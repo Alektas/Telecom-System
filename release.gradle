@@ -1,0 +1,45 @@
+import java.util.regex.Pattern
+
+task incrementVersionCode {
+    doLast {
+        println(":incrementVersionCode - Incrementing Version Code...")
+        def buildFile = file("build.gradle")
+        def buildText = buildFile.getText()
+        def patternVersionCode = Pattern.compile("versionCode (\\d+)")
+        def matcherVersionCode = patternVersionCode.matcher(buildText)
+        matcherVersionCode.find()
+        def mVersionCode = Integer.parseInt(matcherVersionCode.group(1))
+        def mNextVersionCode = mVersionCode + 1
+        def buildContent = matcherVersionCode.replaceAll("versionCode " + mNextVersionCode + "")
+        println(":incrementVersionCode - new versionCode=" + mNextVersionCode)
+        buildFile.write(buildContent)
+    }
+}
+
+task incrementVersionName {
+    doLast {
+        println(":incrementVersionName - Incrementing Version Name...")
+        def buildFile = file("build.gradle")
+        def buildText = buildFile.getText()
+        def patternVersionNumber = Pattern.compile("versionName \"(.+)\"")
+        def matcherVersionNumber = patternVersionNumber.matcher(buildText)
+        matcherVersionNumber.find()
+        def buildContent = matcherVersionNumber.replaceAll("versionName \"" + ver + "\"")
+        println(":incrementVersionName - new versionName=" + ver)
+        buildFile.write(buildContent)
+    }
+}
+
+task release {
+    doLast {
+        println(":release - Version Increment")
+    }
+}
+
+//incrementVersionName.mustRunAfter build
+//incrementVersionCode.mustRunAfter build
+
+//release.dependsOn assembleRelease
+
+release.dependsOn incrementVersionCode
+release.dependsOn incrementVersionName
