@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PolarGraphView">
+        <attr name="label_y" format="string"/>
+        <attr name="label_x" format="string"/>
+        <attr name="labels_text_size" format="dimension"/>
+        <attr name="points_color" format="color"/>
+    </declare-styleable>
+</resources>
