@@ -6,6 +6,7 @@ import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.coders.CdmaCoder
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator
+import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

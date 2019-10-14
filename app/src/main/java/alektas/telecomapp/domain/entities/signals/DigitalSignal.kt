@@ -2,8 +2,8 @@ package alektas.telecomapp.domain.entities.signals
 
 import alektas.telecomapp.domain.entities.Simulator
 
-class DigitSignal(
-    bits: Array<Boolean>,
+class DigitalSignal(
+    val bits: Array<Boolean>,
     bitTime: Double,
     magnitude: Double = 1.0,
     bipolar: Boolean = true

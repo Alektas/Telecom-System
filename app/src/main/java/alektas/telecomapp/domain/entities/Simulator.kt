@@ -8,7 +8,7 @@ class Simulator {
         /**
          * Частота дискретизации (количество измерений в единицу времени)
          */
-        const val SAMPLING_RATE = 1.0e6
+        const val SAMPLING_RATE = 1.0e7
 
         /**
          * Период дискретизации измерения сигналов (в условных единицах времени)
@@ -18,12 +18,22 @@ class Simulator {
         /**
          * Количество измерений за время симуляции
          */
-        const val SAMPLE_COUNT = 1024
+        const val SAMPLE_COUNT = 8192
 
         /**
          * Общее время симуляции (в условных единицах времени)
          */
         const val SIMULATION_TIME = SAMPLE_COUNT * SAMPLING_TIME
+
+        /**
+         * Подсчет количества сэмплов (измерений/тактов), которое получится (измерится, пройдет)
+         * за время <code>time</code>
+         *
+         * @return количество сэмплов (измерений/тактов)
+         */
+        fun samplesFor(time: Double): Int {
+            return (time * SAMPLING_RATE).toInt()
+        }
 
         /**
          * Производится вычисление функции <code>timeFunction</code> на всем временном участке

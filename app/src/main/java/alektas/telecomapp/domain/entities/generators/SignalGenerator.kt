@@ -1,6 +1,6 @@
 package alektas.telecomapp.domain.entities.generators
 
-import alektas.telecomapp.domain.entities.signals.DigitSignal
+import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.HarmonicSignal
 
 class SignalGenerator {
@@ -20,11 +20,11 @@ class SignalGenerator {
         bitTime: Double,
         magnitude: Double = 1.0,
         bipolar: Boolean = true
-    ): DigitSignal = DigitSignal(data, bitTime, magnitude, bipolar)
+    ): DigitalSignal = DigitalSignal(data, bitTime, magnitude, bipolar)
 
     fun pulse(
         pulseTime: Double,
         magnitude: Double = 1.0,
         negative: Boolean = false
-    ): DigitSignal = DigitSignal(arrayOf(true), pulseTime, magnitude, negative)
+    ): DigitalSignal = DigitalSignal(arrayOf(true), pulseTime, magnitude, negative)
 }
