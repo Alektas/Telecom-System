@@ -3,46 +3,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".ui.chart.ChartFragment">
 
     <com.jjoe64.graphview.GraphView
-        android:id="@+id/signal_chart"
+        android:id="@+id/data_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/input_signal_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/output_signal_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <alektas.telecomapp.ui.chart.polar.PolarGraphView
+        android:id="@+id/constellation_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.5"
+        app:label_x="I"
+        app:label_y="Q"
+        app:labels_text_size="@dimen/textsize_graph_view_label" />
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/spectrum_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <!--    <com.db.williamchart.view.LineChartView-->
-    <!--        android:id="@+id/lineChart2"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="200dp"-->
-    <!--        android:layout_margin="2dp"-->
-    <!--        android:layout_weight="1"-->
-    <!--        app:chart_axis="none"-->
-    <!--        app:chart_lineColor="#000000"-->
-    <!--        app:chart_lineThickness="2dp"-->
-    <!--        app:chart_smoothLine="false" />-->
-
-    <!--    <HorizontalScrollView-->
-    <!--        android:layout_width="3000dp"-->
-    <!--        android:layout_height="200dp"-->
-    <!--        android:layout_weight="1">-->
-
-    <!--        <com.db.williamchart.view.LineChartView-->
-    <!--            android:id="@+id/lineChart3"-->
-    <!--            android:layout_width="3000dp"-->
-    <!--            android:layout_height="match_parent"-->
-    <!--            android:layout_margin="2dp"-->
-    <!--            app:chart_axis="x"-->
-    <!--            app:chart_lineColor="#000000"-->
-    <!--            app:chart_lineThickness="2dp"-->
-    <!--            app:chart_smoothLine="true" />-->
-    <!--    </HorizontalScrollView>-->
+        android:layout_weight="1.5"/>
 
 </LinearLayout>

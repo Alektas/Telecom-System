@@ -32,14 +32,34 @@ class ChartFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(ChartViewModel::class.java)
 
-        signal_chart.viewport.apply {
+        data_chart.viewport.apply {
             isScalable = true
             isXAxisBoundsManual = true
             setMinX(0.0)
-            setMaxX(0.001)
+            setMaxX(0.0008)
             isYAxisBoundsManual = true
-            setMinY(-1.0)
-            setMaxY(1.0)
+            setMinY(-1.5)
+            setMaxY(1.5)
+        }
+
+        input_signal_chart.viewport.apply {
+            isScalable = true
+            isXAxisBoundsManual = true
+            setMinX(0.0)
+            setMaxX(0.0008)
+            isYAxisBoundsManual = true
+            setMinY(-1.5)
+            setMaxY(1.5)
+        }
+
+        output_signal_chart.viewport.apply {
+            isScalable = true
+            isXAxisBoundsManual = true
+            setMinX(0.0)
+            setMaxX(0.0008)
+            isYAxisBoundsManual = true
+            setMinY(-1.5)
+            setMaxY(1.5)
         }
 
         spectrum_chart.viewport.apply {
@@ -49,15 +69,27 @@ class ChartFragment : Fragment() {
             setMaxX(500.0)
             isYAxisBoundsManual = true
             setMinY(-0.0)
-            setMaxY(200.0)
+            setMaxY(400.0)
         }
 
-        viewModel.signalData.observe(viewLifecycleOwner, Observer {
-            signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
+            input_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        })
+
+        viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
+            output_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
         })
 
         viewModel.spectrumData.observe(viewLifecycleOwner, Observer {
             spectrum_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        })
+
+        viewModel.dataSignalData.observe(viewLifecycleOwner, Observer {
+            data_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        })
+
+        viewModel.constellationData.observe(viewLifecycleOwner, Observer {
+            constellation_chart.setData(it)
         })
     }
 
