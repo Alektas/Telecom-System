@@ -18,6 +18,6 @@ class QpskModulator : Modulator<Array<Boolean>> {
         val dataQ = data.filterIndexed { index, _ -> index % 2 != 0 }.toTypedArray()
         val signalQ = DigitalSignal(dataQ, QpskContract.SYMBOL_TIME)
 
-        return carrier * signalI + carrier.shiftPhaseBy(Math.PI / 2) * signalQ
+        return carrier * signalI - carrier.shiftPhaseBy(Math.PI / 2) * signalQ
     }
 }

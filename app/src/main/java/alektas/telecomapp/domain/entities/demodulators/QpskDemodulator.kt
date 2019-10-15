@@ -52,7 +52,7 @@ class QpskDemodulator : Demodulator<Signal> {
         return data
     }
 
-    private fun averageDigitalSignal(signal: Signal, interval: Int): Signal {
+    fun averageDigitalSignal(signal: Signal, interval: Int): Signal {
         val averageValues = mutableListOf<Double>()
         signal.getValues().toList()
             .chunked(interval) { it.average() }
@@ -75,7 +75,7 @@ class QpskDemodulator : Demodulator<Signal> {
     private fun extractBinaryData(signal: Signal, interval: Int): BooleanArray {
         return signal.getValues().toList()
             .chunked(interval) { it.average() }
-            .map { it > 0 }
+            .map { it < 0 }
             .toBooleanArray()
     }
 
