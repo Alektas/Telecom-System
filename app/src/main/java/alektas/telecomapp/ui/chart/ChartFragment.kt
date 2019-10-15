@@ -16,6 +16,10 @@ import com.jjoe64.graphview.series.DataPoint
 class ChartFragment : Fragment() {
 
     companion object {
+        const val SIGNAL_MAGNITUDE = 1.5
+        const val SIGNAL_DURATION = 0.0004
+        const val SPECTRUM_HEIGHT = 800.0
+        const val SPECTRUM_WIDTH = 500.0
         fun newInstance() = ChartFragment()
     }
 
@@ -36,40 +40,40 @@ class ChartFragment : Fragment() {
             isScalable = true
             isXAxisBoundsManual = true
             setMinX(0.0)
-            setMaxX(0.0008)
+            setMaxX(SIGNAL_DURATION)
             isYAxisBoundsManual = true
-            setMinY(-1.5)
-            setMaxY(1.5)
+            setMinY(-SIGNAL_MAGNITUDE)
+            setMaxY(SIGNAL_MAGNITUDE)
         }
 
         input_signal_chart.viewport.apply {
             isScalable = true
             isXAxisBoundsManual = true
             setMinX(0.0)
-            setMaxX(0.0008)
+            setMaxX(SIGNAL_DURATION)
             isYAxisBoundsManual = true
-            setMinY(-1.5)
-            setMaxY(1.5)
+            setMinY(-SIGNAL_MAGNITUDE)
+            setMaxY(SIGNAL_MAGNITUDE)
         }
 
         output_signal_chart.viewport.apply {
             isScalable = true
             isXAxisBoundsManual = true
             setMinX(0.0)
-            setMaxX(0.0008)
+            setMaxX(SIGNAL_DURATION)
             isYAxisBoundsManual = true
-            setMinY(-1.5)
-            setMaxY(1.5)
+            setMinY(-SIGNAL_MAGNITUDE)
+            setMaxY(SIGNAL_MAGNITUDE)
         }
 
         spectrum_chart.viewport.apply {
             isScalable = true
             isXAxisBoundsManual = true
             setMinX(0.0)
-            setMaxX(500.0)
+            setMaxX(SPECTRUM_WIDTH)
             isYAxisBoundsManual = true
-            setMinY(-0.0)
-            setMaxY(400.0)
+            setMinY(0.0)
+            setMaxY(SPECTRUM_HEIGHT)
         }
 
         viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
