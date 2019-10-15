@@ -10,6 +10,11 @@ import java.util.*
 
 class QpskDemodulator : Demodulator<Signal> {
 
+    /**
+     * Демодуляция QPSK сигнала.
+     *
+     * @return двоичный биполярный сигнал из -1 и 1
+     */
     override fun demodulate(signal: Signal): Signal {
         val gen = SignalGenerator()
         val cos = gen.cos(frequency = QpskContract.CARRIER_FREQUENCY)
@@ -27,6 +32,10 @@ class QpskDemodulator : Demodulator<Signal> {
         return DigitalSignal(data.toTypedArray(), QpskContract.DATA_BIT_TIME)
     }
 
+    /**
+     * Возвращает "созвездие" QPSK сигнала <code>signal</code> в виде массива попарно:
+     * первое значение - I-компонента сигнала, второе - Q-компонента.
+     */
     fun getConstellation(signal: Signal): List<Pair<Double, Double>> {
         val gen = SignalGenerator()
         val cos = gen.cos(frequency = QpskContract.CARRIER_FREQUENCY)
@@ -57,6 +66,12 @@ class QpskDemodulator : Demodulator<Signal> {
         return BaseSignal(d)
     }
 
+    /**
+     * Сглаживает сигнал и возвращает массив битов в соответствии с уровнем сигнала
+     * на интервалах <code>interval</code>.
+     * Если сигнал больше 0, то бит = 1
+     * Если сигнал меньше или равен 0, то бит = 0
+     */
     private fun extractBinaryData(signal: Signal, interval: Int): BooleanArray {
         return signal.getValues().toList()
             .chunked(interval) { it.average() }
@@ -64,6 +79,9 @@ class QpskDemodulator : Demodulator<Signal> {
             .toBooleanArray()
     }
 
+    /**
+     * Сглаживает сигнал и возвращает массив значений сигнала на интервалах <code>interval</code>.
+     */
     private fun extractDigitalData(signal: Signal, interval: Int): List<Double> {
         return signal.getValues().toList()
             .chunked(interval) { it.average() }
