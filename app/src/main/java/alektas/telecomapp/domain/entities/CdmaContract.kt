@@ -8,5 +8,6 @@ class CdmaContract {
         const val CODE_LENGTH = 4
         const val SPREAD_RATIO = CODE_LENGTH
         const val DATA_BIT_TIME = SPREAD_RATIO * CODE_BIT_TIME
+        const val SPREAD_DATA_LENGTH = SPREAD_RATIO * DATA_FRAME_LENGTH
     }
 }

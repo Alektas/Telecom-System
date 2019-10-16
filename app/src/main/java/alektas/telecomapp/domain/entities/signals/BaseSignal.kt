@@ -14,7 +14,7 @@ open class BaseSignal() : Signal {
     }
 
     override fun getPoints(from: Double, to: Double): Map<Double, Double> {
-        return data.filterKeys { it in from..to }
+        return data.filterKeys { it >= from && it < to }
     }
 
     override fun getValues(): DoubleArray {
@@ -22,7 +22,7 @@ open class BaseSignal() : Signal {
     }
 
     override fun getValues(from: Double, to: Double): DoubleArray {
-        return data.filterKeys { it in from..to }.values.toDoubleArray()
+        return data.filterKeys { it >= from && it < to }.values.toDoubleArray()
     }
 
     override fun getValueAt(time: Double): Double {
