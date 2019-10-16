@@ -14,11 +14,15 @@ open class BaseSignal() : Signal {
     }
 
     override fun getPoints(from: Double, to: Double): Map<Double, Double> {
-        return data.filterKeys { it >= from || it <= to }
+        return data.filterKeys { it in from..to }
     }
 
     override fun getValues(): DoubleArray {
         return data.values.toDoubleArray()
+    }
+
+    override fun getValues(from: Double, to: Double): DoubleArray {
+        return data.filterKeys { it in from..to }.values.toDoubleArray()
     }
 
     override fun getValueAt(time: Double): Double {
@@ -44,8 +48,12 @@ open class BaseSignal() : Signal {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other == null || other !is Signal) return false
-        return other.getPoints() == this.data
+        if (this === other) return true
+        if (other !is BaseSignal) return false
+
+        if (data != other.data) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
