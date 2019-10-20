@@ -6,7 +6,7 @@ import java.util.*
 import kotlin.math.cos
 import kotlin.math.exp
 
-class Window(private val type: Int) {
+class Window(val type: Int) {
 
     fun applyTo(signal: Signal): Signal {
         val points = signal.getPoints()
@@ -26,6 +26,16 @@ class Window(private val type: Int) {
         }
 
         return BaseSignal(d)
+    }
+
+    fun calculate(n: Int, frameSize: Int): Double {
+        return when (type) {
+            GAUSSE -> gausse(n, frameSize)
+            HAMMING -> hamming(n, frameSize)
+            HANN -> hann(n, frameSize)
+            BLACKMANN -> blackmannHarris(n, frameSize)
+            else -> square(n, frameSize)
+        }
     }
 
     private fun calculate(
