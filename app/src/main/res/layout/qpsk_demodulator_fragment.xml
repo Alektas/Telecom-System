@@ -25,13 +25,73 @@
             app:layout_constraintTop_toBottomOf="@id/input_signal_label" />
 
         <TextView
+            android:id="@+id/i_signal_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_graph_label"
+            android:layout_marginTop="16dp"
+            android:text="@string/i_signal"
+            app:layout_constraintTop_toBottomOf="@id/input_signal_chart" />
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/i_signal_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            app:layout_constraintTop_toBottomOf="@id/i_signal_label" />
+
+        <TextView
+            android:id="@+id/filtered_i_signal_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_graph_label"
+            android:layout_marginTop="16dp"
+            android:text="@string/filtered_i_signal"
+            app:layout_constraintTop_toBottomOf="@id/i_signal_chart" />
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/filtered_i_signal_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            app:layout_constraintTop_toBottomOf="@id/filtered_i_signal_label" />
+
+        <TextView
+            android:id="@+id/q_signal_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_graph_label"
+            android:layout_marginTop="16dp"
+            android:text="@string/q_signal"
+            app:layout_constraintTop_toBottomOf="@id/filtered_i_signal_chart" />
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/q_signal_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            app:layout_constraintTop_toBottomOf="@id/q_signal_label" />
+
+        <TextView
+            android:id="@+id/filtered_q_signal_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_graph_label"
+            android:layout_marginTop="16dp"
+            android:text="@string/filtered_q_signal"
+            app:layout_constraintTop_toBottomOf="@id/q_signal_chart" />
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/filtered_q_signal_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            app:layout_constraintTop_toBottomOf="@id/filtered_q_signal_label" />
+
+        <TextView
             android:id="@+id/output_signal_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_graph_label"
             android:layout_marginTop="16dp"
             android:text="@string/output_signal"
-            app:layout_constraintTop_toBottomOf="@id/input_signal_chart" />
+            app:layout_constraintTop_toBottomOf="@id/filtered_q_signal_chart" />
 
         <com.jjoe64.graphview.GraphView
             android:id="@+id/output_signal_chart"

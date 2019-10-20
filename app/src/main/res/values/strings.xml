@@ -9,4 +9,8 @@
     <string name="impulse_response">Импульсная характеристика</string>
     <string name="filter_setting">Настройка фильтра</string>
     <string name="qpsk_demodulator">Qpsk демодулятор</string>
+    <string name="i_signal">I-составляющая до фильтрации</string>
+    <string name="q_signal">Q-составляющая до фильтрации</string>
+    <string name="filtered_q_signal">Q-составляющая после фильтрации</string>
+    <string name="filtered_i_signal">I-составляющая после фильтрации</string>
 </resources>

@@ -6,6 +6,7 @@ import io.reactivex.Observable
 
 interface Repository {
     fun getDemodulatorConfig(): DemodulatorConfig
+    fun observeDemodulatorConfig(): Observable<DemodulatorConfig>
     fun setDemodulatorConfig(config: DemodulatorConfig)
     fun getDemodulatorFilterConfig(): FilterConfig
     fun observeDemodulatorFilterConfig(): Observable<FilterConfig>

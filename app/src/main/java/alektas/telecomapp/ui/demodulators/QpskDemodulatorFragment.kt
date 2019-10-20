@@ -11,16 +11,11 @@ import alektas.telecomapp.R
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.qpsk_demodulator_fragment.constellation_chart
-import kotlinx.android.synthetic.main.qpsk_demodulator_fragment.input_signal_chart
-import kotlinx.android.synthetic.main.qpsk_demodulator_fragment.output_signal_chart
+import kotlinx.android.synthetic.main.qpsk_demodulator_fragment.*
 
 class QpskDemodulatorFragment : Fragment() {
 
     companion object {
-        const val TAG = "QpskDemodulatorFragment"
-        const val SIGNAL_MAGNITUDE = 1.5
-        const val SIGNAL_DURATION = 0.0004
         fun newInstance() = QpskDemodulatorFragment()
     }
 
@@ -37,28 +32,24 @@ class QpskDemodulatorFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(QpskDemodulatorViewModel::class.java)
 
-        input_signal_chart.viewport.apply {
-            isScalable = true
-            isXAxisBoundsManual = false
-            isYAxisBoundsManual = false
-            setMinX(0.0)
-            setMaxX(SIGNAL_DURATION)
-            setMinY(-SIGNAL_MAGNITUDE)
-            setMaxY(SIGNAL_MAGNITUDE)
-        }
-
-        output_signal_chart.viewport.apply {
-            isScalable = true
-            isXAxisBoundsManual = false
-            isYAxisBoundsManual = false
-            setMinX(0.0)
-            setMaxX(SIGNAL_DURATION)
-            setMinY(-SIGNAL_MAGNITUDE)
-            setMaxY(SIGNAL_MAGNITUDE)
-        }
-
         viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
             input_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        })
+
+        viewModel.iSignalData.observe(viewLifecycleOwner, Observer {
+            i_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        })
+
+        viewModel.filteredISignalData.observe(viewLifecycleOwner, Observer {
+            filtered_i_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        })
+
+        viewModel.qSignalData.observe(viewLifecycleOwner, Observer {
+            q_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+        })
+
+        viewModel.filteredQSignalData.observe(viewLifecycleOwner, Observer {
+            filtered_q_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
         })
 
         viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {

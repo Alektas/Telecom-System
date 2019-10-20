@@ -8,12 +8,16 @@ import io.reactivex.subjects.BehaviorSubject
 
 class TelecomSystem: Repository {
     private var demodulatorConfig: DemodulatorConfig = DemodulatorConfig()
-    private var filterConfig: FilterConfig =
-        FilterConfig()
+    private val demodulatorConfigSource: BehaviorSubject<DemodulatorConfig> = BehaviorSubject.create()
+    private var filterConfig: FilterConfig = FilterConfig()
     private val filterConfigSource: BehaviorSubject<FilterConfig> = BehaviorSubject.create()
 
     override fun getDemodulatorConfig(): DemodulatorConfig {
         return demodulatorConfig
+    }
+
+    override fun observeDemodulatorConfig(): Observable<DemodulatorConfig> {
+        return demodulatorConfigSource
     }
 
     override fun setDemodulatorConfig(config: DemodulatorConfig) {
@@ -30,6 +34,8 @@ class TelecomSystem: Repository {
 
     override fun setDemodulatorFilterConfig(config: FilterConfig) {
         filterConfig = config
-        filterConfigSource.onNext(config)
+        filterConfigSource.onNext(filterConfig)
+        demodulatorConfig.filterConfig = filterConfig
+        demodulatorConfigSource.onNext(demodulatorConfig)
     }
 }

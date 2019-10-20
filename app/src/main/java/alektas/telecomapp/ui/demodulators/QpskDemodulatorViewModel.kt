@@ -2,28 +2,75 @@ package alektas.telecomapp.ui.demodulators
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
+import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.observers.DisposableObserver
 import javax.inject.Inject
 
 class QpskDemodulatorViewModel : ViewModel() {
     @Inject lateinit var system: Repository
+    private val disposable: Disposable
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
+    val iSignalData = MutableLiveData<Array<DataPoint>>()
+    val filteredISignalData = MutableLiveData<Array<DataPoint>>()
+    val qSignalData = MutableLiveData<Array<DataPoint>>()
+    val filteredQSignalData = MutableLiveData<Array<DataPoint>>()
     val outputSignalData = MutableLiveData<Array<DataPoint>>()
     val constellationData = MutableLiveData<List<Pair<Float, Float>>>()
 
     init {
         App.component.inject(this)
-        val config = system.getDemodulatorConfig()
-        config.inputSignal?.let { signal ->
+        settingCharts(system.getDemodulatorConfig())
+
+        disposable = system.observeDemodulatorConfig()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
+                override fun onComplete() {
+                }
+
+                override fun onNext(t: DemodulatorConfig) {
+                    settingCharts(t)
+                }
+
+                override fun onError(e: Throwable) {
+                }
+
+            })
+    }
+
+    private fun settingCharts(config: DemodulatorConfig) {
+        config.inputSignal.let { signal ->
             inputSignalData.value = signal.getPoints()
                 .map { DataPoint(it.key, it.value) }.toTypedArray()
-            outputSignalData.value = QpskDemodulator().demodulate(signal).getPoints()
+
+            val demodulator = QpskDemodulator(config)
+            outputSignalData.value = demodulator.demodulate(signal).getPoints()
                 .map { DataPoint(it.key, it.value) }.toTypedArray()
-            constellationData.value = QpskDemodulator().getConstellation(signal)
-                    .map { Pair(it.first.toFloat(), it.second.toFloat()) }
+
+            constellationData.value = demodulator.getConstellation(signal)
+                .map { Pair(it.first.toFloat(), it.second.toFloat()) }
+
+            iSignalData.value = demodulator.sigI.getPoints()
+                .map { DataPoint(it.key, it.value) }.toTypedArray()
+
+            filteredISignalData.value = demodulator.filteredSigI.getPoints()
+                .map { DataPoint(it.key, it.value) }.toTypedArray()
+
+            qSignalData.value = demodulator.sigQ.getPoints()
+                .map { DataPoint(it.key, it.value) }.toTypedArray()
+
+            filteredQSignalData.value = demodulator.filteredSigQ.getPoints()
+                .map { DataPoint(it.key, it.value) }.toTypedArray()
         }
+    }
+
+    override fun onCleared() {
+        disposable.dispose()
+        super.onCleared()
     }
 }

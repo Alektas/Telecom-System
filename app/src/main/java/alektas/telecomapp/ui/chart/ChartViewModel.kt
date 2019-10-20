@@ -64,8 +64,8 @@ class ChartViewModel : ViewModel() {
         val demodConfig = DemodulatorConfig().apply { inputSignal = channel.ether }
         system.setDemodulatorConfig(demodConfig)
 
-        val receivedGroupSignal = QpskDemodulator().demodulate(channel.ether) as BinarySignal
-        val receivedGroupConstellation = QpskDemodulator().getConstellation(channel.ether)
+        val receivedGroupSignal = QpskDemodulator(DemodulatorConfig()).demodulate(channel.ether) as BinarySignal
+        val receivedGroupConstellation = QpskDemodulator(DemodulatorConfig()).getConstellation(channel.ether)
 
         if (BuildConfig.DEBUG) {
             println("Transmit: encoded data1: ${data1.joinToString { if (it) "1" else "0" }}")
