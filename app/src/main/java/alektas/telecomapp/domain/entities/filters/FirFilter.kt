@@ -1,6 +1,8 @@
 package alektas.telecomapp.domain.entities.filters
 
 import alektas.telecomapp.domain.entities.Window
+import alektas.telecomapp.domain.entities.signals.BaseSignal
+import alektas.telecomapp.domain.entities.signals.Signal
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -27,6 +29,10 @@ class FirFilter(
         config.samplingRate,
         config.windowType
     )
+
+    override fun filter(signal: Signal): Signal {
+        return BaseSignal(signal.getTimes(), filter(signal.getValues()))
+    }
 
     override fun filter(
         data: DoubleArray
