@@ -13,7 +13,7 @@ class Simulator {
         /**
          * Период дискретизации измерения сигналов (в условных единицах времени)
          */
-        const val SAMPLING_TIME = 1 / SAMPLING_RATE
+        const val SAMPLE_TIME = 1 / SAMPLING_RATE
 
         /**
          * Количество измерений за время симуляции.
@@ -27,7 +27,7 @@ class Simulator {
         /**
          * Общее время симуляции (в условных единицах времени)
          */
-        const val SIMULATION_TIME = SAMPLE_COUNT * SAMPLING_TIME
+        const val SIMULATION_TIME = SAMPLE_COUNT * SAMPLE_TIME
 
         /**
          * Подсчет количества сэмплов (измерений/тактов), которое получится (измерится, пройдет)
@@ -43,7 +43,7 @@ class Simulator {
          * Производится вычисление функции <code>timeFunction</code> на всем временном участке
          * симуляции.
          * Общее время симуляции: {@link #SIMULATION_TIME}
-         * Временные интервалы вычисления: {@link #SAMPLING_TIME}
+         * Временные интервалы вычисления: {@link #SAMPLE_TIME}
          *
          * @param timeFunction функция с аргументом времени, по которой вычисляются значения
          *
@@ -52,7 +52,7 @@ class Simulator {
         fun simulate(timeFunction: (Double) -> Double): TreeMap<Double, Double> {
             val data = TreeMap<Double, Double>()
             for (i in 0 until SAMPLE_COUNT) {
-                val time = i * SAMPLING_TIME
+                val time = i * SAMPLE_TIME
                 data[time] = timeFunction(time)
             }
             return data
