@@ -1,18 +1,17 @@
 package alektas.telecomapp.domain.entities.demodulators
 
-import alektas.telecomapp.BuildConfig
 import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
-import alektas.telecomapp.domain.entities.signals.DigitalSignal
+import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.math.abs
 
-class QpskDemodulator : Demodulator<Signal> {
+class QpskDemodulator(config: DemodulatorConfig = DemodulatorConfig.DEFAULT) : Demodulator<Signal> {
     private val isBit: (Double) -> Boolean = { abs(it) > QpskContract.SIGNAL_THRESHOLD }
 
     /**
@@ -47,7 +46,7 @@ class QpskDemodulator : Demodulator<Signal> {
             data.add(dataQ[i])
         }
 
-        return DigitalSignal(data.toTypedArray(), QpskContract.DATA_BIT_TIME)
+        return BinarySignal(data.toTypedArray(), QpskContract.DATA_BIT_TIME)
     }
 
     /**
@@ -115,7 +114,6 @@ class QpskDemodulator : Demodulator<Signal> {
     ): Pair<BooleanArray, Map<Int, Double>> {
         val errorBits = HashMap<Int, Double>()
         val bits = signal.getValues(from, to).toList()
-            .also { if (BuildConfig.DEBUG) println("Signal values count: ${it.size}") }
             .windowed(interval, interval, false) { it.average() }
             .also {
                 it.forEachIndexed { i, value -> if (!isBit(value)) errorBits[i] = value }
