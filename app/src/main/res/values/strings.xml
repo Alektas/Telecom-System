@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Telecom Systems</string>
+    <string name="input_signal">Входной сигнал</string>
+    <string name="output_signal">Выходной сигнал</string>
+    <string name="output_constellation">Созвездие</string>
+    <string name="filter_order">Порядок</string>
+    <string name="weight_func">Весовая функция</string>
+    <string name="filter_cutoff_freq">Частота среза</string>
+    <string name="impulse_response">Импульсная характеристика</string>
+    <string name="filter_setting">Настройка фильтра</string>
+    <string name="qpsk_demodulator">Qpsk демодулятор</string>
 </resources>

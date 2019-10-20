@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".ui.chart.ChartFragment">
 
@@ -11,19 +11,19 @@
         android:id="@+id/data_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1" />
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/input_signal_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1" />
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/output_signal_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1" />
 
     <alektas.telecomapp.ui.chart.polar.PolarGraphView
         android:id="@+id/constellation_chart"
@@ -38,6 +38,14 @@
         android:id="@+id/spectrum_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.5"/>
+        android:layout_weight="1.5" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_qpsk_demod_btn"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/qpsk_demodulator" />
 
 </LinearLayout>

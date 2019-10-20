@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.chart
+package alektas.telecomapp.ui.demodulators
 
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -6,49 +6,41 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+
+import alektas.telecomapp.R
 import androidx.lifecycle.Observer
-
-import kotlinx.android.synthetic.main.chart_fragment.*
-import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.DataPoint
+import com.jjoe64.graphview.series.LineGraphSeries
+import kotlinx.android.synthetic.main.qpsk_demodulator_fragment.constellation_chart
+import kotlinx.android.synthetic.main.qpsk_demodulator_fragment.input_signal_chart
+import kotlinx.android.synthetic.main.qpsk_demodulator_fragment.output_signal_chart
 
-
-class ChartFragment : Fragment() {
+class QpskDemodulatorFragment : Fragment() {
 
     companion object {
-        const val TAG = "ChartFragment"
+        const val TAG = "QpskDemodulatorFragment"
         const val SIGNAL_MAGNITUDE = 1.5
         const val SIGNAL_DURATION = 0.0004
-        const val SPECTRUM_HEIGHT = 1.0
-        const val SPECTRUM_WIDTH = 500.0
-        fun newInstance() = ChartFragment()
+        fun newInstance() = QpskDemodulatorFragment()
     }
 
-    private lateinit var viewModel: ChartViewModel
+    private lateinit var viewModel: QpskDemodulatorViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(alektas.telecomapp.R.layout.chart_fragment, container, false)
+        return inflater.inflate(R.layout.qpsk_demodulator_fragment, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(ChartViewModel::class.java)
-
-        data_chart.viewport.apply {
-            isScalable = true
-            isXAxisBoundsManual = true
-            setMinX(0.0)
-            setMaxX(SIGNAL_DURATION)
-            setMinY(-SIGNAL_MAGNITUDE)
-            setMaxY(SIGNAL_MAGNITUDE)
-        }
+        viewModel = ViewModelProviders.of(this).get(QpskDemodulatorViewModel::class.java)
 
         input_signal_chart.viewport.apply {
             isScalable = true
-            isXAxisBoundsManual = true
+            isXAxisBoundsManual = false
+            isYAxisBoundsManual = false
             setMinX(0.0)
             setMaxX(SIGNAL_DURATION)
             setMinY(-SIGNAL_MAGNITUDE)
@@ -57,21 +49,12 @@ class ChartFragment : Fragment() {
 
         output_signal_chart.viewport.apply {
             isScalable = true
-            isXAxisBoundsManual = true
+            isXAxisBoundsManual = false
+            isYAxisBoundsManual = false
             setMinX(0.0)
             setMaxX(SIGNAL_DURATION)
             setMinY(-SIGNAL_MAGNITUDE)
             setMaxY(SIGNAL_MAGNITUDE)
-        }
-
-        spectrum_chart.viewport.apply {
-            isScalable = true
-            isXAxisBoundsManual = true
-            setMinX(0.0)
-            setMaxX(SPECTRUM_WIDTH)
-            isYAxisBoundsManual = true
-            setMinY(0.0)
-            setMaxY(SPECTRUM_HEIGHT)
         }
 
         viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
@@ -80,14 +63,6 @@ class ChartFragment : Fragment() {
 
         viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
             output_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.spectrumData.observe(viewLifecycleOwner, Observer {
-            spectrum_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.dataSignalData.observe(viewLifecycleOwner, Observer {
-            data_chart.addSeries(LineGraphSeries<DataPoint>(it))
         })
 
         viewModel.constellationData.observe(viewLifecycleOwner, Observer {

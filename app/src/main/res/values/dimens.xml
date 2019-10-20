@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="size_graph_constellation">200dp</dimen>
+    <dimen name="height_graph_signal">150dp</dimen>
+    <dimen name="margin_start_graph_label">32dp</dimen>
+    <dimen name="margin_start_field">16dp</dimen>
+</resources>
