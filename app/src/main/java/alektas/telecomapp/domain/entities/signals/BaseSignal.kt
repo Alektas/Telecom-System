@@ -3,10 +3,18 @@ package alektas.telecomapp.domain.entities.signals
 import java.util.*
 
 open class BaseSignal() : Signal {
-    var data = TreeMap<Double, Double>()
+    var data: Map<Double, Double> = TreeMap()
 
-    constructor(data: TreeMap<Double, Double>) : this() {
+    constructor(data: Map<Double, Double>) : this() {
         this.data = data
+    }
+
+    constructor(times: DoubleArray, values: DoubleArray) : this() {
+        val d = TreeMap<Double, Double>()
+        for (i in times.indices) {
+            d[times[i]] = values[i]
+        }
+        this.data = d
     }
 
     override fun getPoints(): Map<Double, Double> {
@@ -15,6 +23,14 @@ open class BaseSignal() : Signal {
 
     override fun getPoints(from: Double, to: Double): Map<Double, Double> {
         return data.filterKeys { it >= from && it < to }
+    }
+
+    override fun getTimes(): DoubleArray {
+        return data.keys.toDoubleArray()
+    }
+
+    override fun getTimes(from: Double, to: Double): DoubleArray {
+        return data.filterKeys { it >= from && it < to }.keys.toDoubleArray()
     }
 
     override fun getValues(): DoubleArray {
