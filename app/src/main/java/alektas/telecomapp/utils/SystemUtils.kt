@@ -12,14 +12,7 @@ class SystemUtils {
         fun hideKeyboard(fragment: Fragment) {
             // Check if no view has focus:
             val view = fragment.view
-            if (view != null) {
-                val inputManager = fragment.requireContext()
-                    .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                inputManager.hideSoftInputFromWindow(
-                    view.windowToken,
-                    InputMethodManager.HIDE_NOT_ALWAYS
-                )
-            }
+            hideKeyboard(view)
         }
 
         fun hideKeyboard(view: View?) {

@@ -22,13 +22,13 @@ class CdmaCoderTest {
      */
     @Test
     fun encode_isCorrect() {
-        val code = arrayOf(true, false)
-        val data = arrayOf(false, true, true)
+        val code = booleanArrayOf(true, false)
+        val data = booleanArrayOf(false, true, true)
 
         val encodedData = coder.encode(code, data)
 
         assertArrayEquals(
-            arrayOf(true, false, false, true, false, true),
+            booleanArrayOf(true, false, false, true, false, true),
             encodedData)
     }
 
@@ -39,8 +39,8 @@ class CdmaCoderTest {
      */
     @Test
     fun encode_length_isCorrect() {
-        val code = arrayOf(true, false, true)
-        val data = arrayOf(false, true, true, false)
+        val code = booleanArrayOf(true, false, true)
+        val data = booleanArrayOf(false, true, true, false)
 
         val size = coder.encode(code, data).size
 
@@ -55,12 +55,12 @@ class CdmaCoderTest {
      */
     @Test
     fun decode_isCorrect() {
-        val code = arrayOf(true, false)
-        val encodedData = arrayOf(false, true, true, false, false, true)
+        val code = booleanArrayOf(true, false)
+        val encodedData = booleanArrayOf(false, true, true, false, false, true)
 
         val decodedData = coder.decode(code, encodedData)
 
-        assertArrayEquals(arrayOf(true, false, true), decodedData)
+        assertArrayEquals(booleanArrayOf(true, false, true), decodedData)
     }
 
     /**
@@ -70,8 +70,8 @@ class CdmaCoderTest {
      */
     @Test
     fun decode_length_isCorrect() {
-        val code = arrayOf(true, false, true)
-        val encodedData = arrayOf(false, true, true, false, false, false, true, true, true)
+        val code = booleanArrayOf(true, false, true)
+        val encodedData = booleanArrayOf(false, true, true, false, false, false, true, true, true)
 
         val size = coder.decode(code, encodedData).size
 

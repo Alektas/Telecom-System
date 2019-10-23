@@ -4,4 +4,9 @@
     <dimen name="height_graph_signal">150dp</dimen>
     <dimen name="margin_start_graph_label">32dp</dimen>
     <dimen name="margin_start_field">16dp</dimen>
+    <dimen name="margin_start_title">32dp</dimen>
+    <dimen name="padding_top_page">16dp</dimen>
+    <dimen name="padding_horiz_page">32dp</dimen>
+    <dimen name="margin_top_title">16dp</dimen>
+    <dimen name="margin_start_body">8dp</dimen>
 </resources>

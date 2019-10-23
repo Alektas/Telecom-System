@@ -1,9 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="@dimen/padding_horiz_page"
     tools:context=".ui.main.MainFragment">
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_data_source_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/data_source"
+        app:layout_constraintBottom_toTopOf="@id/to_demodulation_btn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.4"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_demodulation_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/demodulator"
+        app:layout_constraintBottom_toTopOf="@id/to_decoding_btn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/to_data_source_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_decoding_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/decoder"
+        app:layout_constraintBottom_toTopOf="@id/to_statistics_btn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/to_demodulation_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_statistics_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/statistics"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/to_decoding_btn"
+        app:layout_constraintVertical_bias="0.4" />
 </androidx.constraintlayout.widget.ConstraintLayout>

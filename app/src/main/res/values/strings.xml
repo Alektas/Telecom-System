@@ -13,4 +13,19 @@
     <string name="q_signal">Q-составляющая до фильтрации</string>
     <string name="filtered_q_signal">Q-составляющая после фильтрации</string>
     <string name="filtered_i_signal">I-составляющая после фильтрации</string>
+    <string name="data">Данные: </string>
+    <string name="code">Код: </string>
+    <string name="channel_name">Канал: </string>
+    <string name="generate_channels">Сгенерировать каналы</string>
+    <string name="channels">Каналы</string>
+    <string name="ether">Эфир</string>
+    <string name="SNR">Отношение С/Ш, дБ</string>
+    <string name="data_source">Источник данных</string>
+    <string name="statistics">Статистика</string>
+    <string name="decoder">Декодер</string>
+    <string name="demodulator">Демодулятор</string>
+    <string name="channel_count">Количество</string>
+    <string name="code_types">Тип кодов</string>
+    <string name="frame_length">Длина фрейма</string>
+    <string name="channel_delete_button_descr">Channel delete button</string>
 </resources>

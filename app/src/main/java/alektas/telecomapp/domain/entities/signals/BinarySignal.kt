@@ -3,7 +3,7 @@ package alektas.telecomapp.domain.entities.signals
 import alektas.telecomapp.domain.entities.Simulator
 
 class BinarySignal(
-    val bits: Array<Boolean>,
+    val bits: BooleanArray,
     bitTime: Double,
     magnitude: Double = 1.0,
     bipolar: Boolean = true

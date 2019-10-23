@@ -46,21 +46,24 @@ open class BaseSignal() : Signal {
     }
 
     override fun plus(other: Signal): Signal {
-        val d = TreeMap<Double, Double>()
-        other.getPoints().mapValuesTo(d) { it.value + (data[it.key] ?: 0.0) }
-        return BaseSignal(d)
+        other as BaseSignal
+        val times = (getTimes() + other.getTimes()).sorted()
+        val values = times.map { (this.data[it] ?: 0.0) + (other.data[it] ?: 0.0) }
+        return BaseSignal(times.zip(values).toMap())
     }
 
     override fun minus(other: Signal): Signal {
-        val d = TreeMap<Double, Double>()
-        other.getPoints().mapValuesTo(d) { it.value - (data[it.key] ?: 0.0) }
-        return BaseSignal(d)
+        other as BaseSignal
+        val times = (getTimes() + other.getTimes()).sorted()
+        val values = times.map { (this.data[it] ?: 0.0) - (other.data[it] ?: 0.0) }
+        return BaseSignal(times.zip(values).toMap())
     }
 
     override fun times(other: Signal): Signal {
-        val d = TreeMap<Double, Double>()
-        other.getPoints().mapValuesTo(d) { it.value * (data[it.key] ?: 1.0) }
-        return BaseSignal(d)
+        other as BaseSignal
+        val times = (getTimes() + other.getTimes()).sorted()
+        val values = times.map { (this.data[it] ?: 0.0) * (other.data[it] ?: 0.0) }
+        return BaseSignal(times.zip(values).toMap())
     }
 
     override fun equals(other: Any?): Boolean {

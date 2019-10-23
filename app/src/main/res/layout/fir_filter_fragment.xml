@@ -60,7 +60,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:hint="@string/weight_func"
                 android:editable="false"/>
         </com.google.android.material.textfield.TextInputLayout>
 
