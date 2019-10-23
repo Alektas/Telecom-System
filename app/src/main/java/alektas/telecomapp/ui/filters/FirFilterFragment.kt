@@ -21,7 +21,6 @@ class FirFilterFragment : Fragment() {
 
     companion object {
         fun newInstance() = FirFilterFragment()
-
     }
 
     override fun onCreateView(
@@ -82,6 +81,7 @@ class FirFilterFragment : Fragment() {
 
     private fun setupWindowsDropdown(viewModel: FirFilterViewModel) {
         val windows = mutableListOf<Pair<Int, String>>()
+
         viewModel.windowsData.observe(viewLifecycleOwner, Observer { w ->
             windows.clear()
             windows.addAll(w.map { Pair(it.key, it.value) })
@@ -92,6 +92,7 @@ class FirFilterFragment : Fragment() {
             )
             filter_window_input.setAdapter<ArrayAdapter<String>>(adapter)
         })
+
         filter_window_input.setOnItemClickListener { _, _, position, _ ->
             viewModel.onWindowChanged(windows[position].first)
         }

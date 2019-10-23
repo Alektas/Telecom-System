@@ -1,6 +1,6 @@
 package alektas.telecomapp.domain.entities.coders
 
-class CdmaCoder : Coder<Array<Boolean>> {
+class CdmaCoder : Coder<BooleanArray> {
 
     /**
      * Кодирование информации путем сложения каждого бита информации с кодом по модулю 2 (XOR)
@@ -10,21 +10,21 @@ class CdmaCoder : Coder<Array<Boolean>> {
      * @return массив битов. Если код равен 0, то возвращается исходная информация.
      * Если информация отсутствует, то возвращается 0.
      */
-    override fun encode(code: Array<Boolean>, data: Array<Boolean>): Array<Boolean> {
+    override fun encode(code: BooleanArray, data: BooleanArray): BooleanArray {
         if (code.isEmpty() || data.isEmpty()) return data
 
         val spreadData = mutableListOf<Boolean>()
         data.forEach { bit -> repeat(code.size) { spreadData.add(bit.xor(code[it])) } }
 
-        return spreadData.toTypedArray()
+        return spreadData.toBooleanArray()
     }
 
-    override fun decode(code: Array<Boolean>, codedData: Array<Boolean>): Array<Boolean> {
+    override fun decode(code: BooleanArray, codedData: BooleanArray): BooleanArray {
         return codedData.asList()
             .chunked(code.size) {
                 average(it.mapIndexed { i, bit -> bit.xor(code[i]) })
             }
-            .toTypedArray()
+            .toBooleanArray()
     }
 
     private fun average(data: List<Boolean>): Boolean {

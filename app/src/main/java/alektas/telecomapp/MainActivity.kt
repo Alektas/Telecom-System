@@ -1,6 +1,7 @@
 package alektas.telecomapp
 
 import alektas.telecomapp.ui.chart.ChartFragment
+import alektas.telecomapp.ui.datasource.DataSourceFragment
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorFragment
 import alektas.telecomapp.ui.filters.FirFilterFragment
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.main_activity)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.container, ChartFragment.newInstance(), ChartFragment.TAG)
+                .replace(R.id.container, MainFragment.newInstance(), ChartFragment.TAG)
                 .commitNow()
         }
     }
@@ -25,7 +26,8 @@ class MainActivity : AppCompatActivity() {
             .replace(
                 R.id.container,
                 when (view.id) {
-                    R.id.to_qpsk_demod_btn -> QpskDemodulatorFragment.newInstance()
+                    R.id.to_data_source_btn -> DataSourceFragment.newInstance()
+                    R.id.to_demodulation_btn -> QpskDemodulatorFragment.newInstance()
                     R.id.to_qpsk_demod_filter_btn -> FirFilterFragment.newInstance()
                     else -> MainFragment.newInstance()
                 }

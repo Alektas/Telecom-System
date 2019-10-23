@@ -16,7 +16,7 @@ class SignalGenerator {
     ): HarmonicSignal = HarmonicSignal(magnitude, frequency, Math.PI / 2)
 
     fun binary(
-        data: Array<Boolean>,
+        data: BooleanArray,
         bitTime: Double,
         magnitude: Double = 1.0,
         bipolar: Boolean = true
@@ -26,5 +26,5 @@ class SignalGenerator {
         pulseTime: Double,
         magnitude: Double = 1.0,
         negative: Boolean = false
-    ): BinarySignal = BinarySignal(arrayOf(true), pulseTime, magnitude, negative)
+    ): BinarySignal = BinarySignal(booleanArrayOf(true), pulseTime, magnitude, negative)
 }

@@ -11,7 +11,7 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import java.util.*
 import kotlin.math.abs
 
-class QpskDemodulator(val config: DemodulatorConfig) : Demodulator<Signal> {
+class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
     private val isBit: (Double) -> Boolean = { abs(it) > QpskContract.SIGNAL_THRESHOLD }
     private var filter = FirFilter(config.filterConfig)
     var sigI: Signal = BaseSignal()
@@ -56,7 +56,7 @@ class QpskDemodulator(val config: DemodulatorConfig) : Demodulator<Signal> {
             data.add(dataQ[i])
         }
 
-        return BinarySignal(data.toTypedArray(), QpskContract.DATA_BIT_TIME)
+        return BinarySignal(data.toBooleanArray(), QpskContract.DATA_BIT_TIME)
     }
 
     /**

@@ -41,7 +41,7 @@
         android:layout_weight="1.5" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/to_qpsk_demod_btn"
+        android:id="@+id/to_demodulation_btn"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="50dp"
