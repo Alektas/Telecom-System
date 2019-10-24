@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.item_channel.view.*
 
-class ChannelAdapter(val viewModel: DataSourceViewModel) :
+class ChannelAdapter(private val controller: ChannelController) :
     RecyclerView.Adapter<ChannelAdapter.ChannelViewHolder>() {
     var channels = listOf<ChannelData>()
         set(value) {
@@ -32,7 +32,7 @@ class ChannelAdapter(val viewModel: DataSourceViewModel) :
         val channel = channels[position]
         holder.bind(channel)
         holder.itemView.findViewById<ImageButton>(R.id.channel_del_btn).setOnClickListener {
-            viewModel.removeChannel(channel)
+            controller.removeChannel(channel)
         }
     }
 

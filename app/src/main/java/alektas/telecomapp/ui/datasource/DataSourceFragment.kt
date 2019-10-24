@@ -22,7 +22,7 @@ import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.data_source_fragment.*
 import java.lang.NumberFormatException
 
-class DataSourceFragment : Fragment() {
+class DataSourceFragment : Fragment(), ChannelController {
     private lateinit var viewModel: DataSourceViewModel
     private var selectedCodeType: String? = null
 
@@ -43,7 +43,7 @@ class DataSourceFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DataSourceViewModel::class.java)
         setupCodeTypesDropdown()
-        val channelAdapter = ChannelAdapter(viewModel)
+        val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
 
@@ -71,6 +71,12 @@ class DataSourceFragment : Fragment() {
             ether_chart.addSeries(LineGraphSeries<DataPoint>(it))
         })
     }
+
+    override fun removeChannel(channel: ChannelData) {
+        viewModel.removeChannel(channel)
+    }
+
+    override fun showChannelDetails(channel: ChannelData) { }
 
     private fun setupCodeTypesDropdown() {
         val adapter = ArrayAdapter(
