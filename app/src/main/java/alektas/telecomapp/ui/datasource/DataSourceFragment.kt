@@ -1,5 +1,6 @@
 package alektas.telecomapp.ui.datasource
 
+import alektas.telecomapp.data.CodeGenerator
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -41,7 +42,7 @@ class DataSourceFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DataSourceViewModel::class.java)
-        setupCodeTypesDropdown(viewModel)
+        setupCodeTypesDropdown()
         val channelAdapter = ChannelAdapter(viewModel)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
@@ -71,15 +72,13 @@ class DataSourceFragment : Fragment() {
         })
     }
 
-    private fun setupCodeTypesDropdown(viewModel: DataSourceViewModel) {
-        viewModel.codeTypes.observe(viewLifecycleOwner, Observer { t ->
-            val adapter = ArrayAdapter(
-                requireContext(),
-                alektas.telecomapp.R.layout.support_simple_spinner_dropdown_item,
-                t.values.toTypedArray()
-            )
-            channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
-        })
+    private fun setupCodeTypesDropdown() {
+        val adapter = ArrayAdapter(
+            requireContext(),
+            alektas.telecomapp.R.layout.support_simple_spinner_dropdown_item,
+            CodeGenerator.codeNames.values.toTypedArray()
+        )
+        channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
         channel_code_type.setOnItemClickListener { parent, _, position, _ ->
             val type = parent.getItemAtPosition(position)
@@ -88,7 +87,7 @@ class DataSourceFragment : Fragment() {
             }
         }
 
-        channel_code_type.setOnTouchListener{ v, _ ->
+        channel_code_type.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
             (v as AutoCompleteTextView).showDropDown()
             false
@@ -118,7 +117,7 @@ class DataSourceFragment : Fragment() {
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             0
         }
-        val codeType = selectedCodeType?.let { viewModel.getCodeTypeId(it) } ?: 0
+        val codeType = selectedCodeType?.let { CodeGenerator.getCodeTypeId(it) } ?: 0
         viewModel.generateChannels(channelCount, frameLength, codeType)
     }
 
