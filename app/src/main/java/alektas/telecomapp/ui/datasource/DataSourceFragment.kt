@@ -1,6 +1,7 @@
 package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.ChannelData
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
 import androidx.fragment.app.Fragment

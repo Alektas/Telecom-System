@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/padding_horiz_page"
+        android:paddingEnd="@dimen/padding_horiz_page"
+        android:paddingTop="@dimen/padding_top_page"
+        android:paddingBottom="@dimen/padding_top_page"
+        tools:context=".ui.datasource.DataSourceFragment">
+
+        <TextView
+            android:id="@+id/input_label"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_title"
+            android:text="@string/input_data"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/input_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/input_label" />
+
+        <View
+            android:id="@+id/divider1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="?android:attr/listDivider"
+            app:layout_constraintTop_toBottomOf="@id/input_chart" />
+
+        <TextView
+            android:id="@+id/channels_label"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_title"
+            android:layout_marginTop="@dimen/margin_top_title"
+            android:text="@string/channels"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider1" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/channel_code_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/channel_code"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/add_channel_btn"
+            app:layout_constraintTop_toBottomOf="@id/channels_label">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/channel_code"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:ems="10"
+                android:digits="01"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <ImageButton
+            android:id="@+id/add_channel_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintTop_toTopOf="@id/channel_code_layout"
+            app:layout_constraintBottom_toBottomOf="@id/channel_code_layout"
+            app:layout_constraintStart_toEndOf="@id/channel_code_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:tint="@color/design_default_color_on_primary"
+            android:backgroundTint="@color/colorPrimary"
+            android:src="@drawable/ic_add_black_24dp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/channel_count_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="@string/channel_count"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/channel_code_type_layout"
+            app:layout_constraintTop_toBottomOf="@id/channel_code_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/channel_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/channel_code_type_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:hint="@string/code_types"
+            app:layout_constraintStart_toEndOf="@id/channel_count_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBaseline_toBaselineOf="@id/channel_count_layout">
+
+            <AutoCompleteTextView
+                android:id="@+id/channel_code_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:lines="1"
+                android:editable="false" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/generate_channels_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/decode_channels"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/channel_count_layout" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/channel_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="true"
+            app:layout_constraintTop_toBottomOf="@id/generate_channels_btn"
+            tools:itemCount="4"
+            tools:listitem="@layout/item_channel" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

@@ -3,6 +3,7 @@ package alektas.telecomapp.di
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.ui.chart.ChartViewModel
 import alektas.telecomapp.ui.datasource.DataSourceViewModel
+import alektas.telecomapp.ui.decoder.DecoderViewModel
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorViewModel
 import alektas.telecomapp.ui.filters.FirFilterViewModel
 import dagger.Component
@@ -16,4 +17,5 @@ interface AppComponent {
     fun inject(vm: ChartViewModel)
     fun inject(vm: QpskDemodulatorViewModel)
     fun inject(vm: FirFilterViewModel)
+    fun inject(vm: DecoderViewModel)
 }

@@ -29,4 +29,9 @@ interface Repository {
 
     fun setDemodulatedSignal(signal: BinarySignal)
     fun observeDemodulatedSignal(): Observable<BinarySignal>
+
+    fun addDecodedChannel(channel: ChannelData)
+    fun removeDecodedChannel(channel: ChannelData)
+    fun setDecodedChannels(channels: List<ChannelData>)
+    fun observeDecodedChannels(): Observable<List<ChannelData>>
 }

@@ -64,7 +64,7 @@ class ChartViewModel : ViewModel() {
 //            .build()
 //
 //        val demodConfig = DemodulatorConfig().apply { inputSignal = channel.ether }
-//        system.setDemodulatorConfig(demodConfig)
+//        storage.setDemodulatorConfig(demodConfig)
 //
 //        val receivedGroupSignal = QpskDemodulator(DemodulatorConfig()).demodulate(channel.ether) as BinarySignal
 //        val receivedGroupConstellation = QpskDemodulator(DemodulatorConfig()).getConstellation(channel.ether)
