@@ -28,4 +28,7 @@
     <string name="code_types">Тип кодов</string>
     <string name="frame_length">Длина фрейма</string>
     <string name="channel_delete_button_descr">Channel delete button</string>
+    <string name="input_data">Входные данные</string>
+    <string name="channel_code">Код канала</string>
+    <string name="decode_channels">Декодировать каналы</string>
 </resources>

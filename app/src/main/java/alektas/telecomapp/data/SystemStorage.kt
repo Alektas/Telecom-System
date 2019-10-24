@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BaseSignal
+import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
@@ -14,9 +15,12 @@ import java.util.concurrent.TimeUnit
 class SystemStorage : Repository {
     private var demodulatorConfig: DemodulatorConfig = DemodulatorConfig()
     private var channelList = mutableListOf<ChannelData>()
+    private var decodedChannelList = mutableListOf<ChannelData>()
     private val channelsSource: BehaviorSubject<List<ChannelData>> = BehaviorSubject.create()
     private val channelsSignalSource: BehaviorSubject<Signal> = BehaviorSubject.create()
     private val noiseSource: BehaviorSubject<Signal> = BehaviorSubject.create()
+    private val demodulatedSignalSource: BehaviorSubject<BinarySignal> = BehaviorSubject.create()
+    private val decodedChannelsSource: BehaviorSubject<List<ChannelData>> = BehaviorSubject.create()
     private val etherSource = Observable.combineLatest(
         channelsSignalSource.startWith(BaseSignal()),
         noiseSource.startWith(BaseSignal()),
@@ -24,10 +28,13 @@ class SystemStorage : Repository {
             signal + noise
         })
         .debounce(500L, TimeUnit.MILLISECONDS)
-        .switchMap { signal -> Observable.create<Signal> {
-            demodulatorConfig.inputSignal = signal
-            demodulatorConfigSource.onNext(demodulatorConfig)
-            it.onNext(signal) } }
+        .switchMap { signal ->
+            Observable.create<Signal> {
+                demodulatorConfig.inputSignal = signal
+                demodulatorConfigSource.onNext(demodulatorConfig)
+                it.onNext(signal)
+            }
+        }
     private val demodulatorConfigSource: BehaviorSubject<DemodulatorConfig> =
         BehaviorSubject.create()
     private var filterConfig: FilterConfig = FilterConfig()
@@ -92,5 +99,31 @@ class SystemStorage : Repository {
 
     override fun observeEther(): Observable<Signal> {
         return etherSource
+    }
+
+    override fun setDemodulatedSignal(signal: BinarySignal) {
+        demodulatedSignalSource.onNext(signal)
+    }
+
+    override fun observeDemodulatedSignal(): Observable<BinarySignal> {
+        return demodulatedSignalSource
+    }
+
+    override fun addDecodedChannel(channel: ChannelData) {
+        decodedChannelList.add(channel)
+        decodedChannelsSource.onNext(decodedChannelList)
+    }
+
+    override fun removeDecodedChannel(channel: ChannelData) {
+        if (decodedChannelList.remove(channel)) decodedChannelsSource.onNext(decodedChannelList)
+    }
+
+    override fun setDecodedChannels(channels: List<ChannelData>) {
+        decodedChannelList = channels.toMutableList()
+        decodedChannelsSource.onNext(decodedChannelList)
+    }
+
+    override fun observeDecodedChannels(): Observable<List<ChannelData>> {
+        return decodedChannelsSource
     }
 }

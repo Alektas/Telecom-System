@@ -4,6 +4,7 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
+import alektas.telecomapp.domain.entities.signals.BinarySignal
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -13,7 +14,7 @@ import io.reactivex.observers.DisposableObserver
 import javax.inject.Inject
 
 class QpskDemodulatorViewModel : ViewModel() {
-    @Inject lateinit var system: Repository
+    @Inject lateinit var storage: Repository
     private val disposable: Disposable
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val iSignalData = MutableLiveData<Array<DataPoint>>()
@@ -25,9 +26,9 @@ class QpskDemodulatorViewModel : ViewModel() {
 
     init {
         App.component.inject(this)
-        settingCharts(system.getDemodulatorConfig())
+        settingCharts(storage.getDemodulatorConfig())
 
-        disposable = system.observeDemodulatorConfig()
+        disposable = storage.observeDemodulatorConfig()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
                 override fun onComplete() {
@@ -49,8 +50,11 @@ class QpskDemodulatorViewModel : ViewModel() {
                 .map { DataPoint(it.key, it.value) }.toTypedArray()
 
             val demodulator = QpskDemodulator(config)
-            outputSignalData.value = demodulator.demodulate(signal).getPoints()
+            val demodulatedSignal = demodulator.demodulate(signal)
+            outputSignalData.value = demodulatedSignal.getPoints()
                 .map { DataPoint(it.key, it.value) }.toTypedArray()
+
+            storage.setDemodulatedSignal(demodulatedSignal as BinarySignal)
 
             constellationData.value = demodulator.getConstellation(signal)
                 .map { Pair(it.first.toFloat(), it.second.toFloat()) }

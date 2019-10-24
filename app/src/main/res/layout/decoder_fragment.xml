@@ -14,41 +14,23 @@
         tools:context=".ui.datasource.DataSourceFragment">
 
         <TextView
-            android:id="@+id/ether_label"
+            android:id="@+id/input_label"
             style="@style/TextAppearance.MaterialComponents.Headline6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_title"
-            android:text="@string/ether"
+            android:text="@string/input_data"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/ether_snr_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/SNR"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ether_label">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/ether_snr"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
-
         <com.jjoe64.graphview.GraphView
-            android:id="@+id/ether_chart"
+            android:id="@+id/input_chart"
             android:layout_width="match_parent"
             android:layout_height="@dimen/height_graph_signal"
             android:layout_marginTop="16dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ether_snr_layout" />
+            app:layout_constraintTop_toBottomOf="@id/input_label" />
 
         <View
             android:id="@+id/divider1"
@@ -56,7 +38,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
             android:background="?android:attr/listDivider"
-            app:layout_constraintTop_toBottomOf="@id/ether_chart" />
+            app:layout_constraintTop_toBottomOf="@id/input_chart" />
 
         <TextView
             android:id="@+id/channels_label"
@@ -70,14 +52,48 @@
             app:layout_constraintTop_toBottomOf="@id/divider1" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/channel_code_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/channel_code"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/add_channel_btn"
+            app:layout_constraintTop_toBottomOf="@id/channels_label">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/channel_code"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:ems="10"
+                android:digits="01"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <ImageButton
+            android:id="@+id/add_channel_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintTop_toTopOf="@id/channel_code_layout"
+            app:layout_constraintBottom_toBottomOf="@id/channel_code_layout"
+            app:layout_constraintStart_toEndOf="@id/channel_code_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:tint="@color/design_default_color_on_primary"
+            android:backgroundTint="@color/colorPrimary"
+            android:src="@drawable/ic_add_black_24dp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/channel_count_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:hint="@string/channel_count"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/channel_code_type_layout"
-            app:layout_constraintTop_toBottomOf="@id/channels_label">
+            app:layout_constraintTop_toBottomOf="@id/channel_code_layout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/channel_count"
@@ -107,33 +123,14 @@
                 android:editable="false" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/frame_length_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/frame_length"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/channel_count_layout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/frame_length"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:imeOptions="actionDone"
-                android:ems="10"
-                android:inputType="number" />
-        </com.google.android.material.textfield.TextInputLayout>
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/generate_channels_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/generate_channels"
+            android:text="@string/decode_channels"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/frame_length_layout" />
+            app:layout_constraintTop_toBottomOf="@id/channel_count_layout" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/channel_list"

@@ -23,12 +23,6 @@ class DataSourceViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val channels = MutableLiveData<List<ChannelData>>()
     val ether = MutableLiveData<Array<DataPoint>>()
-    val codeTypes = MutableLiveData<Map<Int, String>>(
-        mapOf(
-            CodeGenerator.WALSH to "Уолша",
-            CodeGenerator.RANDOM to "Случайные"
-        )
-    )
 
     init {
         App.component.inject(this)
@@ -67,10 +61,6 @@ class DataSourceViewModel : ViewModel() {
         codeType: Int
     ) {
         processor.generateChannels(count, frameLength, codeType)
-    }
-
-    fun getCodeTypeId(codeTypeName: String): Int {
-        return codeTypes.value?.filterValues { it == codeTypeName }?.keys?.first() ?: 0
     }
 
     fun removeChannel(channel: ChannelData) {

@@ -1,29 +1,19 @@
 package alektas.telecomapp.domain.entities
 
 data class ChannelData(
-    val id: Int,
-    val name: String,
-    val data: BooleanArray,
-    val code: BooleanArray
+    val name: String = "${channelsCount + 1}",
+    var data: BooleanArray = booleanArrayOf(),
+    val code: BooleanArray = booleanArrayOf()
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    private val id: Int
 
-        other as ChannelData
-
-        if (!name.contentEquals(other.name)) return false
-        if (!data.contentEquals(other.data)) return false
-        if (!code.contentEquals(other.code)) return false
-
-        return true
+    init {
+        channelsCount++
+        id = channelsCount
     }
 
-    override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + data.contentHashCode()
-        result = 31 * result + code.contentHashCode()
-        return result
+    companion object {
+        private var channelsCount: Int = 0
     }
 
     fun getDataString(): String {
@@ -32,6 +22,26 @@ data class ChannelData(
 
     fun getCodeString(): String {
         return code.joinToString { if (it) "1" else "0" }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ChannelData) return false
+
+        if (name != other.name) return false
+        if (!data.contentEquals(other.data)) return false
+        if (!code.contentEquals(other.code)) return false
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + data.contentHashCode()
+        result = 31 * result + code.contentHashCode()
+        result = 31 * result + id
+        return result
     }
 
 }

@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.item_data_source_channel.view.*
+import kotlinx.android.synthetic.main.item_channel.view.*
 
-class ChannelAdapter(val viewModel: DataSourceViewModel) :
+class ChannelAdapter(private val controller: ChannelController) :
     RecyclerView.Adapter<ChannelAdapter.ChannelViewHolder>() {
     var channels = listOf<ChannelData>()
         set(value) {
@@ -20,7 +20,7 @@ class ChannelAdapter(val viewModel: DataSourceViewModel) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChannelViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_data_source_channel, parent, false)
+            .inflate(R.layout.item_channel, parent, false)
         return ChannelViewHolder(view)
     }
 
@@ -32,7 +32,7 @@ class ChannelAdapter(val viewModel: DataSourceViewModel) :
         val channel = channels[position]
         holder.bind(channel)
         holder.itemView.findViewById<ImageButton>(R.id.channel_del_btn).setOnClickListener {
-            viewModel.removeChannel(channel)
+            controller.removeChannel(channel)
         }
     }
 

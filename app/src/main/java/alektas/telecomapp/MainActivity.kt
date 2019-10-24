@@ -2,6 +2,7 @@ package alektas.telecomapp
 
 import alektas.telecomapp.ui.chart.ChartFragment
 import alektas.telecomapp.ui.datasource.DataSourceFragment
+import alektas.telecomapp.ui.decoder.DecoderFragment
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorFragment
 import alektas.telecomapp.ui.filters.FirFilterFragment
 import androidx.appcompat.app.AppCompatActivity
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.to_data_source_btn -> DataSourceFragment.newInstance()
                     R.id.to_demodulation_btn -> QpskDemodulatorFragment.newInstance()
                     R.id.to_qpsk_demod_filter_btn -> FirFilterFragment.newInstance()
+                    R.id.to_decoding_btn -> DecoderFragment.newInstance()
                     else -> MainFragment.newInstance()
                 }
             )

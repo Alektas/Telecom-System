@@ -7,6 +7,14 @@ class CodeGenerator {
     companion object {
         const val RANDOM = 0
         const val WALSH = 1
+        val codeNames = mapOf(
+            RANDOM to "Случайные",
+            WALSH to "Уолша"
+        )
+
+        fun getCodeTypeId(codeTypeName: String): Int {
+            return codeNames.filterValues { it == codeTypeName }.keys.first()
+        }
     }
 
     fun generateRandomCodes(count: Int, length: Int): Array<BooleanArray> {
@@ -55,11 +63,14 @@ class CodeGenerator {
         return generateHadamardMatrix(codeCount, hadamardMatrixCore)
     }
 
-    private fun generateHadamardMatrix(codeCount: Int, core: Array<BooleanArray>): Array<BooleanArray> {
+    private fun generateHadamardMatrix(
+        codeCount: Int,
+        core: Array<BooleanArray>
+    ): Array<BooleanArray> {
         if (core.size >= codeCount) return core
 
         val size = 2 * core.size
-        val matrix =  Array(size) { y ->
+        val matrix = Array(size) { y ->
             val raw = BooleanArray(size)
             for (x in 0 until size) {
                 raw[x] =
