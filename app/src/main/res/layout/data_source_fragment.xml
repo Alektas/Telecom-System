@@ -142,7 +142,7 @@
             android:nestedScrollingEnabled="true"
             app:layout_constraintTop_toBottomOf="@id/generate_channels_btn"
             tools:itemCount="4"
-            tools:listitem="@layout/item_data_source_channel" />
+            tools:listitem="@layout/item_channel" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

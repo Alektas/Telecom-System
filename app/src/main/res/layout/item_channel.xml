@@ -18,31 +18,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@id/channel_name_label"
-        android:layout_toEndOf="@id/channel_name_label"
-        android:layout_toStartOf="@id/channel_del_btn"/>
-
-    <TextView
-        android:id="@+id/channel_data_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_below="@id/channel_name"
-        android:text="@string/data" />
-
-    <TextView
-        android:id="@+id/channel_data"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@id/channel_data_label"
-        android:layout_toEndOf="@id/channel_data_label" />
+        android:layout_toStartOf="@id/channel_del_btn"
+        android:layout_toEndOf="@id/channel_name_label" />
 
     <TextView
         android:id="@+id/channel_code_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/channel_name"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_below="@id/channel_data"
         android:text="@string/code" />
 
     <TextView
@@ -52,15 +37,30 @@
         android:layout_alignBaseline="@id/channel_code_label"
         android:layout_toEndOf="@id/channel_code_label" />
 
+    <TextView
+        android:id="@+id/channel_data_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/channel_code"
+        android:layout_marginEnd="8dp"
+        android:text="@string/data" />
+
+    <TextView
+        android:id="@+id/channel_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/channel_data_label"
+        android:layout_toEndOf="@id/channel_data_label" />
+
     <ImageButton
         android:id="@+id/channel_del_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:contentDescription="@string/channel_delete_button_descr"
-        android:tint="@color/colorAccent"
+        android:layout_alignParentEnd="true"
         android:background="@android:color/transparent"
-        android:src="@drawable/ic_cancel_black_24dp"/>
+        android:contentDescription="@string/channel_delete_button_descr"
+        android:src="@drawable/ic_cancel_black_24dp"
+        android:tint="@color/colorAccent" />
 
 </RelativeLayout>

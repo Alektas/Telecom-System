@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BaseSignal
+import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
@@ -17,6 +18,7 @@ class SystemStorage : Repository {
     private val channelsSource: BehaviorSubject<List<ChannelData>> = BehaviorSubject.create()
     private val channelsSignalSource: BehaviorSubject<Signal> = BehaviorSubject.create()
     private val noiseSource: BehaviorSubject<Signal> = BehaviorSubject.create()
+    private val demodulatedSignalSource: BehaviorSubject<BinarySignal> = BehaviorSubject.create()
     private val etherSource = Observable.combineLatest(
         channelsSignalSource.startWith(BaseSignal()),
         noiseSource.startWith(BaseSignal()),
@@ -92,5 +94,13 @@ class SystemStorage : Repository {
 
     override fun observeEther(): Observable<Signal> {
         return etherSource
+    }
+
+    override fun setDemodulatedSignal(signal: BinarySignal) {
+        demodulatedSignalSource.onNext(signal)
+    }
+
+    override fun observeDemodulatedSignal(): Observable<BinarySignal> {
+        return demodulatedSignalSource
     }
 }
