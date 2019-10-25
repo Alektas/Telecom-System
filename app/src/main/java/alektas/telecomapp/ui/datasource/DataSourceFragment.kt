@@ -112,7 +112,7 @@ class DataSourceFragment : Fragment(), ChannelController {
             val msg = "Количество каналов должно быть положительным целым числом"
             Log.e(TAG, msg, e)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            0
+            return
         }
         val frameLength = try {
             val l = frame_length.text.toString().toInt()
@@ -122,7 +122,7 @@ class DataSourceFragment : Fragment(), ChannelController {
             val msg = "Длина фрейма должна быть положительным целым числом"
             Log.e(TAG, msg, e)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            0
+            return
         }
         val codeType = selectedCodeType?.let { CodeGenerator.getCodeTypeId(it) } ?: 0
         viewModel.generateChannels(channelCount, frameLength, codeType)

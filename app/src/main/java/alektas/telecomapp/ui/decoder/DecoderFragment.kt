@@ -119,7 +119,7 @@ class DecoderFragment : Fragment(), ChannelController {
                 val msg = "Количество каналов должно быть положительным целым числом"
                 Log.e(TAG, msg, e)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                0
+                return
             }
             val codeType = selectedCodeType?.let { CodeGenerator.getCodeTypeId(it) } ?: 0
             viewModel.decodeChannels(channelCount, codeType)
