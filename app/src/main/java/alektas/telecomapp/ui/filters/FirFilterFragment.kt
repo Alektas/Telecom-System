@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.Window
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
@@ -66,11 +67,8 @@ class FirFilterFragment : Fragment() {
         viewModel.initConfigData.observe(viewLifecycleOwner, Observer { data ->
             filter_order_input.setText(data.order.toString())
             filter_cutoff_freq_input.setText(data.bandwidth.toString())
-            val windows = viewModel.windowsData.value
-            if (windows != null) {
-                val winName: String = windows[data.windowType] ?: "${data.windowType}"
-                filter_window_input.setText(winName, false)
-            }
+            val winName: String = Window.windowNames[data.windowType] ?: "${data.windowType}"
+            filter_window_input.setText(winName, false)
         })
 
         viewModel.impulseResponseData.observe(viewLifecycleOwner, Observer { data ->
@@ -80,21 +78,16 @@ class FirFilterFragment : Fragment() {
     }
 
     private fun setupWindowsDropdown(viewModel: FirFilterViewModel) {
-        val windows = mutableListOf<Pair<Int, String>>()
+        val adapter = ArrayAdapter(
+            requireContext(),
+            R.layout.support_simple_spinner_dropdown_item,
+            Window.windowNames.values.toTypedArray()
+        )
+        filter_window_input.setAdapter<ArrayAdapter<String>>(adapter)
 
-        viewModel.windowsData.observe(viewLifecycleOwner, Observer { w ->
-            windows.clear()
-            windows.addAll(w.map { Pair(it.key, it.value) })
-            val adapter = ArrayAdapter(
-                requireContext(),
-                R.layout.support_simple_spinner_dropdown_item,
-                w.values.toTypedArray()
-            )
-            filter_window_input.setAdapter<ArrayAdapter<String>>(adapter)
-        })
-
-        filter_window_input.setOnItemClickListener { _, _, position, _ ->
-            viewModel.onWindowChanged(windows[position].first)
+        filter_window_input.setOnItemClickListener { parent, _, position, _ ->
+            val windowName = parent.getItemAtPosition(position)
+            if (windowName is String) viewModel.onWindowChanged(windowName)
         }
     }
 

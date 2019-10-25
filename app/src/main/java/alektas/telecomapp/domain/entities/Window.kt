@@ -10,7 +10,8 @@ class Window(val type: Int) {
 
     fun applyTo(signal: Signal): Signal {
         val points = signal.getPoints()
-        val values = calculate(points.values.toList(),
+        val values = calculate(
+            points.values.toList(),
             when (type) {
                 GAUSSE -> ::gausse
                 HAMMING -> ::hamming
@@ -51,6 +52,18 @@ class Window(val type: Int) {
         const val HAMMING = 1
         const val HANN = 2
         const val BLACKMANN = 3
+        const val SQUARE = 999
+        val windowNames = mapOf(
+            GAUSSE to "Гаусс",
+            HANN to "Ханн",
+            HAMMING to "Хамминг",
+            BLACKMANN to "Блэкмэн",
+            SQUARE to "Равномерная"
+        )
+
+        fun getIdBy(windowName: String): Int {
+            return windowNames.filterValues { it == windowName }.keys.first()
+        }
 
         fun square(n: Int, frameSize: Int): Double {
             return 1.0

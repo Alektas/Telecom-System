@@ -20,15 +20,6 @@ class FirFilterViewModel : ViewModel() {
     var config: FilterConfig
     var initConfigData = MutableLiveData<FilterConfig>()
     var impulseResponseData = MutableLiveData<Array<DataPoint>>()
-    val windowsData = MutableLiveData<Map<Int, String>>(
-        mapOf(
-            Window.GAUSSE to "Гаусс",
-            Window.HANN to "Ханн",
-            Window.HAMMING to "Хамминг",
-            Window.BLACKMANN to "Блэкмэн",
-            999 to "Равномерная"
-        )
-    )
     private val disposable: Disposable
 
     init {
@@ -70,7 +61,9 @@ class FirFilterViewModel : ViewModel() {
         }
     }
 
-    fun onWindowChanged(windowType: Int) {
+    fun onWindowChanged(windowName: String) {
+        val windowType = Window.getIdBy(windowName)
+
         if (windowType != config.windowType) {
             config.windowType = windowType
             system.setDemodulatorFilterConfig(config)
