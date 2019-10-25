@@ -3,6 +3,9 @@ package alektas.telecomapp.domain.entities.demodulators
 import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.domain.entities.Simulator
+import alektas.telecomapp.domain.entities.filters.DummyFilter
+import alektas.telecomapp.domain.entities.filters.Filter
+import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.filters.FirFilter
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
@@ -13,7 +16,10 @@ import kotlin.math.abs
 
 class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
     private val isBit: (Double) -> Boolean = { abs(it) > QpskContract.SIGNAL_THRESHOLD }
-    private var filter = FirFilter(config.filterConfig)
+    private var filter: Filter = when (config.filterConfig.type) {
+        FilterConfig.FIR -> FirFilter(config.filterConfig)
+        else -> DummyFilter()
+    }
     var sigI: Signal = BaseSignal()
     var filteredSigI: Signal = BaseSignal()
     var sigQ: Signal = BaseSignal()
