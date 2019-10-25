@@ -18,6 +18,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
     var filteredSigI: Signal = BaseSignal()
     var sigQ: Signal = BaseSignal()
     var filteredSigQ: Signal = BaseSignal()
+    var constellation: List<Pair<Double, Double>> = listOf()
 
     /**
      * Демодуляция QPSK сигнала.
@@ -33,6 +34,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
         sigQ = signal * sin
         filteredSigI = filter.filter(sigI)
         filteredSigQ = filter.filter(sigQ)
+        constellation = getConstellation(sigI, sigQ)
 
         val dataI = extractBinaryData(
             filteredSigI,
@@ -102,6 +104,33 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
         d.putAll(data)
 
         return BaseSignal(d)
+    }
+
+    /**
+     * Возвращает "созвездие" QPSK сигнала <code>signal</code> в виде массива попарно:
+     * первое значение - I-компонента сигнала, второе - Q-компонента.
+     */
+    fun getConstellation(sigI: Signal, sigQ: Signal): List<Pair<Double, Double>> {
+        val dataI = extractDigitalData(
+            sigI,
+            0.0,
+            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            Simulator.samplesFor(QpskContract.SYMBOL_TIME)
+        )
+
+        val dataQ = extractDigitalData(
+            sigQ,
+            0.0,
+            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            Simulator.samplesFor(QpskContract.SYMBOL_TIME)
+        )
+
+        val data = mutableListOf<Pair<Double, Double>>()
+        dataI.forEachIndexed { i, value ->
+            data.add(Pair(value, dataQ[i]))
+        }
+
+        return data
     }
 
     /**
