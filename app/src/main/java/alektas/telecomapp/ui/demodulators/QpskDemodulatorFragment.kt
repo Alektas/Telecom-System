@@ -32,33 +32,33 @@ class QpskDemodulatorFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(QpskDemodulatorViewModel::class.java)
 
-        viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
-            input_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.iSignalData.observe(viewLifecycleOwner, Observer {
-            i_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.filteredISignalData.observe(viewLifecycleOwner, Observer {
-            filtered_i_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.qSignalData.observe(viewLifecycleOwner, Observer {
-            q_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.filteredQSignalData.observe(viewLifecycleOwner, Observer {
-            filtered_q_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
-            output_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
-        })
-
-        viewModel.constellationData.observe(viewLifecycleOwner, Observer {
-            constellation_chart.setData(it)
-        })
+//        viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
+//            input_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+//        })
+//
+//        viewModel.iSignalData.observe(viewLifecycleOwner, Observer {
+//            i_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+//        })
+//
+//        viewModel.filteredISignalData.observe(viewLifecycleOwner, Observer {
+//            filtered_i_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+//        })
+//
+//        viewModel.qSignalData.observe(viewLifecycleOwner, Observer {
+//            q_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+//        })
+//
+//        viewModel.filteredQSignalData.observe(viewLifecycleOwner, Observer {
+//            filtered_q_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+//        })
+//
+//        viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
+//            output_signal_chart.addSeries(LineGraphSeries<DataPoint>(it))
+//        })
+//
+//        viewModel.constellationData.observe(viewLifecycleOwner, Observer {
+//            constellation_chart.setData(it)
+//        })
     }
 
 }

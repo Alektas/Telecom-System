@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.filters
+package alektas.telecomapp.ui.demodulators.filter
 
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -9,7 +9,9 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Window
+import alektas.telecomapp.utils.SystemUtils
 import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
@@ -88,6 +90,12 @@ class FirFilterFragment : Fragment() {
         filter_window_input.setOnItemClickListener { parent, _, position, _ ->
             val windowName = parent.getItemAtPosition(position)
             if (windowName is String) viewModel.onWindowChanged(windowName)
+        }
+
+        filter_window_input.setOnTouchListener { v, _ ->
+            SystemUtils.hideKeyboard(this)
+            (v as AutoCompleteTextView).showDropDown()
+            false
         }
     }
 

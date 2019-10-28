@@ -45,6 +45,10 @@ open class BaseSignal() : Signal {
         return data[time] ?: 0.toDouble()
     }
 
+    override fun isEmpty(): Boolean {
+        return data.isEmpty()
+    }
+
     override fun plus(other: Signal): Signal {
         other as BaseSignal
         val times = (getTimes() + other.getTimes()).sorted()

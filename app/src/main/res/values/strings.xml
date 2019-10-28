@@ -7,7 +7,7 @@
     <string name="weight_func">Весовая функция</string>
     <string name="filter_cutoff_freq">Частота среза</string>
     <string name="impulse_response">Импульсная характеристика</string>
-    <string name="filter_setting">Настройка фильтра</string>
+    <string name="filter">Фильтр</string>
     <string name="qpsk_demodulator">Qpsk демодулятор</string>
     <string name="i_signal">I-составляющая до фильтрации</string>
     <string name="q_signal">Q-составляющая до фильтрации</string>
@@ -31,4 +31,9 @@
     <string name="input_data">Входные данные</string>
     <string name="channel_code">Код канала</string>
     <string name="decode_channels">Декодировать каналы</string>
+    <string name="generator">Генератор</string>
+    <string name="demodulation">Демодуляция</string>
+    <string name="input_spectrum">Спектр сигнала</string>
+    <string name="processing">Обработка</string>
+    <string name="frequency_in_megaherz">Частота, МГц</string>
 </resources>

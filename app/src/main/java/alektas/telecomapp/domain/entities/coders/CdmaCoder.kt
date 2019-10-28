@@ -28,7 +28,7 @@ class CdmaCoder : Coder<BooleanArray> {
     }
 
     private fun average(data: List<Boolean>): Boolean {
-        return data.count { it }.let { it > data.size - it }
+        return data.count { it }.let { it >= data.size - it }
     }
 
 }

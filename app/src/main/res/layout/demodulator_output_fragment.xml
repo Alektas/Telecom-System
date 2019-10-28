@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.demodulators.output.DemodulatorOutputFragment">
+
+    <TextView
+        android:id="@+id/output_signal_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_graph_label"
+        android:layout_marginTop="16dp"
+        android:text="@string/output_signal"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/output_signal_chart"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_graph_signal"
+        app:layout_constraintTop_toBottomOf="@id/output_signal_label" />
+
+    <TextView
+        android:id="@+id/spectrum_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_graph_label"
+        android:layout_marginTop="16dp"
+        android:text="@string/input_spectrum"
+        app:layout_constraintTop_toBottomOf="@id/output_signal_chart" />
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/spectrum_chart"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_graph_signal"
+        app:layout_constraintTop_toBottomOf="@id/spectrum_label" />
+
+    <TextView
+        android:id="@+id/output_constellation_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_graph_label"
+        android:layout_marginTop="16dp"
+        android:text="@string/output_constellation"
+        app:layout_constraintTop_toBottomOf="@id/spectrum_chart" />
+
+    <alektas.telecomapp.ui.chart.polar.PolarGraphView
+        android:id="@+id/constellation_chart"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/size_graph_constellation"
+        app:label_x="I"
+        app:label_y="Q"
+        app:labels_text_size="@dimen/textsize_graph_view_label"
+        app:layout_constraintTop_toBottomOf="@id/output_constellation_label" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

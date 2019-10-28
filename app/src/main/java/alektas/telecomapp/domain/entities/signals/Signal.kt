@@ -52,6 +52,11 @@ interface Signal {
      */
     fun getValueAt(time: Double): Double
 
+    /**
+     * Проверяет, есть ли сигнал
+     */
+    fun isEmpty(): Boolean
+
     operator fun plus(other: Signal): Signal
 
     operator fun minus(other: Signal): Signal

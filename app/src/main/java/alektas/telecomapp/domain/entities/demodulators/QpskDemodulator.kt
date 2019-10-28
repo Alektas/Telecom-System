@@ -1,6 +1,5 @@
 package alektas.telecomapp.domain.entities.demodulators
 
-import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.domain.entities.filters.DummyFilter
@@ -11,15 +10,16 @@ import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
-import java.util.*
 import kotlin.math.abs
 
-class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
+class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
     private val isBit: (Double) -> Boolean = { abs(it) > QpskContract.SIGNAL_THRESHOLD }
-    private var filter: Filter = when (config.filterConfig.type) {
+    private val filter: Filter = when (config.filterConfig.type) {
         FilterConfig.FIR -> FirFilter(config.filterConfig)
         else -> DummyFilter()
     }
+    private val dataLength = config.dataLength
+    private val carrierFrequency = config.carrierFrequency
     var sigI: Signal = BaseSignal()
     var filteredSigI: Signal = BaseSignal()
     var sigQ: Signal = BaseSignal()
@@ -32,10 +32,12 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
      *
      * @return двоичный биполярный сигнал из -1 и 1
      */
-    override fun demodulate(signal: Signal): Signal {
+    override fun demodulate(signal: Signal): BinarySignal {
+        if (signal.isEmpty()) return BinarySignal(booleanArrayOf(), QpskContract.DATA_BIT_TIME)
+
         val gen = SignalGenerator()
-        val cos = gen.cos(frequency = QpskContract.CARRIER_FREQUENCY)
-        val sin = gen.sin(frequency = QpskContract.CARRIER_FREQUENCY)
+        val cos = gen.cos(frequency = carrierFrequency)
+        val sin = gen.sin(frequency = carrierFrequency)
         sigI = signal * cos
         sigQ = signal * sin
         filteredSigI = filter.filter(sigI)
@@ -45,7 +47,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
         val dataI = extractBinaryData(
             filteredSigI,
             0.0,
-            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            QpskContract.SYMBOL_TIME * dataLength / 2.0,
             Simulator.samplesFor(QpskContract.SYMBOL_TIME),
             isBit
         ).first
@@ -53,7 +55,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
         val dataQ = extractBinaryData(
             filteredSigQ,
             0.0,
-            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            QpskContract.SYMBOL_TIME * dataLength / 2.0,
             Simulator.samplesFor(QpskContract.SYMBOL_TIME),
             isBit
         ).first
@@ -73,20 +75,20 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
      */
     fun getConstellation(signal: Signal): List<Pair<Double, Double>> {
         val gen = SignalGenerator()
-        val cos = gen.cos(frequency = QpskContract.CARRIER_FREQUENCY)
-        val sin = gen.sin(frequency = QpskContract.CARRIER_FREQUENCY)
+        val cos = gen.cos(frequency = carrierFrequency)
+        val sin = gen.sin(frequency = carrierFrequency)
 
         val dataI = extractDigitalData(
             signal * cos,
             0.0,
-            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            QpskContract.SYMBOL_TIME * dataLength / 2.0,
             Simulator.samplesFor(QpskContract.SYMBOL_TIME)
         )
 
         val dataQ = extractDigitalData(
             signal * sin,
             0.0,
-            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            QpskContract.SYMBOL_TIME * dataLength / 2.0,
             Simulator.samplesFor(QpskContract.SYMBOL_TIME)
         )
 
@@ -98,20 +100,6 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
         return data
     }
 
-    fun averageDigitalSignal(signal: Signal, interval: Int): Signal {
-        val averageValues = mutableListOf<Double>()
-        signal.getValues().toList()
-            .windowed(interval, interval, false) { it.average() }
-            .forEach { value -> repeat(interval) { averageValues.add(value) } }
-
-        val data = signal.getPoints().keys.zip(averageValues)
-
-        val d = TreeMap<Double, Double>()
-        d.putAll(data)
-
-        return BaseSignal(d)
-    }
-
     /**
      * Возвращает "созвездие" QPSK сигнала <code>signal</code> в виде массива попарно:
      * первое значение - I-компонента сигнала, второе - Q-компонента.
@@ -120,14 +108,14 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<Signal> {
         val dataI = extractDigitalData(
             sigI,
             0.0,
-            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            QpskContract.SYMBOL_TIME * dataLength / 2.0,
             Simulator.samplesFor(QpskContract.SYMBOL_TIME)
         )
 
         val dataQ = extractDigitalData(
             sigQ,
             0.0,
-            QpskContract.SYMBOL_TIME * CdmaContract.SPREAD_DATA_LENGTH / 2.0,
+            QpskContract.SYMBOL_TIME * dataLength / 2.0,
             Simulator.samplesFor(QpskContract.SYMBOL_TIME)
         )
 

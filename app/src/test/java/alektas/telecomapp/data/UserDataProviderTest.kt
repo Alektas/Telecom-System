@@ -1,6 +1,5 @@
-package alektas.telecomapp.data.dummy
+package alektas.telecomapp.data
 
-import alektas.telecomapp.data.UserDataProvider
 import org.junit.Assert.*
 import org.junit.Test
 

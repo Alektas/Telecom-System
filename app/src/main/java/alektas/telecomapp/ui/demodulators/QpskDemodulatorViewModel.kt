@@ -5,17 +5,19 @@ import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import alektas.telecomapp.domain.entities.signals.BinarySignal
+import alektas.telecomapp.domain.entities.signals.Signal
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.observers.DisposableObserver
 import javax.inject.Inject
 
 class QpskDemodulatorViewModel : ViewModel() {
     @Inject lateinit var storage: Repository
-    private val disposable: Disposable
+    private val disposable = CompositeDisposable()
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val iSignalData = MutableLiveData<Array<DataPoint>>()
     val filteredISignalData = MutableLiveData<Array<DataPoint>>()
@@ -26,22 +28,33 @@ class QpskDemodulatorViewModel : ViewModel() {
 
     init {
         App.component.inject(this)
-        settingCharts(storage.getDemodulatorConfig())
+//        settingCharts(storage.getDemodulatorConfig())
 
-        disposable = storage.observeDemodulatorConfig()
+        disposable.addAll(storage.observeDemodulatorConfig()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
-                override fun onComplete() {
-                }
-
                 override fun onNext(t: DemodulatorConfig) {
-                    settingCharts(t)
+                    inputSignalData.value = t.inputSignal.getPoints()
+                        .map { DataPoint(it.key, it.value) }.toTypedArray()
                 }
 
-                override fun onError(e: Throwable) {
-                }
+                override fun onComplete() { }
 
-            })
+                override fun onError(e: Throwable) { }
+            }),
+            storage.observeDemodulatedSignal()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Signal>() {
+                    override fun onNext(t: Signal) {
+                        outputSignalData.value = t.getPoints()
+                            .map { DataPoint(it.key, it.value) }.toTypedArray()
+                    }
+
+                    override fun onComplete() { }
+
+                    override fun onError(e: Throwable) { }
+                })
+        )
     }
 
     private fun settingCharts(config: DemodulatorConfig) {
