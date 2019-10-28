@@ -5,7 +5,11 @@ import alektas.telecomapp.ui.chart.ChartViewModel
 import alektas.telecomapp.ui.datasource.DataSourceViewModel
 import alektas.telecomapp.ui.decoder.DecoderViewModel
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorViewModel
-import alektas.telecomapp.ui.filters.FirFilterViewModel
+import alektas.telecomapp.ui.demodulators.processing.DemodulatorProcessViewModel
+import alektas.telecomapp.ui.demodulators.filter.FirFilterViewModel
+import alektas.telecomapp.ui.demodulators.generator.DemodulatorGeneratorViewModel
+import alektas.telecomapp.ui.demodulators.input.DemodulatorInputViewModel
+import alektas.telecomapp.ui.demodulators.output.DemodulatorOutputViewModel
 import dagger.Component
 import javax.inject.Singleton
 
@@ -16,6 +20,10 @@ interface AppComponent {
     fun inject(vm: DataSourceViewModel)
     fun inject(vm: ChartViewModel)
     fun inject(vm: QpskDemodulatorViewModel)
+    fun inject(vm: DemodulatorInputViewModel)
+    fun inject(vm: DemodulatorGeneratorViewModel)
     fun inject(vm: FirFilterViewModel)
+    fun inject(vm: DemodulatorProcessViewModel)
+    fun inject(vm: DemodulatorOutputViewModel)
     fun inject(vm: DecoderViewModel)
 }

@@ -4,7 +4,11 @@ import alektas.telecomapp.ui.chart.ChartFragment
 import alektas.telecomapp.ui.datasource.DataSourceFragment
 import alektas.telecomapp.ui.decoder.DecoderFragment
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorFragment
-import alektas.telecomapp.ui.filters.FirFilterFragment
+import alektas.telecomapp.ui.demodulators.filter.FirFilterFragment
+import alektas.telecomapp.ui.demodulators.generator.DemodulatorGeneratorFragment
+import alektas.telecomapp.ui.demodulators.input.DemodulatorInputFragment
+import alektas.telecomapp.ui.demodulators.output.DemodulatorOutputFragment
+import alektas.telecomapp.ui.demodulators.processing.DemodulatorProcessFragment
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import alektas.telecomapp.ui.main.MainFragment
@@ -29,7 +33,11 @@ class MainActivity : AppCompatActivity() {
                 when (view.id) {
                     R.id.to_data_source_btn -> DataSourceFragment.newInstance()
                     R.id.to_demodulation_btn -> QpskDemodulatorFragment.newInstance()
-                    R.id.to_qpsk_demod_filter_btn -> FirFilterFragment.newInstance()
+                    R.id.to_demodulator_input_btn -> DemodulatorInputFragment.newInstance()
+                    R.id.to_demodulator_generator_btn -> DemodulatorGeneratorFragment.newInstance()
+                    R.id.to_demodulator_filter_btn -> FirFilterFragment.newInstance()
+                    R.id.to_demodulator_process_btn -> DemodulatorProcessFragment.newInstance()
+                    R.id.to_demodulator_output_btn -> DemodulatorOutputFragment.newInstance()
                     R.id.to_decoding_btn -> DecoderFragment.newInstance()
                     else -> MainFragment.newInstance()
                 }

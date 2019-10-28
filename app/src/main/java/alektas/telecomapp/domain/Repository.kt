@@ -14,22 +14,25 @@ interface Repository {
     fun getDemodulatorFilterConfig(): FilterConfig
     fun observeDemodulatorFilterConfig(): Observable<FilterConfig>
     fun setDemodulatorFilterConfig(config: FilterConfig)
+    fun setDemodulatorFrequency(frequency: Double)
 
     fun setChannels(channels: List<ChannelData>)
     fun removeChannel(channel: ChannelData)
+
     fun observeChannels(): Observable<List<ChannelData>>
-
     fun setChannelsSignal(signal: Signal)
-    fun observeChannelsSignal(): Observable<Signal>
 
+    fun observeChannelsSignal(): Observable<Signal>
     fun setNoise(signal: Signal)
+
     fun observeNoise(): Observable<Signal>
 
     fun observeEther(): Observable<Signal>
-
     fun setDemodulatedSignal(signal: BinarySignal)
     fun observeDemodulatedSignal(): Observable<BinarySignal>
+    fun setDemodulatedSignalConstellation(points: List<Pair<Double, Double>>)
 
+    fun observeDemodulatedSignalConstellation(): Observable<List<Pair<Double, Double>>>
     fun addDecodedChannel(channel: ChannelData)
     fun removeDecodedChannel(channel: ChannelData)
     fun setDecodedChannels(channels: List<ChannelData>)

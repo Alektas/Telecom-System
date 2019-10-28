@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.filters
+package alektas.telecomapp.ui.demodulators.filter
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository

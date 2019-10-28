@@ -5,6 +5,8 @@ import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.coders.CdmaCoder
+import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
+import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
@@ -34,6 +36,18 @@ class SystemProcessor {
                 override fun onError(e: Throwable) {}
             })
 
+        storage.observeDemodulatorConfig()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : DisposableObserver<DemodulatorConfig>() {
+                override fun onNext(c: DemodulatorConfig) {
+                    demodulate(c)
+                }
+
+                override fun onComplete() {}
+
+                override fun onError(e: Throwable) {}
+            })
+
         storage.observeDemodulatedSignal()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : DisposableObserver<BinarySignal>() {
@@ -41,22 +55,22 @@ class SystemProcessor {
                     codedGroupData = t.bits
                 }
 
-                override fun onComplete() { }
+                override fun onComplete() {}
 
-                override fun onError(e: Throwable) { }
+                override fun onError(e: Throwable) {}
             })
     }
 
     fun generateChannels(
-        count: Int = CdmaContract.MAX_CHANNEL_COUNT,
-        frameLength: Int = CdmaContract.DATA_FRAME_LENGTH,
+        count: Int,
+        frameLength: Int,
         codesType: Int = CodeGenerator.WALSH
     ) {
         val channels = mutableListOf<ChannelData>()
         val codeGen = CodeGenerator()
         val codes = when (codesType) {
             CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
-            else -> codeGen.generateRandomCodes(count, CdmaContract.CODE_LENGTH)
+            else -> codeGen.generateRandomCodes(count, count)
         }
 
         for (i in 0 until count) {
@@ -64,6 +78,11 @@ class SystemProcessor {
             val channel = ChannelData("${i + 1}", frameData, codes[i])
             channels.add(channel)
         }
+
+        CdmaContract.DATA_FRAME_LENGTH = frameLength
+        CdmaContract.CODE_LENGTH = codes[0].size
+        CdmaContract.SPREAD_RATIO = codes[0].size
+        CdmaContract.SPREAD_DATA_LENGTH = frameLength * codes[0].size
 
         storage.setChannels(channels)
     }
@@ -91,6 +110,13 @@ class SystemProcessor {
 
     fun setNoise(snr: Double) {
         storage.setNoise(WhiteNoise(snr, QpskContract.SIGNAL_MAGNITUDE))
+    }
+
+    fun demodulate(config: DemodulatorConfig) {
+        val demodulator = QpskDemodulator(config)
+        val demodSignal = demodulator.demodulate(config.inputSignal)
+        storage.setDemodulatedSignal(demodSignal)
+        storage.setDemodulatedSignalConstellation(demodulator.constellation)
     }
 
     fun decodeChannel(code: BooleanArray) {
