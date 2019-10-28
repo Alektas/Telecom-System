@@ -30,6 +30,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
      * Демодуляция QPSK сигнала.
      * В процессе демодуляции в объекте демодулятора сохраняются промежуточные сигналы.
      *
+     * @param signal ФМн-4 (QPSK) сигнал
      * @return двоичный биполярный сигнал из -1 и 1
      */
     override fun demodulate(signal: Signal): BinarySignal {
@@ -72,6 +73,8 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
     /**
      * Возвращает "созвездие" QPSK сигнала <code>signal</code> в виде массива попарно:
      * первое значение - I-компонента сигнала, второе - Q-компонента.
+     *
+     * @param signal ФМн-4 (QPSK) сигнал
      */
     fun getConstellation(signal: Signal): List<Pair<Double, Double>> {
         val gen = SignalGenerator()
@@ -104,7 +107,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
      * Возвращает "созвездие" QPSK сигнала <code>signal</code> в виде массива попарно:
      * первое значение - I-компонента сигнала, второе - Q-компонента.
      */
-    fun getConstellation(sigI: Signal, sigQ: Signal): List<Pair<Double, Double>> {
+    private fun getConstellation(sigI: Signal, sigQ: Signal): List<Pair<Double, Double>> {
         val dataI = extractDigitalData(
             sigI,
             0.0,
@@ -151,7 +154,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
             .also {
                 it.forEachIndexed { i, value -> if (!isBit(value)) errorBits[i] = value }
             }
-            .map { it < 0 }
+            .map { it > 0 }
             .toBooleanArray()
 
         return Pair(bits, errorBits)
