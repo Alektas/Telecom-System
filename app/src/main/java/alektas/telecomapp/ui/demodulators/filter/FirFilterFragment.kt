@@ -9,6 +9,7 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Window
+import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -80,10 +81,10 @@ class FirFilterFragment : Fragment() {
     }
 
     private fun setupWindowsDropdown(viewModel: FirFilterViewModel) {
-        val adapter = ArrayAdapter(
+        val adapter = SimpleArrayAdapter(
             requireContext(),
             R.layout.support_simple_spinner_dropdown_item,
-            Window.windowNames.values.toTypedArray()
+            Window.windowNames.values.toList()
         )
         filter_window_input.setAdapter<ArrayAdapter<String>>(adapter)
 
