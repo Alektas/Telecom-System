@@ -4,7 +4,7 @@ import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.domain.entities.Window
 
 class FilterConfig(
-    var type: Int = NONE,
+    var type: Int = FIR,
     var order: Int = 256,
     var bandwidth: Double = 1.0e3,
     var suppressBand: Double = 1.0e1,

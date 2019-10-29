@@ -17,6 +17,10 @@ class SystemStorage : Repository {
     private var decodedChannelList = mutableListOf<ChannelData>()
     private val channelsSource = BehaviorSubject.create<List<ChannelData>>()
     private val channelsSignalSource = BehaviorSubject.create<Signal>()
+    private val channelISource = BehaviorSubject.create<Signal>()
+    private val channelQSource = BehaviorSubject.create<Signal>()
+    private val filteredChannelISource = BehaviorSubject.create<Signal>()
+    private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Signal>()
     private val demodulatedSignalSource = BehaviorSubject.create<BinarySignal>()
     private val demodulatedSignalConstellationSource =
@@ -123,6 +127,39 @@ class SystemStorage : Repository {
     override fun observeDemodulatedSignalConstellation(): Observable<List<Pair<Double, Double>>> {
         return demodulatedSignalConstellationSource
     }
+
+    override fun setChannelI(sigI: Signal) {
+        channelISource.onNext(sigI)
+    }
+
+    override fun setFilteredChannelI(filteredSigI: Signal) {
+        filteredChannelISource.onNext(filteredSigI)
+    }
+
+    override fun setChannelQ(sigQ: Signal) {
+        channelQSource.onNext(sigQ)
+    }
+
+    override fun setFilteredChannelQ(filteredSigQ: Signal) {
+        filteredChannelQSource.onNext(filteredSigQ)
+    }
+
+    override fun observeChannelI(): Observable<Signal> {
+        return channelISource
+    }
+
+    override fun observeFilteredChannelI(): Observable<Signal> {
+        return filteredChannelISource
+    }
+
+    override fun observeChannelQ(): Observable<Signal> {
+        return channelQSource
+    }
+
+    override fun observeFilteredChannelQ(): Observable<Signal> {
+        return filteredChannelQSource
+    }
+
 
     override fun addDecodedChannel(channel: ChannelData) {
         decodedChannelList.add(channel)

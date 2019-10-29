@@ -21,20 +21,29 @@ interface Repository {
 
     fun observeChannels(): Observable<List<ChannelData>>
     fun setChannelsSignal(signal: Signal)
-
     fun observeChannelsSignal(): Observable<Signal>
+
     fun setNoise(signal: Signal)
-
     fun observeNoise(): Observable<Signal>
-
     fun observeEther(): Observable<Signal>
+
     fun setDemodulatedSignal(signal: BinarySignal)
     fun observeDemodulatedSignal(): Observable<BinarySignal>
     fun setDemodulatedSignalConstellation(points: List<Pair<Double, Double>>)
-
     fun observeDemodulatedSignalConstellation(): Observable<List<Pair<Double, Double>>>
+
+    fun setChannelI(sigI: Signal)
+    fun observeChannelI(): Observable<Signal>
+    fun setFilteredChannelI(filteredSigI: Signal)
+    fun observeFilteredChannelI(): Observable<Signal>
+    fun setChannelQ(sigQ: Signal)
+    fun observeChannelQ(): Observable<Signal>
+    fun setFilteredChannelQ(filteredSigQ: Signal)
+    fun observeFilteredChannelQ(): Observable<Signal>
+
     fun addDecodedChannel(channel: ChannelData)
     fun removeDecodedChannel(channel: ChannelData)
     fun setDecodedChannels(channels: List<ChannelData>)
     fun observeDecodedChannels(): Observable<List<ChannelData>>
+
 }

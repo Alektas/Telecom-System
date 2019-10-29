@@ -36,4 +36,6 @@
     <string name="input_spectrum">Спектр сигнала</string>
     <string name="processing">Обработка</string>
     <string name="frequency_in_megaherz">Частота, МГц</string>
+    <string name="i_channel">I-канал</string>
+    <string name="q_channel">Q-канал</string>
 </resources>
