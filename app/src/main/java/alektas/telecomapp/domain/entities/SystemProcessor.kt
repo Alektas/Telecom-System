@@ -116,6 +116,10 @@ class SystemProcessor {
         val demodulator = QpskDemodulator(config)
         val demodSignal = demodulator.demodulate(config.inputSignal)
         storage.setDemodulatedSignal(demodSignal)
+        storage.setChannelI(demodulator.sigI)
+        storage.setFilteredChannelI(demodulator.filteredSigI)
+        storage.setChannelQ(demodulator.sigQ)
+        storage.setFilteredChannelQ(demodulator.filteredSigQ)
         storage.setDemodulatedSignalConstellation(demodulator.constellation)
     }
 

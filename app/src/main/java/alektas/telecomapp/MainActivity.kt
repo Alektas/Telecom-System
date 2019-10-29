@@ -5,6 +5,8 @@ import alektas.telecomapp.ui.datasource.DataSourceFragment
 import alektas.telecomapp.ui.decoder.DecoderFragment
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorFragment
 import alektas.telecomapp.ui.demodulators.filter.FirFilterFragment
+import alektas.telecomapp.ui.demodulators.filter.ichannel.IChannelFragment
+import alektas.telecomapp.ui.demodulators.filter.qchannel.QChannelFragment
 import alektas.telecomapp.ui.demodulators.generator.DemodulatorGeneratorFragment
 import alektas.telecomapp.ui.demodulators.input.DemodulatorInputFragment
 import alektas.telecomapp.ui.demodulators.output.DemodulatorOutputFragment
@@ -36,6 +38,8 @@ class MainActivity : AppCompatActivity() {
                     R.id.to_demodulator_input_btn -> DemodulatorInputFragment.newInstance()
                     R.id.to_demodulator_generator_btn -> DemodulatorGeneratorFragment.newInstance()
                     R.id.to_demodulator_filter_btn -> FirFilterFragment.newInstance()
+                    R.id.to_i_channel_btn -> IChannelFragment.newInstance()
+                    R.id.to_q_channel_btn -> QChannelFragment.newInstance()
                     R.id.to_demodulator_process_btn -> DemodulatorProcessFragment.newInstance()
                     R.id.to_demodulator_output_btn -> DemodulatorOutputFragment.newInstance()
                     R.id.to_decoding_btn -> DecoderFragment.newInstance()

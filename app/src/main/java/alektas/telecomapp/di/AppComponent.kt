@@ -7,6 +7,8 @@ import alektas.telecomapp.ui.decoder.DecoderViewModel
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorViewModel
 import alektas.telecomapp.ui.demodulators.processing.DemodulatorProcessViewModel
 import alektas.telecomapp.ui.demodulators.filter.FirFilterViewModel
+import alektas.telecomapp.ui.demodulators.filter.ichannel.IChannelViewModel
+import alektas.telecomapp.ui.demodulators.filter.qchannel.QChannelViewModel
 import alektas.telecomapp.ui.demodulators.generator.DemodulatorGeneratorViewModel
 import alektas.telecomapp.ui.demodulators.input.DemodulatorInputViewModel
 import alektas.telecomapp.ui.demodulators.output.DemodulatorOutputViewModel
@@ -26,4 +28,6 @@ interface AppComponent {
     fun inject(vm: DemodulatorProcessViewModel)
     fun inject(vm: DemodulatorOutputViewModel)
     fun inject(vm: DecoderViewModel)
+    fun inject(vm: IChannelViewModel)
+    fun inject(vm: QChannelViewModel)
 }

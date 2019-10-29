@@ -78,4 +78,24 @@
                 android:editable="false"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_i_channel_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/i_channel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filter_window_input_layout"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_q_channel_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/q_channel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/to_i_channel_btn"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
