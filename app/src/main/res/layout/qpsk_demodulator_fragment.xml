@@ -222,11 +222,10 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/to_demodulator_process_btn"
-        style="@style/SchemeBlockBtn.Disabled"
+        style="@style/SchemeBlockBtn.Enabled"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:onClick="onNavigateBtnClick"
-        android:enabled="false"
         android:text="@string/processing"
         app:layout_constraintBottom_toTopOf="@id/arrow_to_output"
         app:layout_constraintEnd_toEndOf="parent"

@@ -79,6 +79,26 @@ class SystemStorage : Repository {
         setDemodulatorConfig(demodulatorConfig)
     }
 
+    override fun setDemodulatorThreshold(threshold: Double) {
+        demodulatorConfig.bitThreshold = threshold
+        setDemodulatorConfig(demodulatorConfig)
+    }
+
+    override fun setDemodulatorBitTime(bitTime: Double) {
+        demodulatorConfig.bitTime = bitTime
+        setDemodulatorConfig(demodulatorConfig)
+    }
+
+    override fun setDemodulatorFrameLength(frameLength: Int) {
+        demodulatorConfig.frameLength = frameLength
+        setDemodulatorConfig(demodulatorConfig)
+    }
+
+    override fun setDemodulatorCodeLength(codeLength: Int) {
+        demodulatorConfig.codeLength = codeLength
+        setDemodulatorConfig(demodulatorConfig)
+    }
+
     override fun setChannels(channels: List<ChannelData>) {
         channelList = channels.toMutableList()
         channelsSource.onNext(channelList)

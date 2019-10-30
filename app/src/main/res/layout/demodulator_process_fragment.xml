@@ -1,73 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         tools:context=".ui.demodulators.processing.DemodulatorProcessFragment">
 
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/demodulation_process_pager"
+            android:layout_width="match_parent"
+            android:layout_height="450dp"
+            android:elevation="8dp"
+            android:background="@color/colorSecondaryBackground">
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/demodulation_process_tab_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorSecondaryBackground"/>
+        </androidx.viewpager.widget.ViewPager>
+
         <TextView
-            android:id="@+id/i_signal_label"
+            android:id="@+id/signal_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_graph_label"
             android:layout_marginTop="16dp"
-            android:text="@string/i_signal"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:text="@string/sum_data" />
 
         <com.jjoe64.graphview.GraphView
-            android:id="@+id/i_signal_chart"
+            android:id="@+id/sum_data_chart"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/height_graph_signal"
-            app:layout_constraintTop_toBottomOf="@id/i_signal_label" />
+            android:layout_height="@dimen/height_graph_signal"/>
 
-        <TextView
-            android:id="@+id/filtered_i_signal_label"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_frame_length_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_start_graph_label"
-            android:layout_marginTop="16dp"
-            android:text="@string/filtered_i_signal"
-            app:layout_constraintTop_toBottomOf="@id/i_signal_chart" />
+            android:layout_marginStart="@dimen/margin_start_field"
+            android:layout_marginEnd="@dimen/margin_start_field"
+            android:layout_marginTop="@dimen/margin_top_title"
+            android:hint="@string/frame_length">
 
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/filtered_i_signal_chart"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/height_graph_signal"
-            app:layout_constraintTop_toBottomOf="@id/filtered_i_signal_label" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_frame_length"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/q_signal_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_start_graph_label"
-            android:layout_marginTop="16dp"
-            android:text="@string/q_signal"
-            app:layout_constraintTop_toBottomOf="@id/filtered_i_signal_chart" />
-
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/q_signal_chart"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/height_graph_signal"
-            app:layout_constraintTop_toBottomOf="@id/q_signal_label" />
-
-        <TextView
-            android:id="@+id/filtered_q_signal_label"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_code_length_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_start_graph_label"
-            android:layout_marginTop="16dp"
-            android:text="@string/filtered_q_signal"
-            app:layout_constraintTop_toBottomOf="@id/q_signal_chart" />
+            android:layout_marginStart="@dimen/margin_start_field"
+            android:layout_marginEnd="@dimen/margin_start_field"
+            android:hint="@string/code_length">
 
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/filtered_q_signal_chart"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_code_length"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_bit_time_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/height_graph_signal"
-            app:layout_constraintTop_toBottomOf="@id/filtered_q_signal_label" />
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_field"
+            android:layout_marginEnd="@dimen/margin_start_field"
+            android:hint="@string/bit_time">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_bit_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_threshold_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_field"
+            android:layout_marginEnd="@dimen/margin_start_field"
+            android:layout_marginBottom="@dimen/margin_top_title"
+            android:hint="@string/threshold">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_threshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
 </ScrollView>
