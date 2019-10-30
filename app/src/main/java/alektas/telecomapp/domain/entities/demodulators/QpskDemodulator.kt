@@ -1,6 +1,5 @@
 package alektas.telecomapp.domain.entities.demodulators
 
-import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.domain.entities.filters.DummyFilter
 import alektas.telecomapp.domain.entities.filters.Filter
@@ -13,12 +12,17 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import kotlin.math.abs
 
 class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
-    private val isBit: (Double) -> Boolean = { abs(it) > QpskContract.SIGNAL_THRESHOLD }
+    private val isBit: (Double) -> Boolean = { abs(it) > config.bitThreshold }
     private val filter: Filter = when (config.filterConfig.type) {
         FilterConfig.FIR -> FirFilter(config.filterConfig)
         else -> DummyFilter()
     }
-    private val dataLength = config.dataLength
+    private val frameLength = config.frameLength
+    private val codeLength = config.codeLength
+    private val bitTime = config.bitTime
+    private val symbolTime = bitTime * 2
+    private val dataTime = bitTime * frameLength * codeLength
+    private val timeOffset = bitTime / 2
     private val carrierFrequency = config.carrierFrequency
     var sigI: Signal = BaseSignal()
     var filteredSigI: Signal = BaseSignal()
@@ -34,7 +38,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
      * @return двоичный биполярный сигнал из -1 и 1
      */
     override fun demodulate(signal: Signal): BinarySignal {
-        if (signal.isEmpty()) return BinarySignal(booleanArrayOf(), QpskContract.DATA_BIT_TIME)
+        if (signal.isEmpty()) return BinarySignal(booleanArrayOf(), bitTime)
 
         val gen = SignalGenerator()
         val cos = gen.cos(frequency = carrierFrequency)
@@ -47,17 +51,17 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
 
         val dataI = extractBinaryData(
             filteredSigI,
-            0.0,
-            QpskContract.SYMBOL_TIME * dataLength / 2.0,
-            Simulator.samplesFor(QpskContract.SYMBOL_TIME),
+            timeOffset,
+            dataTime + timeOffset,
+            Simulator.samplesFor(symbolTime),
             isBit
         ).first
 
         val dataQ = extractBinaryData(
             filteredSigQ,
-            0.0,
-            QpskContract.SYMBOL_TIME * dataLength / 2.0,
-            Simulator.samplesFor(QpskContract.SYMBOL_TIME),
+            timeOffset,
+            dataTime + timeOffset,
+            Simulator.samplesFor(symbolTime),
             isBit
         ).first
 
@@ -67,7 +71,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
             data.add(dataQ[i])
         }
 
-        return BinarySignal(data.toBooleanArray(), QpskContract.DATA_BIT_TIME)
+        return BinarySignal(data.toBooleanArray(), bitTime)
     }
 
     /**
@@ -83,16 +87,16 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
 
         val dataI = extractDigitalData(
             signal * cos,
-            0.0,
-            QpskContract.SYMBOL_TIME * dataLength / 2.0,
-            Simulator.samplesFor(QpskContract.SYMBOL_TIME)
+            timeOffset,
+            dataTime + timeOffset,
+            Simulator.samplesFor(symbolTime)
         )
 
         val dataQ = extractDigitalData(
             signal * sin,
-            0.0,
-            QpskContract.SYMBOL_TIME * dataLength / 2.0,
-            Simulator.samplesFor(QpskContract.SYMBOL_TIME)
+            timeOffset,
+            dataTime + timeOffset,
+            Simulator.samplesFor(symbolTime)
         )
 
         val data = mutableListOf<Pair<Double, Double>>()
@@ -110,16 +114,16 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
     private fun getConstellation(sigI: Signal, sigQ: Signal): List<Pair<Double, Double>> {
         val dataI = extractDigitalData(
             sigI,
-            0.0,
-            QpskContract.SYMBOL_TIME * dataLength / 2.0,
-            Simulator.samplesFor(QpskContract.SYMBOL_TIME)
+            timeOffset,
+            dataTime + timeOffset,
+            Simulator.samplesFor(symbolTime)
         )
 
         val dataQ = extractDigitalData(
             sigQ,
-            0.0,
-            QpskContract.SYMBOL_TIME * dataLength / 2.0,
-            Simulator.samplesFor(QpskContract.SYMBOL_TIME)
+            timeOffset,
+            dataTime + timeOffset,
+            Simulator.samplesFor(symbolTime)
         )
 
         val data = mutableListOf<Pair<Double, Double>>()

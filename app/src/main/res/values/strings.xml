@@ -9,8 +9,8 @@
     <string name="impulse_response">Импульсная характеристика</string>
     <string name="filter">Фильтр</string>
     <string name="qpsk_demodulator">Qpsk демодулятор</string>
-    <string name="i_signal">I-составляющая до фильтрации</string>
-    <string name="q_signal">Q-составляющая до фильтрации</string>
+    <string name="i_signal">I-составляющая</string>
+    <string name="q_signal">Q-составляющая</string>
     <string name="filtered_q_signal">Q-составляющая после фильтрации</string>
     <string name="filtered_i_signal">I-составляющая после фильтрации</string>
     <string name="data">Данные: </string>
@@ -38,4 +38,12 @@
     <string name="frequency_in_megaherz">Частота, МГц</string>
     <string name="i_channel">I-канал</string>
     <string name="q_channel">Q-канал</string>
+    <string name="i_signal_data">Данные I-составляющей</string>
+    <string name="q_signal_data">Данные Q-составляющей</string>
+    <string name="threshold">Пороговый уровень сигнала</string>
+    <string name="signal">Сигнал</string>
+    <string name="channel_data">Данные составляющей</string>
+    <string name="sum_data">Данные</string>
+    <string name="bit_time">Время бита, мкс</string>
+    <string name="code_length">Длина кода</string>
 </resources>

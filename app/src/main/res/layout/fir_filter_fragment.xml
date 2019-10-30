@@ -60,23 +60,23 @@
                 android:inputType="numberDecimal"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/filter_window_input_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/filter_window_input_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/weight_func"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filter_cutoff_freq_input_layout">
+
+        <AutoCompleteTextView
+            android:id="@+id/filter_window_input"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="@string/weight_func"
-            app:layout_constraintTop_toBottomOf="@id/filter_cutoff_freq_input_layout"
-            app:layout_constraintStart_toStartOf="parent">
-
-            <AutoCompleteTextView
-                android:id="@+id/filter_window_input"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:imeOptions="actionDone"
-                android:ems="10"
-                android:editable="false"/>
-        </com.google.android.material.textfield.TextInputLayout>
+            android:editable="false"
+            android:ems="10"
+            android:imeOptions="actionDone" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/to_i_channel_btn"
