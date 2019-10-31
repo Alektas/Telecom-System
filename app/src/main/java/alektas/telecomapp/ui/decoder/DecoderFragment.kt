@@ -12,9 +12,9 @@ import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
+import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
 import android.util.Log
-import android.view.inputmethod.EditorInfo
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
@@ -48,23 +48,38 @@ class DecoderFragment : Fragment(), ChannelController {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DecoderViewModel::class.java)
         setupCodeTypesDropdown()
+        setInitValues(viewModel)
+
         val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
 
-        channel_code.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                add_channel_btn.performClick()
-                true
-            } else false
+        channel_code.setOnEditorActionListener { _, _, _ ->
+            add_channel_btn.performClick()
+            false
+        }
+
+        channel_count.setOnEditorActionListener { _, _, _ ->
+            generate_channels_btn.performClick()
+            false
         }
 
         add_channel_btn.setOnClickListener {
+            SystemUtils.hideKeyboard(this)
             val codeString = channel_code.text.toString()
+            if (codeString.isEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    "Введите код из нулей и единиц",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
             viewModel.decodeCustomChannel(codeString)
         }
 
         generate_channels_btn.setOnClickListener {
+            SystemUtils.hideKeyboard(this)
             decodeChannels()
         }
 
@@ -86,10 +101,10 @@ class DecoderFragment : Fragment(), ChannelController {
     override fun showChannelDetails(channel: ChannelData) {}
 
     private fun setupCodeTypesDropdown() {
-        val adapter = ArrayAdapter(
+        val adapter = SimpleArrayAdapter(
             requireContext(),
             R.layout.support_simple_spinner_dropdown_item,
-            CodeGenerator.codeNames.values.toTypedArray()
+            CodeGenerator.codeNames.values.toList()
         )
         channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
@@ -100,16 +115,28 @@ class DecoderFragment : Fragment(), ChannelController {
             }
         }
 
-        channel_code_type.setOnTouchListener { v, _ ->
+        val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
+        channel_code_type.setText(defaultType)
+        selectedCodeType = defaultType
+
+        channel_code_type_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
             (v as AutoCompleteTextView).showDropDown()
             false
         }
     }
 
-    private fun decodeChannels() {
-        SystemUtils.hideKeyboard(this)
+    private fun setInitValues(viewModel: DecoderViewModel) {
+        viewModel.initCodeType.observe(viewLifecycleOwner, Observer {
+            channel_code_type.setText(CodeGenerator.getCodeName(it))
+        })
 
+        viewModel.initChannelCount.observe(viewLifecycleOwner, Observer {
+            channel_count.setText(it.toString())
+        })
+    }
+
+    private fun decodeChannels() {
         viewModel.inputSignalData.value?.let {
             val channelCount = try {
                 val c = channel_count.text.toString().toInt()
