@@ -61,6 +61,10 @@ class Window(val type: Int) {
             SQUARE to "Равномерная"
         )
 
+        fun getName(id: Int): String {
+            return windowNames[id] ?: id.toString()
+        }
+
         fun getIdBy(windowName: String): Int {
             return windowNames.filterValues { it == windowName }.keys.first()
         }

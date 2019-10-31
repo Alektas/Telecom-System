@@ -7,6 +7,8 @@ import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
+import alektas.telecomapp.domain.entities.signals.noises.Noise
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
@@ -21,17 +23,17 @@ class SystemStorage : Repository {
     private val channelQSource = BehaviorSubject.create<Signal>()
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
-    private val noiseSource = BehaviorSubject.create<Signal>()
+    private val noiseSource = BehaviorSubject.create<Noise>()
     private val demodulatedSignalSource = BehaviorSubject.create<BinarySignal>()
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
     private val etherSource = Observable.combineLatest(
         channelsSignalSource.startWith(BaseSignal()),
-        noiseSource.startWith(BaseSignal()),
+        noiseSource.startWith(BaseNoise()),
         BiFunction<Signal, Signal, Signal> { signal, noise -> signal + noise })
         .debounce(500L, TimeUnit.MILLISECONDS)
-        .switchMap { signal -> Observable.create<Signal> { it.onNext(signal) } }
+        .switchMap { signal: Signal -> Observable.create<Signal> { it.onNext(signal) } }
         .apply {
             subscribe { ether ->
                 demodulatorConfig.inputSignal = ether
@@ -112,11 +114,11 @@ class SystemStorage : Repository {
         return channelsSource
     }
 
-    override fun setNoise(signal: Signal) {
+    override fun setNoise(signal: Noise) {
         noiseSource.onNext(signal)
     }
 
-    override fun observeNoise(): Observable<Signal> {
+    override fun observeNoise(): Observable<Noise> {
         return noiseSource
     }
 

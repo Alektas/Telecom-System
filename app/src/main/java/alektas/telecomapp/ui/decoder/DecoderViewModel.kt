@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.signals.BinarySignal
+import alektas.telecomapp.utils.doOnFirst
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -22,6 +23,8 @@ class DecoderViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val channels = MutableLiveData<List<ChannelData>>()
+    val initCodeType = MutableLiveData<Int>()
+    val initChannelCount = MutableLiveData<Int>()
 
     init {
         App.component.inject(this)
@@ -41,6 +44,10 @@ class DecoderViewModel : ViewModel() {
             }),
             storage.observeDecodedChannels()
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnFirst {
+                    initChannelCount.value = it.size
+                    initCodeType.value = it.first().codeType
+                }
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
                     override fun onNext(t: List<ChannelData>) {
                         channels.value = t

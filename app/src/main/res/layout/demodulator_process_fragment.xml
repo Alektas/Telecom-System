@@ -51,6 +51,8 @@
                 android:id="@+id/process_frame_length"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/process_code_length"
                 android:ems="10"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -68,6 +70,8 @@
                 android:id="@+id/process_code_length"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/process_bit_time"
                 android:ems="10"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -85,6 +89,8 @@
                 android:id="@+id/process_bit_time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/process_threshold"
                 android:ems="10"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>

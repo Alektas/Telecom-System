@@ -6,6 +6,7 @@ import alektas.telecomapp.domain.entities.Window
 import alektas.telecomapp.domain.entities.filters.Filter
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.filters.FirFilter
+import alektas.telecomapp.utils.doOnFirst
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -17,33 +18,32 @@ import javax.inject.Inject
 class FirFilterViewModel : ViewModel() {
     @Inject
     lateinit var system: Repository
-    var config: FilterConfig
     var initConfigData = MutableLiveData<FilterConfig>()
     var impulseResponseData = MutableLiveData<Array<DataPoint>>()
+    private var config: FilterConfig = FilterConfig()
     private val disposable: Disposable
 
     init {
         App.component.inject(this)
-        config = system.getDemodulatorFilterConfig()
         initConfigData.value = config
-        val filter = FirFilter(config)
-        setImpulseResponse(filter)
+        setImpulseResponse(FirFilter(config))
 
         disposable = system.observeDemodulatorFilterConfig()
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnFirst {
+                initConfigData.value = it
+                val filter = FirFilter(it)
+                setImpulseResponse(filter)
+            }
             .subscribeWith(object : DisposableObserver<FilterConfig>() {
-                override fun onComplete() {
-                }
-
                 override fun onNext(t: FilterConfig) {
                     config = t
-                    val f = FirFilter(config)
-                    setImpulseResponse(f)
+                    setImpulseResponse(FirFilter(t))
                 }
 
-                override fun onError(e: Throwable) {
-                }
+                override fun onComplete() { }
 
+                override fun onError(e: Throwable) { }
             })
     }
 
@@ -63,7 +63,6 @@ class FirFilterViewModel : ViewModel() {
 
     fun onWindowChanged(windowName: String) {
         val windowType = Window.getIdBy(windowName)
-
         if (windowType != config.windowType) {
             config.windowType = windowType
             system.setDemodulatorFilterConfig(config)

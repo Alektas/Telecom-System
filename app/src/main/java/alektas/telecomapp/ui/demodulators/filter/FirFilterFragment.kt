@@ -11,10 +11,10 @@ import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Window
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
+import android.view.inputmethod.EditorInfo
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
-import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
@@ -38,41 +38,40 @@ class FirFilterFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(FirFilterViewModel::class.java)
         setupWindowsDropdown(viewModel)
+        setInitValues(viewModel)
 
-        filter_order_input.doOnTextChanged { text, _, _, _ ->
+        filter_order_input.setOnEditorActionListener { tv, _, _ ->
             try {
-                val order = text.toString().toInt()
+                val order = tv.text.toString().toInt()
+                if (order <= 0) throw NumberFormatException()
                 viewModel.onOrderChanged(order)
             } catch (e: NumberFormatException) {
                 Toast.makeText(
                     requireContext(),
-                    "Введите целое число больше 0",
+                    "Введите целое положительное число",
                     Toast.LENGTH_SHORT
                 ).show()
                 e.printStackTrace()
             }
+            false
         }
 
-        filter_cutoff_freq_input.doOnTextChanged { text, _, _, _ ->
+        filter_cutoff_freq_input.setOnEditorActionListener { tv, _, _ ->
+            SystemUtils.hideKeyboard(this)
             try {
-                val freq = text.toString().toDouble()
+                val freq = tv.text.toString().toDouble()
+                if (freq <= 0) throw NumberFormatException()
                 viewModel.onCutoffFrequencyChanged(freq)
             } catch (e: NumberFormatException) {
                 Toast.makeText(
                     requireContext(),
-                    "Введите число больше 0.0",
+                    "Введите положительное число",
                     Toast.LENGTH_SHORT
                 ).show()
                 e.printStackTrace()
             }
+            false
         }
-
-        viewModel.initConfigData.observe(viewLifecycleOwner, Observer { data ->
-            filter_order_input.setText(data.order.toString())
-            filter_cutoff_freq_input.setText(data.bandwidth.toString())
-            val winName: String = Window.windowNames[data.windowType] ?: "${data.windowType}"
-            filter_window_input.setText(winName, false)
-        })
 
         viewModel.impulseResponseData.observe(viewLifecycleOwner, Observer { data ->
             filter_impulse_response_chart.removeAllSeries()
@@ -93,11 +92,20 @@ class FirFilterFragment : Fragment() {
             if (windowName is String) viewModel.onWindowChanged(windowName)
         }
 
-        filter_window_input.setOnTouchListener { v, _ ->
+        filter_window_input_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
             (v as AutoCompleteTextView).showDropDown()
             false
         }
+    }
+
+    private fun setInitValues(viewModel: FirFilterViewModel) {
+        viewModel.initConfigData.observe(viewLifecycleOwner, Observer { data ->
+            filter_order_input.setText(data.order.toString())
+            filter_cutoff_freq_input.setText(data.bandwidth.toString())
+            val winName: String = Window.getName(data.windowType)
+            filter_window_input.setText(winName, false)
+        })
     }
 
 }

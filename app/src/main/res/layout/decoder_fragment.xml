@@ -99,6 +99,7 @@
                 android:id="@+id/channel_count"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
                 android:ems="10"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
