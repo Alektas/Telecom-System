@@ -94,7 +94,6 @@ class DataSourceFragment : Fragment(), ChannelController {
         viewModel.initFrameSize.observe(viewLifecycleOwner, Observer {
             frame_length.setText(it.toString())
         })
-
     }
 
     override fun removeChannel(channel: ChannelData) {

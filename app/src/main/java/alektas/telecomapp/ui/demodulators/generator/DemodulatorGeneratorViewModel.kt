@@ -4,6 +4,8 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
+import alektas.telecomapp.utils.doOnFirst
+import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -17,6 +19,7 @@ class DemodulatorGeneratorViewModel : ViewModel() {
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
     val generatorSignalData = MutableLiveData<Array<DataPoint>>()
+    val initFrequency = MutableLiveData<Float>()
 
     init {
         App.component.inject(this)
@@ -24,6 +27,12 @@ class DemodulatorGeneratorViewModel : ViewModel() {
         disposable.addAll(
             storage.observeDemodulatorConfig()
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnFirst {
+                    // Частоты хранятся в Гц, а отображаются МГц, поэтому домножаем на 10^-6.
+                    // Переводим в Float, потому что в Double число некрасивое ;)
+                    val freq = (it.carrierFrequency * 1.0e-6).toFloat()
+                    initFrequency.value = freq
+                }
                 .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
                     override fun onNext(t: DemodulatorConfig) {
                         showGeneratorSignal(t.carrierFrequency)
@@ -45,8 +54,7 @@ class DemodulatorGeneratorViewModel : ViewModel() {
 
     private fun showGeneratorSignal(frequency: Double) {
         val signal = SignalGenerator().cos(frequency = frequency)
-        generatorSignalData.value =
-            signal.getPoints().map { DataPoint(it.key, it.value) }.toTypedArray()
+        generatorSignalData.value = signal.toDataPoints()
     }
 
     override fun onCleared() {
