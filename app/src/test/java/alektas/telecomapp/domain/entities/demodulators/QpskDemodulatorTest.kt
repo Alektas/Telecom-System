@@ -12,7 +12,10 @@ class QpskDemodulatorTest {
     private val carrier = SignalGenerator().cos(frequency = 100000.0)
     private val dummyFilterConfig = FilterConfig(type = FilterConfig.NONE)
     private val inSig = QpskModulator().modulate(carrier, inData)
-    private val config = DemodulatorConfig(inSig, carrier.frequency, inData.size, dummyFilterConfig)
+    private val config = DemodulatorConfig(
+        inSig, carrier.frequency, 4, 2,
+        filterConfig = dummyFilterConfig
+    )
     private val demodulator = QpskDemodulator(config)
 
     @Test
@@ -47,8 +50,8 @@ class QpskDemodulatorTest {
         val points = demodulator.getConstellation(inSig)
         val data = BooleanArray(inData.size)
         points.forEachIndexed { i, it ->
-            data[i*2] = it.first > 0
-            data[i*2+1] = it.second > 0
+            data[i * 2] = it.first > 0
+            data[i * 2 + 1] = it.second > 0
         }
 
         println("expected: ${inData.joinToString { it.toString() }}")

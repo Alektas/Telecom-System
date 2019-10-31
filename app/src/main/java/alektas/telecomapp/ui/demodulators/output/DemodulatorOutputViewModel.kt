@@ -2,8 +2,9 @@ package alektas.telecomapp.ui.demodulators.output
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.Window
 import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.utils.getNormalizedSpectrum
+import alektas.telecomapp.utils.toFloat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -42,7 +43,7 @@ class DemodulatorOutputViewModel : ViewModel() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<Pair<Double, Double>>>() {
                     override fun onNext(t: List<Pair<Double, Double>>) {
-                        extractConstellationData(t)
+                        constellationData.value = t.toFloat()
                     }
 
                     override fun onComplete() { }
@@ -58,26 +59,10 @@ class DemodulatorOutputViewModel : ViewModel() {
         if (signal.isEmpty()) return
 
         try {
-            val signalData = Window(Window.GAUSSE).applyTo(signal).getValues()
-            var spectrum = FastFourierTransformer(DftNormalization.STANDARD)
-                .transform(
-                    signalData,
-                    TransformType.FORWARD
-                )
-            val actualSize = spectrum.size / 2
-            spectrum = spectrum.take(actualSize).toTypedArray()
-            val maxSpectrumValue = spectrum.maxBy { it.abs() }?.abs() ?: 1.0
-            specturmData.value = spectrum
-                .mapIndexed { i, complex -> DataPoint(i.toDouble(), complex.abs() / maxSpectrumValue) }
-                .toTypedArray()
+            specturmData.value = signal.getNormalizedSpectrum()
         } catch (e: MathIllegalArgumentException) {
             e.printStackTrace()
         }
-    }
-
-    private fun extractConstellationData(points: List<Pair<Double, Double>>) {
-        constellationData.value =
-            points.map { Pair(it.first.toFloat(), it.second.toFloat()) }
     }
 
     override fun onCleared() {

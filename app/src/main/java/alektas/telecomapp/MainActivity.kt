@@ -1,6 +1,5 @@
 package alektas.telecomapp
 
-import alektas.telecomapp.ui.chart.ChartFragment
 import alektas.telecomapp.ui.datasource.DataSourceFragment
 import alektas.telecomapp.ui.decoder.DecoderFragment
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorFragment
@@ -23,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.main_activity)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.container, MainFragment.newInstance(), ChartFragment.TAG)
+                .replace(R.id.container, MainFragment.newInstance())
                 .commitNow()
         }
     }
