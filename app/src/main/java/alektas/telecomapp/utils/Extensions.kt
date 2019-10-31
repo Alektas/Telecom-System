@@ -3,6 +3,7 @@ package alektas.telecomapp.utils
 import alektas.telecomapp.domain.entities.Window
 import alektas.telecomapp.domain.entities.signals.Signal
 import com.jjoe64.graphview.series.DataPoint
+import io.reactivex.Observable
 import org.apache.commons.math3.transform.DftNormalization
 import org.apache.commons.math3.transform.FastFourierTransformer
 import org.apache.commons.math3.transform.TransformType
@@ -44,3 +45,6 @@ fun Signal.getNormalizedSpectrum(): Array<DataPoint> {
         .mapIndexed { i, complex -> DataPoint(i.toDouble(), complex.abs() / maxSpectrumValue) }
         .toTypedArray()
 }
+
+fun <T> Observable<T>.doOnFirst(action: (T) -> Unit): Observable<T> =
+    take(1).doOnNext(action).concatWith(skip(1))

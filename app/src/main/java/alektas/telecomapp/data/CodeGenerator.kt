@@ -15,6 +15,10 @@ class CodeGenerator {
         fun getCodeTypeId(codeTypeName: String): Int {
             return codeNames.filterValues { it == codeTypeName }.keys.first()
         }
+
+        fun getCodeName(id: Int): String {
+            return codeNames[id] ?: id.toString()
+        }
     }
 
     fun generateRandomCodes(count: Int, length: Int): Array<BooleanArray> {
