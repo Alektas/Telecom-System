@@ -65,9 +65,9 @@ class PolarGraphView @JvmOverloads constructor(
     }
 
     fun setData(points: List<Pair<Float, Float>>) {
-        data = points
+        data = normalize(points)
 
-        postInvalidate()
+        invalidate()
     }
 
     private fun normalize(
