@@ -3,6 +3,7 @@ package alektas.telecomapp.ui.demodulators.processing
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.toDataPoints
@@ -23,27 +24,49 @@ class DemodulatorProcessViewModel : ViewModel() {
     val qSignalData = MutableLiveData<Array<DataPoint>>()
     val iBitsData = MutableLiveData<Array<DataPoint>>()
     val qBitsData = MutableLiveData<Array<DataPoint>>()
+    val initFrameLength = MutableLiveData<Int>()
+    val initCodeLength = MutableLiveData<Int>()
+    val initBitTime = MutableLiveData<Double>()
+    val initThreshold = MutableLiveData<Double>()
 
     init {
         App.component.inject(this)
 
-        disposable.addAll(storage.observeDemodulatedSignal()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeWith(object : DisposableObserver<BinarySignal>() {
-                override fun onNext(t: BinarySignal) {
-                    outputSignalData.value = t.toDataPoints()
+        disposable.addAll(
+            storage.observeDemodulatorConfig()
+                .observeOn(AndroidSchedulers.mainThread())
+                .take(1)
+                .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
+                    override fun onNext(t: DemodulatorConfig) {
+                        initFrameLength.value = t.frameLength
+                        initCodeLength.value = t.codeLength
+                        initBitTime.value = t.bitTime * 1.0e6 // преобразование в микросекунды
+                        initThreshold.value = t.bitThreshold
+                    }
 
-                    val iBits = t.bits.filterIndexed { i, _ -> i % 2 == 0 }.toBooleanArray()
-                    val qBits = t.bits.filterIndexed { i, _ -> i % 2 != 0 }.toBooleanArray()
+                    override fun onComplete() {}
 
-                    iBitsData.value = BinarySignal(iBits, QpskContract.SYMBOL_TIME).toDataPoints()
-                    qBitsData.value = BinarySignal(qBits, QpskContract.SYMBOL_TIME).toDataPoints()
-                }
+                    override fun onError(e: Throwable) {}
+                }),
+            storage.observeDemodulatedSignal()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<BinarySignal>() {
+                    override fun onNext(t: BinarySignal) {
+                        outputSignalData.value = t.toDataPoints()
 
-                override fun onComplete() { }
+                        val iBits = t.bits.filterIndexed { i, _ -> i % 2 == 0 }.toBooleanArray()
+                        val qBits = t.bits.filterIndexed { i, _ -> i % 2 != 0 }.toBooleanArray()
 
-                override fun onError(e: Throwable) { }
-            }),
+                        iBitsData.value =
+                            BinarySignal(iBits, QpskContract.SYMBOL_TIME).toDataPoints()
+                        qBitsData.value =
+                            BinarySignal(qBits, QpskContract.SYMBOL_TIME).toDataPoints()
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
             storage.observeFilteredChannelI()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Signal>() {
@@ -51,9 +74,9 @@ class DemodulatorProcessViewModel : ViewModel() {
                         iSignalData.value = t.toDataPoints()
                     }
 
-                    override fun onComplete() { }
+                    override fun onComplete() {}
 
-                    override fun onError(e: Throwable) { }
+                    override fun onError(e: Throwable) {}
                 }),
             storage.observeFilteredChannelQ()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -62,9 +85,9 @@ class DemodulatorProcessViewModel : ViewModel() {
                         qSignalData.value = t.toDataPoints()
                     }
 
-                    override fun onComplete() { }
+                    override fun onComplete() {}
 
-                    override fun onError(e: Throwable) { }
+                    override fun onError(e: Throwable) {}
                 })
         )
     }

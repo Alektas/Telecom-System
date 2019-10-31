@@ -8,10 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
+import alektas.telecomapp.utils.SystemUtils
 import android.util.Log
 import android.widget.Toast
 import androidx.core.os.bundleOf
-import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
@@ -49,10 +49,19 @@ class DemodulatorProcessFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DemodulatorProcessViewModel::class.java)
+        setInitValues(viewModel)
+        setFieldsActions(viewModel)
 
-        process_frame_length.doOnTextChanged { text, _, _, _ ->
+        viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
+            sum_data_chart.removeAllSeries()
+            sum_data_chart.addSeries(LineGraphSeries(it))
+        })
+    }
+
+    private fun setFieldsActions(viewModel: DemodulatorProcessViewModel) {
+        process_frame_length.setOnEditorActionListener { tv, _, _ ->
             try {
-                val frameLength = text.toString().toInt()
+                val frameLength = tv.text.toString().toInt()
                 if (frameLength <= 0) throw NumberFormatException()
                 viewModel.setFrameLength(frameLength)
             } catch (e: NumberFormatException) {
@@ -60,11 +69,12 @@ class DemodulatorProcessFragment : Fragment() {
                 Log.e(TAG, msg, e)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
+            false
         }
 
-        process_code_length.doOnTextChanged { text, _, _, _ ->
+        process_code_length.setOnEditorActionListener { tv, _, _ ->
             try {
-                val codeLength = text.toString().toInt()
+                val codeLength = tv.text.toString().toInt()
                 if (codeLength <= 0) throw NumberFormatException()
                 viewModel.setCodeLength(codeLength)
             } catch (e: NumberFormatException) {
@@ -72,11 +82,12 @@ class DemodulatorProcessFragment : Fragment() {
                 Log.e(TAG, msg, e)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
+            false
         }
 
-        process_bit_time.doOnTextChanged { text, _, _, _ ->
+        process_bit_time.setOnEditorActionListener { tv, _, _ ->
             try {
-                val bitTime = text.toString().toDouble()
+                val bitTime = tv.text.toString().toDouble()
                 if (bitTime <= 0) throw NumberFormatException()
                 viewModel.setBitTime(bitTime)
             } catch (e: NumberFormatException) {
@@ -84,11 +95,13 @@ class DemodulatorProcessFragment : Fragment() {
                 Log.e(TAG, msg, e)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
+            false
         }
 
-        process_threshold.doOnTextChanged { text, _, _, _ ->
+        process_threshold.setOnEditorActionListener { tv, _, _ ->
+            SystemUtils.hideKeyboard(this)
             try {
-                val threshold = text.toString().toDouble()
+                val threshold = tv.text.toString().toDouble()
                 if (threshold < 0) throw NumberFormatException()
                 viewModel.setThreshold(threshold)
             } catch (e: NumberFormatException) {
@@ -96,11 +109,25 @@ class DemodulatorProcessFragment : Fragment() {
                 Log.e(TAG, msg, e)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
+            false
         }
+    }
 
-        viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
-            sum_data_chart.removeAllSeries()
-            sum_data_chart.addSeries(LineGraphSeries(it))
+    private fun setInitValues(viewModel: DemodulatorProcessViewModel) {
+        viewModel.initFrameLength.observe(viewLifecycleOwner, Observer {
+            process_frame_length.setText(it.toString())
+        })
+
+        viewModel.initCodeLength.observe(viewLifecycleOwner, Observer {
+            process_code_length.setText(it.toString())
+        })
+
+        viewModel.initBitTime.observe(viewLifecycleOwner, Observer {
+            process_bit_time.setText(it.toBigDecimal().toPlainString())
+        })
+
+        viewModel.initThreshold.observe(viewLifecycleOwner, Observer {
+            process_threshold.setText(it.toString())
         })
     }
 }
