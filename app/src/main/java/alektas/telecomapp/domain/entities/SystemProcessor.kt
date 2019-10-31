@@ -75,7 +75,7 @@ class SystemProcessor {
 
         for (i in 0 until count) {
             val frameData = UserDataProvider.generateData(frameLength)
-            val channel = ChannelData("${i + 1}", frameData, codes[i])
+            val channel = ChannelData("${i + 1}", frameData, codes[i], codesType)
             channels.add(channel)
         }
 

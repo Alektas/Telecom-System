@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.domain.entities.signals.noises.Noise
 import io.reactivex.Observable
 
 interface Repository {
@@ -27,8 +28,8 @@ interface Repository {
     fun setChannelsSignal(signal: Signal)
     fun observeChannelsSignal(): Observable<Signal>
 
-    fun setNoise(signal: Signal)
-    fun observeNoise(): Observable<Signal>
+    fun setNoise(signal: Noise)
+    fun observeNoise(): Observable<Noise>
     fun observeEther(): Observable<Signal>
 
     fun setDemodulatedSignal(signal: BinarySignal)

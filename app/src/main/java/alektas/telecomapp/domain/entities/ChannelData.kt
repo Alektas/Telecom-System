@@ -1,9 +1,12 @@
 package alektas.telecomapp.domain.entities
 
+import alektas.telecomapp.data.CodeGenerator
+
 data class ChannelData(
     val name: String = "${channelsCount + 1}",
     var data: BooleanArray = booleanArrayOf(),
-    val code: BooleanArray = booleanArrayOf()
+    val code: BooleanArray = booleanArrayOf(),
+    val codeType: Int = CodeGenerator.WALSH
 ) {
     private val id: Int
 

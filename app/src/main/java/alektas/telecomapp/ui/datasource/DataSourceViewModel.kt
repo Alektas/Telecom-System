@@ -1,18 +1,19 @@
 package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.App
-import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.utils.doOnFirst
+import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
-import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class DataSourceViewModel : ViewModel() {
@@ -23,12 +24,21 @@ class DataSourceViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val channels = MutableLiveData<List<ChannelData>>()
     val ether = MutableLiveData<Array<DataPoint>>()
+    val initNoiseSnr = MutableLiveData<Double>()
+    val initChannelCount = MutableLiveData<Int>()
+    val initCodeType = MutableLiveData<Int>()
+    val initFrameSize = MutableLiveData<Int>()
 
     init {
         App.component.inject(this)
 
         disposable.addAll(storage.observeChannels()
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnFirst {
+                initChannelCount.value = it.size
+                initCodeType.value = it.first().codeType
+                initFrameSize.value = it.first().data.size
+            }
             .subscribeWith(object: DisposableObserver<List<ChannelData>>() {
                 override fun onNext(t: List<ChannelData>) {
                     channels.value = t
@@ -39,16 +49,27 @@ class DataSourceViewModel : ViewModel() {
                 override fun onError(e: Throwable) { }
             }),
             storage.observeEther()
-                .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object: DisposableObserver<Signal>() {
                     override fun onNext(s: Signal) {
-                        ether.value = s.getPoints().map { DataPoint(it.key, it.value) }.toTypedArray()
+                        ether.value = s.toDataPoints()
                     }
 
                     override fun onComplete() {
                         println("Complete ether stream")
                     }
+
+                    override fun onError(e: Throwable) { }
+                }),
+            storage.observeNoise()
+                .observeOn(AndroidSchedulers.mainThread())
+                .take(1)
+                .subscribeWith(object: DisposableObserver<Noise>() {
+                    override fun onNext(s: Noise) {
+                        initNoiseSnr.value = s.snr()
+                    }
+
+                    override fun onComplete() { }
 
                     override fun onError(e: Throwable) { }
                 })

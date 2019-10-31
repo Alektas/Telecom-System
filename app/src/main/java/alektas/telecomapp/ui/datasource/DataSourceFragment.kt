@@ -2,6 +2,7 @@ package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -15,7 +16,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
-import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jjoe64.graphview.series.DataPoint
@@ -30,7 +30,6 @@ class DataSourceFragment : Fragment(), ChannelController {
     companion object {
         const val TAG = "DataSourceFragment"
         fun newInstance() = DataSourceFragment()
-
     }
 
     override fun onCreateView(
@@ -44,12 +43,18 @@ class DataSourceFragment : Fragment(), ChannelController {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DataSourceViewModel::class.java)
         setupCodeTypesDropdown()
+        setInitValues(viewModel)
+
         val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
 
-        ether_snr.doOnTextChanged { text, _, _, _ ->
-            changeNoisePower(text.toString())
+        ether_snr.setOnEditorActionListener { tv, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                changeNoisePower(tv.text.toString())
+                SystemUtils.hideKeyboard(this)
+                true
+            } else false
         }
 
         frame_length.setOnEditorActionListener { _, actionId, _ ->
@@ -73,6 +78,25 @@ class DataSourceFragment : Fragment(), ChannelController {
         })
     }
 
+    private fun setInitValues(viewModel: DataSourceViewModel) {
+        viewModel.initNoiseSnr.observe(viewLifecycleOwner, Observer {
+            ether_snr.setText(it.toString())
+        })
+
+        viewModel.initCodeType.observe(viewLifecycleOwner, Observer {
+            channel_code_type.setText(CodeGenerator.getCodeName(it))
+        })
+
+        viewModel.initChannelCount.observe(viewLifecycleOwner, Observer {
+            channel_count.setText(it.toString())
+        })
+
+        viewModel.initFrameSize.observe(viewLifecycleOwner, Observer {
+            frame_length.setText(it.toString())
+        })
+
+    }
+
     override fun removeChannel(channel: ChannelData) {
         viewModel.removeChannel(channel)
     }
@@ -80,10 +104,10 @@ class DataSourceFragment : Fragment(), ChannelController {
     override fun showChannelDetails(channel: ChannelData) { }
 
     private fun setupCodeTypesDropdown() {
-        val adapter = ArrayAdapter(
+        val adapter = SimpleArrayAdapter(
             requireContext(),
             alektas.telecomapp.R.layout.support_simple_spinner_dropdown_item,
-            CodeGenerator.codeNames.values.toTypedArray()
+            CodeGenerator.codeNames.values.toList()
         )
         channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
@@ -94,7 +118,11 @@ class DataSourceFragment : Fragment(), ChannelController {
             }
         }
 
-        channel_code_type.setOnTouchListener { v, _ ->
+        val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
+        channel_code_type.setText(defaultType)
+        selectedCodeType = defaultType
+
+        channel_code_type_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
             (v as AutoCompleteTextView).showDropDown()
             false
