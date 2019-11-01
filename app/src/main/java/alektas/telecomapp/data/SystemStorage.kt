@@ -28,6 +28,7 @@ class SystemStorage : Repository {
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
+    private val channelsErrorsSource = BehaviorSubject.create<List<List<Int>>>()
     private val etherSource = Observable.combineLatest(
         channelsSignalSource.startWith(BaseSignal()),
         noiseSource.startWith(BaseNoise()),
@@ -199,5 +200,13 @@ class SystemStorage : Repository {
 
     override fun observeDecodedChannels(): Observable<List<ChannelData>> {
         return decodedChannelsSource
+    }
+
+    override fun setChannelsErrors(errors: List<List<Int>>) {
+        channelsErrorsSource.onNext(errors)
+    }
+
+    override fun observeChannelsErrors(): Observable<List<List<Int>>> {
+        return channelsErrorsSource
     }
 }
