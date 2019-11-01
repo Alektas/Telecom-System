@@ -18,13 +18,21 @@ fun List<Pair<Double, Double>>.toFloat(): List<Pair<Float, Float>> =
     this.map { Pair(it.first.toFloat(), it.second.toFloat()) }
 
 fun Signal.getSpectrum(): Array<DataPoint> {
-    val signalData = Window(Window.GAUSSE).applyTo(this).getValues()
+    val data = Window(Window.GAUSSE).applyTo(this).getValues()
+    val oldSize = data.size
+    val signalData = if (!oldSize.isPowerOfTwo()) {
+        val newSize = oldSize.highestOneBit().shl(1)
+        data.copyOf(newSize = newSize)
+    } else {
+        data
+    }
+
     var spectrum = FastFourierTransformer(DftNormalization.STANDARD)
         .transform(
             signalData,
             TransformType.FORWARD
         )
-    val actualSize = spectrum.size / 2
+    val actualSize = (spectrum.size / 2).coerceIn(0, 4000)
     spectrum = spectrum.take(actualSize).toTypedArray()
     return spectrum
         .mapIndexed { i, complex -> DataPoint(i.toDouble(), complex.abs()) }
@@ -32,7 +40,15 @@ fun Signal.getSpectrum(): Array<DataPoint> {
 }
 
 fun Signal.getNormalizedSpectrum(): Array<DataPoint> {
-    val signalData = Window(Window.GAUSSE).applyTo(this).getValues()
+    val data = Window(Window.GAUSSE).applyTo(this).getValues()
+    val oldSize = data.size
+    val signalData = if (!oldSize.isPowerOfTwo()) {
+        val newSize = oldSize.highestOneBit().shl(1)
+        data.copyOf(newSize = newSize)
+    } else {
+        data
+    }
+
     var spectrum = FastFourierTransformer(DftNormalization.STANDARD)
         .transform(
             signalData,
@@ -44,6 +60,20 @@ fun Signal.getNormalizedSpectrum(): Array<DataPoint> {
     return spectrum
         .mapIndexed { i, complex -> DataPoint(i.toDouble(), complex.abs() / maxSpectrumValue) }
         .toTypedArray()
+}
+
+fun Int.isPowerOfTwo(): Boolean {
+    return this > 0 && this and this - 1 == 0
+}
+
+fun Int.highestOneBit(): Int {
+    var i = this
+    i = i or (i shr 1)
+    i = i or (i shr 2)
+    i = i or (i shr 4)
+    i = i or (i shr 8)
+    i = i or (i shr 16)
+    return i - i.ushr(1)
 }
 
 fun <T> Observable<T>.doOnFirst(action: (T) -> Unit): Observable<T> =
