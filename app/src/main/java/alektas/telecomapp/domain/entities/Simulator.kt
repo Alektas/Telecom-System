@@ -1,6 +1,7 @@
 package alektas.telecomapp.domain.entities
 
 import java.util.*
+import kotlin.math.ceil
 
 class Simulator {
 
@@ -22,12 +23,17 @@ class Simulator {
          * Если требование не выполняется, то необходимо дополнять сигнал нулями до кратного
          * степени 2 размера, чтобы выполнять БПФ.
          */
-        const val SAMPLE_COUNT = 8192
+        private var SAMPLE_COUNT = 8192
 
         /**
          * Общее время симуляции (в условных единицах времени)
          */
-        const val SIMULATION_TIME = SAMPLE_COUNT * SAMPLE_TIME
+        private var SIMULATION_TIME = SAMPLE_COUNT * SAMPLE_TIME
+
+        fun setSimulationTime(time: Double) {
+            SIMULATION_TIME = time
+            SAMPLE_COUNT = ceil(SIMULATION_TIME * SAMPLING_RATE).toInt()
+        }
 
         /**
          * Подсчет количества сэмплов (измерений/тактов), которое получится (измерится, пройдет)

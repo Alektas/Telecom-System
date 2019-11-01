@@ -154,7 +154,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
     ): Pair<BooleanArray, Map<Int, Double>> {
         val errorBits = mutableMapOf<Int, Double>()
         val bits = signal.getValues(from, to).toList()
-            .windowed(interval, interval, false) { it.average() }
+            .windowed(interval, interval, true) { it.average() }
             .also {
                 it.forEachIndexed { i, value -> if (!isBit(value)) errorBits[i] = value }
             }
@@ -178,7 +178,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
         interval: Int
     ): List<Double> {
         return signal.getValues(from, to).toList()
-            .windowed(interval, interval, false) { it.average() }
+            .windowed(interval, interval, true) { it.average() }
     }
 
 }
