@@ -24,7 +24,7 @@
     <string name="statistics">Статистика</string>
     <string name="decoder">Декодер</string>
     <string name="demodulator">Демодулятор</string>
-    <string name="channel_count">Количество</string>
+    <string name="channel_count">Количество каналов</string>
     <string name="code_types">Тип кодов</string>
     <string name="frame_length">Длина фрейма</string>
     <string name="channel_delete_button_descr">Channel delete button</string>
@@ -46,4 +46,10 @@
     <string name="sum_data">Данные</string>
     <string name="bit_time">Время бита, мкс</string>
     <string name="code_length">Длина кода</string>
+    <string name="default_channel_count">0</string>
+    <string name="ber">BER</string>
+    <string name="error_bits">Ошибочных битов</string>
+    <string name="bits_transmitted">Бит передано</string>
+    <string name="percent">%</string>
+    <string name="bits_received">Бит принято</string>
 </resources>
