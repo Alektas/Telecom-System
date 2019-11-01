@@ -11,6 +11,7 @@ import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.BinarySignal
+import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.observers.DisposableObserver
@@ -20,6 +21,7 @@ class SystemProcessor {
     @Inject
     lateinit var storage: Repository
     private var codedGroupData: BooleanArray? = null
+    private var noiseSnr: Double? = null
 
     init {
         App.component.inject(this)
@@ -59,6 +61,18 @@ class SystemProcessor {
 
                 override fun onError(e: Throwable) {}
             })
+
+        storage.observeNoise()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : DisposableObserver<Noise>() {
+                override fun onNext(t: Noise) {
+                    noiseSnr = t.snr()
+                }
+
+                override fun onComplete() {}
+
+                override fun onError(e: Throwable) {}
+            })
     }
 
     fun generateChannels(
@@ -78,6 +92,10 @@ class SystemProcessor {
             val channel = ChannelData("${i + 1}", frameData, codes[i], codesType)
             channels.add(channel)
         }
+
+        val commTime = frameLength * codes[0].size * CdmaContract.CODE_BIT_TIME
+        Simulator.setSimulationTime(commTime)
+        noiseSnr?.let { setNoise(it) }
 
         CdmaContract.DATA_FRAME_LENGTH = frameLength
         CdmaContract.CODE_LENGTH = codes[0].size
