@@ -61,12 +61,12 @@ class DecoderViewModel : ViewModel() {
     }
 
     fun decodeChannels(count: Int, codesType: Int) {
-        processor.decodeChannels(count, codesType)
+        processor.setDecodedChannels(count, codesType)
     }
 
     fun decodeCustomChannel(codeString: String) {
         val code = codeString.filter { it == '1' || it == '0' }.map { it == '1' }.toBooleanArray()
-        processor.decodeChannel(code)
+        processor.addDecodedChannel(code)
     }
 
     fun removeChannel(channel: ChannelData) {

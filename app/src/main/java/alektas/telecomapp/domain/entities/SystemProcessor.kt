@@ -10,8 +10,6 @@ import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
-import alektas.telecomapp.domain.entities.signals.BinarySignal
-import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -24,6 +22,7 @@ class SystemProcessor {
     @Inject
     lateinit var storage: Repository
     private var codedGroupData: BooleanArray? = null
+    private var decodedChannels: List<ChannelData>? = null
     private var noiseSnr: Double? = null
 
     init {
@@ -31,51 +30,28 @@ class SystemProcessor {
 
         storage.observeChannels()
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : DisposableObserver<List<ChannelData>>() {
-                override fun onNext(s: List<ChannelData>) {
-                    generateChannelsSignal(s)
-                }
-
-                override fun onComplete() {}
-
-                override fun onError(e: Throwable) {}
-            })
+            .subscribe { generateChannelsSignal(it) }
 
         storage.observeDemodulatorConfig()
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : DisposableObserver<DemodulatorConfig>() {
-                override fun onNext(c: DemodulatorConfig) {
-                    demodulate(c)
-                }
-
-                override fun onComplete() {}
-
-                override fun onError(e: Throwable) {}
-            })
+            .subscribe { demodulate(it) }
 
         storage.observeDemodulatedSignal()
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : DisposableObserver<BinarySignal>() {
-                override fun onNext(t: BinarySignal) {
-                    codedGroupData = t.bits
-                }
+            .subscribe { s ->
+                codedGroupData = s.bits
+                decodedChannels?.let { updateDecodedChannels(it, s.bits) }
+            }
 
-                override fun onComplete() {}
-
-                override fun onError(e: Throwable) {}
-            })
+        storage.observeDecodedChannels()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                decodedChannels = it
+            }
 
         storage.observeNoise()
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : DisposableObserver<Noise>() {
-                override fun onNext(t: Noise) {
-                    noiseSnr = t.snr()
-                }
-
-                override fun onComplete() {}
-
-                override fun onError(e: Throwable) {}
-            })
+            .subscribe { noiseSnr = it.snr() }
 
         Observable.combineLatest(
             storage.observeChannels(),
@@ -83,11 +59,7 @@ class SystemProcessor {
             BiFunction<List<ChannelData>, List<ChannelData>, List<List<Int>>> { origin, decoded ->
                 diffChannels(origin, decoded)
             })
-            .apply {
-                subscribe { errors ->
-                    storage.setChannelsErrors(errors)
-                }
-            }
+            .subscribe { storage.setChannelsErrors(it) }
     }
 
     fun generateChannels(
@@ -156,7 +128,19 @@ class SystemProcessor {
         storage.setDemodulatedSignalConstellation(demodulator.constellation)
     }
 
-    fun decodeChannel(code: BooleanArray) {
+    fun updateDecodedChannels(channels: List<ChannelData>, groupData: BooleanArray) {
+        val newChannels = mutableListOf<ChannelData>()
+
+        for (c in channels) {
+            val frameData = CdmaCoder().decode(c.code, groupData)
+            c.data = frameData
+            newChannels.add(c)
+        }
+
+        storage.setDecodedChannels(channels)
+    }
+
+    fun addDecodedChannel(code: BooleanArray) {
         codedGroupData?.let {
             val data = CdmaCoder().decode(code, it)
             val channel = ChannelData(data = data, code = code)
@@ -164,7 +148,7 @@ class SystemProcessor {
         }
     }
 
-    fun decodeChannels(count: Int, codesType: Int) {
+    fun setDecodedChannels(count: Int, codesType: Int) {
         codedGroupData?.let {
             val channels = mutableListOf<ChannelData>()
             val codeGen = CodeGenerator()
