@@ -14,7 +14,6 @@ import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.BiFunction
-import io.reactivex.observers.DisposableObserver
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -64,6 +63,7 @@ class SystemProcessor {
 
     fun generateChannels(
         count: Int,
+        dataSpeed: Double, // кБит/с
         frameLength: Int,
         codesType: Int = CodeGenerator.WALSH
     ) {
@@ -74,20 +74,17 @@ class SystemProcessor {
             else -> codeGen.generateRandomCodes(count, count)
         }
 
+        val bitTime = 1.0e-3 / dataSpeed
+
         for (i in 0 until count) {
             val frameData = UserDataProvider.generateData(frameLength)
-            val channel = ChannelData("${i + 1}", frameData, codes[i], codesType)
+            val channel = ChannelData("${i + 1}", frameData, bitTime, codes[i], codesType)
             channels.add(channel)
         }
 
-        val commTime = frameLength * codes[0].size * CdmaContract.CODE_BIT_TIME
-        Simulator.setSimulationTime(commTime)
+        val dataTime = frameLength * codes[0].size * bitTime
+        Simulator.setSimulationTime(dataTime)
         noiseSnr?.let { setNoise(it) }
-
-        CdmaContract.DATA_FRAME_LENGTH = frameLength
-        CdmaContract.CODE_LENGTH = codes[0].size
-        CdmaContract.SPREAD_RATIO = codes[0].size
-        CdmaContract.SPREAD_DATA_LENGTH = frameLength * codes[0].size
 
         storage.setChannels(channels)
     }
@@ -98,15 +95,19 @@ class SystemProcessor {
             return
         }
 
-        val groupData = channels.map { CdmaCoder().encode(it.code, it.data) }
+        val groupData = dataAggregation(channels)
+
+        val carrier = SignalGenerator().cos(frequency = QpskContract.DEFAULT_CARRIER_FREQUENCY)
+        val signal = QpskModulator(channels[0].bitTime).modulate(carrier, groupData)
+
+        storage.setChannelsSignal(signal)
+    }
+
+    private fun dataAggregation(channels: List<ChannelData>): BooleanArray {
+        return channels.map { CdmaCoder().encode(it.code, it.data) }
             .reduce { acc, data ->
                 data.mapIndexed { i, bit -> acc[i].xor(bit) }.toBooleanArray()
             }
-
-        val carrier = SignalGenerator().cos(frequency = QpskContract.CARRIER_FREQUENCY)
-        val signal = QpskModulator().modulate(carrier, groupData)
-
-        storage.setChannelsSignal(signal)
     }
 
     fun removeChannel(channel: ChannelData) {
@@ -114,7 +115,7 @@ class SystemProcessor {
     }
 
     fun setNoise(snr: Double) {
-        storage.setNoise(WhiteNoise(snr, QpskContract.SIGNAL_MAGNITUDE))
+        storage.setNoise(WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE))
     }
 
     fun demodulate(config: DemodulatorConfig) {
@@ -154,7 +155,7 @@ class SystemProcessor {
             val codeGen = CodeGenerator()
             val codes = when (codesType) {
                 CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
-                else -> codeGen.generateRandomCodes(count, CdmaContract.CODE_LENGTH)
+                else -> codeGen.generateRandomCodes(count, count)
             }
 
             for (i in 0 until count) {

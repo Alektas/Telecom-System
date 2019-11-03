@@ -87,6 +87,10 @@ class DataSourceFragment : Fragment(), ChannelController {
             channel_code_type.setText(CodeGenerator.getCodeName(it))
         })
 
+        viewModel.initDataSpeed.observe(viewLifecycleOwner, Observer {
+            data_speed.setText(it.toString())
+        })
+
         viewModel.initChannelCount.observe(viewLifecycleOwner, Observer {
             channel_count.setText(it.toString())
         })
@@ -141,6 +145,18 @@ class DataSourceFragment : Fragment(), ChannelController {
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             return
         }
+
+        val dataSpeed = try {
+            val l = data_speed.text.toString().toDouble()
+            if (l <= 0) throw NumberFormatException()
+            else l
+        } catch (e: NumberFormatException) {
+            val msg = "Скорость передачи должна быть положительным числом"
+            Log.e(TAG, msg, e)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val frameLength = try {
             val l = frame_length.text.toString().toInt()
             if (l <= 0) throw NumberFormatException()
@@ -152,7 +168,7 @@ class DataSourceFragment : Fragment(), ChannelController {
             return
         }
         val codeType = selectedCodeType?.let { CodeGenerator.getCodeTypeId(it) } ?: 0
-        viewModel.generateChannels(channelCount, frameLength, codeType)
+        viewModel.generateChannels(channelCount, dataSpeed, frameLength, codeType)
     }
 
     private fun changeNoisePower(text: String) {

@@ -52,4 +52,5 @@
     <string name="bits_transmitted">Бит передано</string>
     <string name="percent">%</string>
     <string name="bits_received">Бит принято</string>
+    <string name="data_speed">Скорость передачи данных, кБит/с</string>
 </resources>

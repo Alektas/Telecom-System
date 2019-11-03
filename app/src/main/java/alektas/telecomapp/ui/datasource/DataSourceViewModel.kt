@@ -25,6 +25,7 @@ class DataSourceViewModel : ViewModel() {
     val channels = MutableLiveData<List<ChannelData>>()
     val ether = MutableLiveData<Array<DataPoint>>()
     val initNoiseSnr = MutableLiveData<Double>()
+    val initDataSpeed = MutableLiveData<Double>()
     val initChannelCount = MutableLiveData<Int>()
     val initCodeType = MutableLiveData<Int>()
     val initFrameSize = MutableLiveData<Int>()
@@ -37,6 +38,7 @@ class DataSourceViewModel : ViewModel() {
             .doOnFirst {
                 initChannelCount.value = it.size
                 initCodeType.value = it.first().codeType
+                initDataSpeed.value = 1.0e-3 / it.first().bitTime // преобразование в скорость (кБит/с)
                 initFrameSize.value = it.first().data.size
             }
             .subscribeWith(object: DisposableObserver<List<ChannelData>>() {
@@ -78,10 +80,11 @@ class DataSourceViewModel : ViewModel() {
 
     fun generateChannels(
         count: Int,
+        dataSpeed: Double,
         frameLength: Int,
         codeType: Int
     ) {
-        processor.generateChannels(count, frameLength, codeType)
+        processor.generateChannels(count, dataSpeed, frameLength, codeType)
     }
 
     fun removeChannel(channel: ChannelData) {

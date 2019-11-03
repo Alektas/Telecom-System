@@ -137,7 +137,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
     /**
      * Сглаживает сигнал и возвращает массив битов в соответствии с уровнем сигнала
      * на интервалах <code>interval</code>.
-     * Если сигнал больше порога {@link QpskContract#SIGNAL_THRESHOLD}, то бит = 1
+     * Если сигнал больше порога {@link QpskContract#DEFAULT_SIGNAL_THRESHOLD}, то бит = 1
      * Если сигнал меньше порога {@link QpskContract#SIGNAL_TRESHOLD_NEG}, то бит = 0
      * Если сигнал между пороговыми значениями, то информация отсутствует, бит не записывается.
      *

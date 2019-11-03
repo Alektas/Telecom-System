@@ -5,6 +5,7 @@ import alektas.telecomapp.data.CodeGenerator
 data class ChannelData(
     val name: String = "${channelsCount + 1}",
     var data: BooleanArray = booleanArrayOf(),
+    val bitTime: Double = QpskContract.DEFAULT_DATA_BIT_TIME,
     val code: BooleanArray = booleanArrayOf(),
     val codeType: Int = CodeGenerator.WALSH
 ) {

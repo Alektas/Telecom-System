@@ -47,7 +47,7 @@ class StatisticFragment : Fragment() {
         })
 
         viewModel.berData.observe(viewLifecycleOwner, Observer {
-            statistic_ber.text = it.toString()
+            statistic_ber.text = String.format("%.2f", it)
         })
     }
 

@@ -85,13 +85,13 @@ class DemodulatorProcessFragment : Fragment() {
             false
         }
 
-        process_bit_time.setOnEditorActionListener { tv, _, _ ->
+        process_data_speed.setOnEditorActionListener { tv, _, _ ->
             try {
-                val bitTime = tv.text.toString().toDouble()
-                if (bitTime <= 0) throw NumberFormatException()
-                viewModel.setBitTime(bitTime)
+                val dataSpeed = tv.text.toString().toDouble()
+                if (dataSpeed <= 0) throw NumberFormatException()
+                viewModel.setDataSpeed(dataSpeed)
             } catch (e: NumberFormatException) {
-                val msg = "Время бита должно быть положительным числом"
+                val msg = "Скорость передачи данных должна быть положительным числом"
                 Log.e(TAG, msg, e)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
@@ -122,8 +122,8 @@ class DemodulatorProcessFragment : Fragment() {
             process_code_length.setText(it.toString())
         })
 
-        viewModel.initBitTime.observe(viewLifecycleOwner, Observer {
-            process_bit_time.setText(it.toBigDecimal().toPlainString())
+        viewModel.initDataSpeed.observe(viewLifecycleOwner, Observer {
+            process_data_speed.setText(it.toBigDecimal().toPlainString())
         })
 
         viewModel.initThreshold.observe(viewLifecycleOwner, Observer {

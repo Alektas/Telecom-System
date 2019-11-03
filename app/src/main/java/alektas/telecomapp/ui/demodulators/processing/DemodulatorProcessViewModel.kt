@@ -26,7 +26,7 @@ class DemodulatorProcessViewModel : ViewModel() {
     val qBitsData = MutableLiveData<Array<DataPoint>>()
     val initFrameLength = MutableLiveData<Int>()
     val initCodeLength = MutableLiveData<Int>()
-    val initBitTime = MutableLiveData<Double>()
+    val initDataSpeed = MutableLiveData<Double>()
     val initThreshold = MutableLiveData<Double>()
 
     init {
@@ -40,7 +40,7 @@ class DemodulatorProcessViewModel : ViewModel() {
                     override fun onNext(t: DemodulatorConfig) {
                         initFrameLength.value = t.frameLength
                         initCodeLength.value = t.codeLength
-                        initBitTime.value = t.bitTime * 1.0e6 // преобразование в микросекунды
+                        initDataSpeed.value = 1.0e-3 / t.bitTime // преобразование в скорость (кБит/с)
                         initThreshold.value = t.bitThreshold
                     }
 
@@ -58,9 +58,9 @@ class DemodulatorProcessViewModel : ViewModel() {
                         val qBits = t.bits.filterIndexed { i, _ -> i % 2 != 0 }.toBooleanArray()
 
                         iBitsData.value =
-                            BinarySignal(iBits, QpskContract.SYMBOL_TIME).toDataPoints()
+                            BinarySignal(iBits, QpskContract.DEFAULT_SYMBOL_TIME).toDataPoints()
                         qBitsData.value =
-                            BinarySignal(qBits, QpskContract.SYMBOL_TIME).toDataPoints()
+                            BinarySignal(qBits, QpskContract.DEFAULT_SYMBOL_TIME).toDataPoints()
                     }
 
                     override fun onComplete() {}
@@ -110,10 +110,10 @@ class DemodulatorProcessViewModel : ViewModel() {
     }
 
     /**
-     * @param bitTime время одного бита данных в микросекундах
+     * @param dataSpeed скорость передачи данных в кБ/с
      */
-    fun setBitTime(bitTime: Double) {
-        storage.setDemodulatorBitTime(bitTime * 1.0e-6)
+    fun setDataSpeed(dataSpeed: Double) {
+        storage.setDemodulatorBitTime(1.0e-3 / dataSpeed)
     }
 
 }
