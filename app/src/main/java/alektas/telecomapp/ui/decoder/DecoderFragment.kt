@@ -22,8 +22,8 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.decoder_fragment.*
-import kotlinx.android.synthetic.main.decoder_fragment.channel_code_type
-import kotlinx.android.synthetic.main.decoder_fragment.channel_count
+import kotlinx.android.synthetic.main.decoder_fragment.source_channel_code_type
+import kotlinx.android.synthetic.main.decoder_fragment.source_channel_count
 import kotlinx.android.synthetic.main.decoder_fragment.channel_list
 import kotlinx.android.synthetic.main.decoder_fragment.generate_channels_btn
 
@@ -59,7 +59,7 @@ class DecoderFragment : Fragment(), ChannelController {
             false
         }
 
-        channel_count.setOnEditorActionListener { _, _, _ ->
+        source_channel_count.setOnEditorActionListener { _, _, _ ->
             generate_channels_btn.performClick()
             false
         }
@@ -106,9 +106,9 @@ class DecoderFragment : Fragment(), ChannelController {
             R.layout.support_simple_spinner_dropdown_item,
             CodeGenerator.codeNames.values.toList()
         )
-        channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
+        source_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
-        channel_code_type.setOnItemClickListener { parent, _, position, _ ->
+        source_channel_code_type.setOnItemClickListener { parent, _, position, _ ->
             val type = parent.getItemAtPosition(position)
             if (type is String) {
                 selectedCodeType = type
@@ -116,10 +116,10 @@ class DecoderFragment : Fragment(), ChannelController {
         }
 
         val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
-        channel_code_type.setText(defaultType)
+        source_channel_code_type.setText(defaultType)
         selectedCodeType = defaultType
 
-        channel_code_type_layout.setOnTouchListener { v, _ ->
+        source_channel_code_type_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
             (v as AutoCompleteTextView).showDropDown()
             false
@@ -128,18 +128,18 @@ class DecoderFragment : Fragment(), ChannelController {
 
     private fun setInitValues(viewModel: DecoderViewModel) {
         viewModel.initCodeType.observe(viewLifecycleOwner, Observer {
-            channel_code_type.setText(CodeGenerator.getCodeName(it))
+            source_channel_code_type.setText(CodeGenerator.getCodeName(it))
         })
 
         viewModel.initChannelCount.observe(viewLifecycleOwner, Observer {
-            channel_count.setText(it.toString())
+            source_channel_count.setText(it.toString())
         })
     }
 
     private fun decodeChannels() {
         viewModel.inputSignalData.value?.let {
             val channelCount = try {
-                val c = channel_count.text.toString().toInt()
+                val c = source_channel_count.text.toString().toInt()
                 if (c < 0) throw NumberFormatException()
                 else c
             } catch (e: NumberFormatException) {
