@@ -9,9 +9,8 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import alektas.telecomapp.utils.SystemUtils
-import android.util.Log
-import android.widget.Toast
 import androidx.core.os.bundleOf
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
@@ -50,7 +49,11 @@ class DemodulatorProcessFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DemodulatorProcessViewModel::class.java)
         setInitValues(viewModel)
-        setFieldsActions(viewModel)
+        setFieldsValidation()
+
+        process_btn.setOnClickListener {
+            processData()
+        }
 
         viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
             sum_data_chart.removeAllSeries()
@@ -58,58 +61,56 @@ class DemodulatorProcessFragment : Fragment() {
         })
     }
 
-    private fun setFieldsActions(viewModel: DemodulatorProcessViewModel) {
-        process_frame_length.setOnEditorActionListener { tv, _, _ ->
+    private fun processData() {
+        SystemUtils.hideKeyboard(this)
+
+        val frameLength = process_frame_length.text.toString()
+        val dataSpeed = process_data_speed.text.toString()
+        val codeLength = process_code_length.text.toString()
+        val threshold = process_threshold.text.toString()
+
+        viewModel.processData(frameLength, dataSpeed, codeLength, threshold)
+    }
+
+    private fun setFieldsValidation() {
+        process_frame_length.doOnTextChanged { text, _, _, _ ->
             try {
-                val frameLength = tv.text.toString().toInt()
+                val frameLength = text.toString().toInt()
                 if (frameLength <= 0) throw NumberFormatException()
-                viewModel.setFrameLength(frameLength)
+                process_frame_length_layout.error = null
             } catch (e: NumberFormatException) {
-                val msg = "Длина фрейма должна быть положительным целым числом"
-                Log.e(TAG, msg, e)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                process_frame_length_layout.error = getString(R.string.error_positive_num)
             }
-            false
         }
 
-        process_code_length.setOnEditorActionListener { tv, _, _ ->
+        process_code_length.doOnTextChanged { text, _, _, _ ->
             try {
-                val codeLength = tv.text.toString().toInt()
+                val codeLength = text.toString().toInt()
                 if (codeLength <= 0) throw NumberFormatException()
-                viewModel.setCodeLength(codeLength)
+                process_code_length_layout.error = null
             } catch (e: NumberFormatException) {
-                val msg = "Длина кода должна быть положительным целым числом"
-                Log.e(TAG, msg, e)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                process_code_length_layout.error = getString(R.string.error_positive_num)
             }
-            false
         }
 
-        process_data_speed.setOnEditorActionListener { tv, _, _ ->
+        process_data_speed.doOnTextChanged { text, _, _, _ ->
             try {
-                val dataSpeed = tv.text.toString().toDouble()
+                val dataSpeed = text.toString().toDouble()
                 if (dataSpeed <= 0) throw NumberFormatException()
-                viewModel.setDataSpeed(dataSpeed)
+                process_data_speed_layout.error = null
             } catch (e: NumberFormatException) {
-                val msg = "Скорость передачи данных должна быть положительным числом"
-                Log.e(TAG, msg, e)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                process_data_speed_layout.error = getString(R.string.error_positive_num_decimal)
             }
-            false
         }
 
-        process_threshold.setOnEditorActionListener { tv, _, _ ->
-            SystemUtils.hideKeyboard(this)
+        process_threshold.doOnTextChanged { text, _, _, _ ->
             try {
-                val threshold = tv.text.toString().toDouble()
+                val threshold = text.toString().toDouble()
                 if (threshold < 0) throw NumberFormatException()
-                viewModel.setThreshold(threshold)
+                process_threshold_layout.error = null
             } catch (e: NumberFormatException) {
-                val msg = "Пороговый уровень сигнала должен быть неотрицательным числом"
-                Log.e(TAG, msg, e)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                process_threshold_layout.error = getString(R.string.error_num)
             }
-            false
         }
     }
 

@@ -53,4 +53,8 @@
     <string name="percent">%</string>
     <string name="bits_received">Бит принято</string>
     <string name="data_speed">Скорость передачи данных, кБит/с</string>
+    <string name="process_data">Обработать</string>
+    <string name="error_positive_num">Введите положительное целое число</string>
+    <string name="error_positive_num_decimal">Введите положительное число</string>
+    <string name="error_num">Введите число</string>
 </resources>

@@ -64,6 +64,19 @@ class SystemStorage : Repository {
         demodulatorConfigSource.onNext(demodulatorConfig)
     }
 
+    override fun updateDemodulatorConfig(
+        frameLength: Int,
+        bitTime: Double,
+        codeLength: Int,
+        threshold: Double
+    ) {
+        demodulatorConfig.frameLength = frameLength
+        demodulatorConfig.bitTime = bitTime
+        demodulatorConfig.codeLength = codeLength
+        demodulatorConfig.bitThreshold = threshold
+        demodulatorConfigSource.onNext(demodulatorConfig)
+    }
+
     override fun getDemodulatorFilterConfig(): FilterConfig {
         return filterConfig
     }
@@ -79,26 +92,6 @@ class SystemStorage : Repository {
 
     override fun setDemodulatorFrequency(frequency: Double) {
         demodulatorConfig.carrierFrequency = frequency
-        setDemodulatorConfig(demodulatorConfig)
-    }
-
-    override fun setDemodulatorThreshold(threshold: Double) {
-        demodulatorConfig.bitThreshold = threshold
-        setDemodulatorConfig(demodulatorConfig)
-    }
-
-    override fun setDemodulatorBitTime(bitTime: Double) {
-        demodulatorConfig.bitTime = bitTime
-        setDemodulatorConfig(demodulatorConfig)
-    }
-
-    override fun setDemodulatorFrameLength(frameLength: Int) {
-        demodulatorConfig.frameLength = frameLength
-        setDemodulatorConfig(demodulatorConfig)
-    }
-
-    override fun setDemodulatorCodeLength(codeLength: Int) {
-        demodulatorConfig.codeLength = codeLength
         setDemodulatorConfig(demodulatorConfig)
     }
 

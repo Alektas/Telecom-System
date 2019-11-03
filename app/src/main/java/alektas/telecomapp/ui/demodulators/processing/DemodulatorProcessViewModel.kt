@@ -3,6 +3,7 @@ package alektas.telecomapp.ui.demodulators.processing
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
@@ -38,9 +39,10 @@ class DemodulatorProcessViewModel : ViewModel() {
                 .take(1)
                 .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
                     override fun onNext(t: DemodulatorConfig) {
-                        initFrameLength.value = t.frameLength
-                        initCodeLength.value = t.codeLength
-                        initDataSpeed.value = 1.0e-3 / t.bitTime // преобразование в скорость (кБит/с)
+                        if (t.frameLength != 0) initFrameLength.value = t.frameLength
+                        if (t.codeLength != 0) initCodeLength.value = t.codeLength
+                        initDataSpeed.value =
+                            1.0e-3 / t.bitTime // преобразование в скорость (кБит/с)
                         initThreshold.value = t.bitThreshold
                     }
 
@@ -97,23 +99,46 @@ class DemodulatorProcessViewModel : ViewModel() {
         super.onCleared()
     }
 
-    fun setThreshold(threshold: Double) {
-        storage.setDemodulatorThreshold(threshold)
-    }
+    fun processData(
+        frameLengthString: String,
+        dataSpeedString: String,
+        codeLengthString: String,
+        thresholdString: String
+    ) {
+        val frameLength = try {
+            val v = frameLengthString.toInt()
+            if (v <= 0) throw NumberFormatException()
+            v
+        } catch (e: NumberFormatException) {
+            return
+        }
 
-    fun setFrameLength(frameLength: Int) {
-        storage.setDemodulatorFrameLength(frameLength)
-    }
+        val dataSpeed = try {
+            val v = dataSpeedString.toDouble()
+            if (v <= 0) throw NumberFormatException()
+            v
+        } catch (e: NumberFormatException) {
+            return
+        }
+        val bitTime = 1.0e-3 / dataSpeed // преобразование в скорость (кБит/с)
 
-    fun setCodeLength(codeLength: Int) {
-        storage.setDemodulatorCodeLength(codeLength)
-    }
+        val codeLength = try {
+            val v = codeLengthString.toInt()
+            if (v <= 0) throw NumberFormatException()
+            v
+        } catch (e: NumberFormatException) {
+            return
+        }
 
-    /**
-     * @param dataSpeed скорость передачи данных в кБ/с
-     */
-    fun setDataSpeed(dataSpeed: Double) {
-        storage.setDemodulatorBitTime(1.0e-3 / dataSpeed)
+        val threshold = try {
+            val v = thresholdString.toDouble()
+            if (v < 0) throw NumberFormatException()
+            v
+        } catch (e: NumberFormatException) {
+            return
+        }
+
+        storage.updateDemodulatorConfig(frameLength, bitTime, codeLength, threshold)
     }
 
 }
