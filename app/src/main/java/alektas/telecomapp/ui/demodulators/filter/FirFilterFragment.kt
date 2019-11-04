@@ -11,10 +11,10 @@ import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Window
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
-import android.view.inputmethod.EditorInfo
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
@@ -38,38 +38,40 @@ class FirFilterFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(FirFilterViewModel::class.java)
         setupWindowsDropdown(viewModel)
+        setFieldsValidation()
         setInitValues(viewModel)
 
         filter_order_input.setOnEditorActionListener { tv, _, _ ->
-            try {
-                val order = tv.text.toString().toInt()
-                if (order <= 0) throw NumberFormatException()
+            SystemUtils.hideKeyboard(this)
+            val order = viewModel.parseFilterOrder(tv.text.toString())
+
+            if (order > 0) {
                 viewModel.onOrderChanged(order)
-            } catch (e: NumberFormatException) {
+            } else {
                 Toast.makeText(
                     requireContext(),
-                    "Введите целое положительное число",
+                    getString(R.string.error_positive_num),
                     Toast.LENGTH_SHORT
                 ).show()
-                e.printStackTrace()
             }
+
             false
         }
 
         filter_cutoff_freq_input.setOnEditorActionListener { tv, _, _ ->
             SystemUtils.hideKeyboard(this)
-            try {
-                val freq = tv.text.toString().toDouble()
-                if (freq <= 0) throw NumberFormatException()
+            val freq = viewModel.parseCutoffFrequency(tv.text.toString())
+
+            if (freq > 0) {
                 viewModel.onCutoffFrequencyChanged(freq)
-            } catch (e: NumberFormatException) {
+            } else {
                 Toast.makeText(
                     requireContext(),
-                    "Введите положительное число",
+                    getString(R.string.error_positive_num_decimal),
                     Toast.LENGTH_SHORT
                 ).show()
-                e.printStackTrace()
             }
+
             false
         }
 
@@ -106,6 +108,24 @@ class FirFilterFragment : Fragment() {
             val winName: String = Window.getName(data.windowType)
             filter_window_input.setText(winName, false)
         })
+    }
+
+    private fun setFieldsValidation() {
+        filter_order_input.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseFilterOrder(text.toString()) > 0) {
+                filter_order_input_layout.error = null
+            } else {
+                filter_order_input_layout.error = getString(R.string.error_positive_num)
+            }
+        }
+
+        filter_cutoff_freq_input.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseCutoffFrequency(text.toString()) > 0) {
+                filter_cutoff_freq_input_layout.error = null
+            } else {
+                filter_cutoff_freq_input_layout.error = getString(R.string.error_positive_num_decimal)
+            }
+        }
     }
 
 }
