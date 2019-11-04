@@ -3,7 +3,6 @@ package alektas.telecomapp.ui.demodulators.processing
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.QpskContract
-import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
@@ -105,40 +104,55 @@ class DemodulatorProcessViewModel : ViewModel() {
         codeLengthString: String,
         thresholdString: String
     ) {
-        val frameLength = try {
-            val v = frameLengthString.toInt()
-            if (v <= 0) throw NumberFormatException()
-            v
-        } catch (e: NumberFormatException) {
-            return
-        }
-
-        val dataSpeed = try {
-            val v = dataSpeedString.toDouble()
-            if (v <= 0) throw NumberFormatException()
-            v
-        } catch (e: NumberFormatException) {
-            return
-        }
+        val frameLength = parseFrameLength(frameLengthString)
+        val dataSpeed = parseDataspeed(dataSpeedString)
         val bitTime = 1.0e-3 / dataSpeed // преобразование в скорость (кБит/с)
+        val codeLength = parseCodeLength(codeLengthString)
+        val threshold = parseThreshold(thresholdString)
 
-        val codeLength = try {
-            val v = codeLengthString.toInt()
-            if (v <= 0) throw NumberFormatException()
-            v
-        } catch (e: NumberFormatException) {
-            return
-        }
-
-        val threshold = try {
-            val v = thresholdString.toDouble()
-            if (v < 0) throw NumberFormatException()
-            v
-        } catch (e: NumberFormatException) {
-            return
-        }
+        if (codeLength <= 0 || dataSpeed <= 0 || frameLength <= 0 || threshold < 0) return
 
         storage.updateDemodulatorConfig(frameLength, bitTime, codeLength, threshold)
+    }
+
+    fun parseThreshold(threshold: String): Double {
+        return try {
+            val c = threshold.toDouble()
+            if (c < 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
+        }
+    }
+
+    fun parseDataspeed(speed: String): Double {
+        return try {
+            val c = speed.toDouble()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
+        }
+    }
+
+    fun parseFrameLength(length: String): Int {
+        return try {
+            val c = length.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
+    }
+
+    fun parseCodeLength(length: String): Int {
+        return try {
+            val c = length.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
     }
 
 }

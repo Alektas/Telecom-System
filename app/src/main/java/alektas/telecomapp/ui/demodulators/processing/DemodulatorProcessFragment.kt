@@ -9,12 +9,14 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import alektas.telecomapp.utils.SystemUtils
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.LineGraphSeries
+import kotlinx.android.synthetic.main.data_source_fragment.*
 import kotlinx.android.synthetic.main.demodulator_process_channel_fragment.*
 import kotlinx.android.synthetic.main.demodulator_process_fragment.*
 import java.lang.NumberFormatException
@@ -51,7 +53,12 @@ class DemodulatorProcessFragment : Fragment() {
         setInitValues(viewModel)
         setFieldsValidation()
 
+        process_threshold.setOnEditorActionListener { _, _, _ ->
+            process_btn.performClick()
+        }
+
         process_btn.setOnClickListener {
+            SystemUtils.hideKeyboard(this)
             processData()
         }
 
@@ -62,53 +69,56 @@ class DemodulatorProcessFragment : Fragment() {
     }
 
     private fun processData() {
-        SystemUtils.hideKeyboard(this)
-
         val frameLength = process_frame_length.text.toString()
         val dataSpeed = process_data_speed.text.toString()
         val codeLength = process_code_length.text.toString()
         val threshold = process_threshold.text.toString()
+
+        if (process_code_length_layout.error != null ||
+            process_data_speed_layout.error != null ||
+            process_frame_length_layout.error != null ||
+            process_threshold_layout.error != null ||
+            codeLength.isEmpty() ||
+            dataSpeed.isEmpty() ||
+            frameLength.isEmpty() ||
+            threshold.isEmpty()
+        ) {
+            Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         viewModel.processData(frameLength, dataSpeed, codeLength, threshold)
     }
 
     private fun setFieldsValidation() {
         process_frame_length.doOnTextChanged { text, _, _, _ ->
-            try {
-                val frameLength = text.toString().toInt()
-                if (frameLength <= 0) throw NumberFormatException()
+            if (viewModel.parseFrameLength(text.toString()) > 0) {
                 process_frame_length_layout.error = null
-            } catch (e: NumberFormatException) {
+            } else {
                 process_frame_length_layout.error = getString(R.string.error_positive_num)
             }
         }
 
         process_code_length.doOnTextChanged { text, _, _, _ ->
-            try {
-                val codeLength = text.toString().toInt()
-                if (codeLength <= 0) throw NumberFormatException()
+            if (viewModel.parseCodeLength(text.toString()) > 0) {
                 process_code_length_layout.error = null
-            } catch (e: NumberFormatException) {
+            } else {
                 process_code_length_layout.error = getString(R.string.error_positive_num)
             }
         }
 
         process_data_speed.doOnTextChanged { text, _, _, _ ->
-            try {
-                val dataSpeed = text.toString().toDouble()
-                if (dataSpeed <= 0) throw NumberFormatException()
+            if (viewModel.parseDataspeed(text.toString()) > 0) {
                 process_data_speed_layout.error = null
-            } catch (e: NumberFormatException) {
+            } else {
                 process_data_speed_layout.error = getString(R.string.error_positive_num_decimal)
             }
         }
 
         process_threshold.doOnTextChanged { text, _, _, _ ->
-            try {
-                val threshold = text.toString().toDouble()
-                if (threshold < 0) throw NumberFormatException()
+            if (viewModel.parseThreshold(text.toString()) >= 0) {
                 process_threshold_layout.error = null
-            } catch (e: NumberFormatException) {
+            } else {
                 process_threshold_layout.error = getString(R.string.error_num)
             }
         }
