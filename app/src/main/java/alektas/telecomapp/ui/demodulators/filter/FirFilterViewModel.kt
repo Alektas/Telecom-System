@@ -80,4 +80,24 @@ class FirFilterViewModel : ViewModel() {
         super.onCleared()
     }
 
+    fun parseFilterOrder(orderString: String): Int {
+        return try {
+            val c = orderString.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
+    }
+
+    fun parseCutoffFrequency(freqString: String): Double {
+        return try {
+            val c = freqString.toDouble()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
+        }
+    }
+
 }

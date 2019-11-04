@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -45,6 +46,7 @@
             android:layout_marginStart="@dimen/margin_start_field"
             android:layout_marginEnd="@dimen/margin_start_field"
             android:layout_marginTop="@dimen/margin_top_title"
+            app:errorEnabled="true"
             android:hint="@string/frame_length">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -64,6 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_field"
             android:layout_marginEnd="@dimen/margin_start_field"
+            app:errorEnabled="true"
             android:hint="@string/code_length">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -83,6 +86,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_field"
             android:layout_marginEnd="@dimen/margin_start_field"
+            app:errorEnabled="true"
             android:hint="@string/data_speed">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -102,7 +106,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_field"
             android:layout_marginEnd="@dimen/margin_start_field"
-            android:layout_marginBottom="@dimen/margin_top_title"
+            app:errorEnabled="true"
             android:hint="@string/threshold">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -113,5 +117,14 @@
                 android:imeOptions="actionDone"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/process_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_field"
+            android:layout_marginEnd="@dimen/margin_start_field"
+            android:layout_marginBottom="@dimen/margin_top_title"
+            android:text="@string/process_data"/>
     </LinearLayout>
 </ScrollView>

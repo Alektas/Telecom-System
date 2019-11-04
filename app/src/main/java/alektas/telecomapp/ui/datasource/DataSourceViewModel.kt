@@ -1,6 +1,7 @@
 package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.App
+import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
@@ -8,6 +9,7 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.utils.doOnFirst
 import alektas.telecomapp.utils.toDataPoints
+import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -79,12 +81,49 @@ class DataSourceViewModel : ViewModel() {
     }
 
     fun generateChannels(
-        count: Int,
-        dataSpeed: Double,
-        frameLength: Int,
-        codeType: Int
+        countString: String,
+        dataSpeedString: String,
+        frameLengthString: String,
+        codeTypeString: String
     ) {
-        processor.generateChannels(count, dataSpeed, frameLength, codeType)
+        val channelCount = parseChannelCount(countString)
+        val dataSpeed = parseDataspeed(dataSpeedString)
+        val frameLength = parseFrameLength(frameLengthString)
+        val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+
+        if (channelCount <= 0 || dataSpeed <= 0 || frameLength <= 0 || codeType < 0) return
+
+        processor.generateChannels(channelCount, dataSpeed, frameLength, codeType)
+    }
+
+    fun parseChannelCount(count: String): Int {
+        return try {
+            val c = count.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
+    }
+
+    fun parseDataspeed(speed: String): Double {
+        return try {
+            val c = speed.toDouble()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
+        }
+    }
+
+    fun parseFrameLength(length: String): Int {
+        return try {
+            val c = length.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
     }
 
     fun removeChannel(channel: ChannelData) {

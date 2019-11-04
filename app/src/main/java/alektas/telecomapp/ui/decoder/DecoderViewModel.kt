@@ -1,6 +1,7 @@
 package alektas.telecomapp.ui.decoder
 
 import alektas.telecomapp.App
+import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
@@ -60,13 +61,35 @@ class DecoderViewModel : ViewModel() {
         )
     }
 
-    fun decodeChannels(count: Int, codesType: Int) {
-        processor.setDecodedChannels(count, codesType)
+    fun decodeCustomChannel(codeString: String) {
+        val code = parseChannelCode(codeString)
+        processor.addDecodedChannel(code)
     }
 
-    fun decodeCustomChannel(codeString: String) {
-        val code = codeString.filter { it == '1' || it == '0' }.map { it == '1' }.toBooleanArray()
-        processor.addDecodedChannel(code)
+    fun decodeChannels(
+        countString: String,
+        codeTypeString: String
+    ) {
+        val channelCount = parseChannelCount(countString)
+        val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+
+        if (channelCount <= 0 || codeType < 0) return
+
+        processor.setDecodedChannels(channelCount, codeType)
+    }
+
+    fun parseChannelCount(count: String): Int {
+        return try {
+            val c = count.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
+    }
+
+    fun parseChannelCode(codeString: String): BooleanArray {
+        return codeString.filter { it == '1' || it == '0' }.map { it == '1' }.toBooleanArray()
     }
 
     fun removeChannel(channel: ChannelData) {

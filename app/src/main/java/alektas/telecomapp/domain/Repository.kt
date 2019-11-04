@@ -16,10 +16,12 @@ interface Repository {
     fun observeDemodulatorFilterConfig(): Observable<FilterConfig>
     fun setDemodulatorFilterConfig(config: FilterConfig)
     fun setDemodulatorFrequency(frequency: Double)
-    fun setDemodulatorThreshold(threshold: Double)
-    fun setDemodulatorBitTime(bitTime: Double)
-    fun setDemodulatorFrameLength(frameLength: Int)
-    fun setDemodulatorCodeLength(codeLength: Int)
+    fun updateDemodulatorConfig(
+        frameLength: Int,
+        bitTime: Double,
+        codeLength: Int,
+        threshold: Double
+    )
 
     fun setChannels(channels: List<ChannelData>)
     fun removeChannel(channel: ChannelData)

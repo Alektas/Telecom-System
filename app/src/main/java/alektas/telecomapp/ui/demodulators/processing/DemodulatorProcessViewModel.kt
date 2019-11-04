@@ -38,9 +38,10 @@ class DemodulatorProcessViewModel : ViewModel() {
                 .take(1)
                 .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
                     override fun onNext(t: DemodulatorConfig) {
-                        initFrameLength.value = t.frameLength
-                        initCodeLength.value = t.codeLength
-                        initDataSpeed.value = 1.0e-3 / t.bitTime // преобразование в скорость (кБит/с)
+                        if (t.frameLength != 0) initFrameLength.value = t.frameLength
+                        if (t.codeLength != 0) initCodeLength.value = t.codeLength
+                        initDataSpeed.value =
+                            1.0e-3 / t.bitTime // преобразование в скорость (кБит/с)
                         initThreshold.value = t.bitThreshold
                     }
 
@@ -97,23 +98,61 @@ class DemodulatorProcessViewModel : ViewModel() {
         super.onCleared()
     }
 
-    fun setThreshold(threshold: Double) {
-        storage.setDemodulatorThreshold(threshold)
+    fun processData(
+        frameLengthString: String,
+        dataSpeedString: String,
+        codeLengthString: String,
+        thresholdString: String
+    ) {
+        val frameLength = parseFrameLength(frameLengthString)
+        val dataSpeed = parseDataspeed(dataSpeedString)
+        val bitTime = 1.0e-3 / dataSpeed // преобразование в скорость (кБит/с)
+        val codeLength = parseCodeLength(codeLengthString)
+        val threshold = parseThreshold(thresholdString)
+
+        if (codeLength <= 0 || dataSpeed <= 0 || frameLength <= 0 || threshold < 0) return
+
+        storage.updateDemodulatorConfig(frameLength, bitTime, codeLength, threshold)
     }
 
-    fun setFrameLength(frameLength: Int) {
-        storage.setDemodulatorFrameLength(frameLength)
+    fun parseThreshold(threshold: String): Double {
+        return try {
+            val c = threshold.toDouble()
+            if (c < 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
+        }
     }
 
-    fun setCodeLength(codeLength: Int) {
-        storage.setDemodulatorCodeLength(codeLength)
+    fun parseDataspeed(speed: String): Double {
+        return try {
+            val c = speed.toDouble()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
+        }
     }
 
-    /**
-     * @param dataSpeed скорость передачи данных в кБ/с
-     */
-    fun setDataSpeed(dataSpeed: Double) {
-        storage.setDemodulatorBitTime(1.0e-3 / dataSpeed)
+    fun parseFrameLength(length: String): Int {
+        return try {
+            val c = length.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
+    }
+
+    fun parseCodeLength(length: String): Int {
+        return try {
+            val c = length.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
+        }
     }
 
 }

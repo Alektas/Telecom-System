@@ -13,7 +13,10 @@ class CodeGenerator {
         )
 
         fun getCodeTypeId(codeTypeName: String): Int {
-            return codeNames.filterValues { it == codeTypeName }.keys.first()
+            return codeNames.filterValues { it == codeTypeName }.let {
+                if (it.isEmpty()) return -1
+                else it.keys.first()
+            }
         }
 
         fun getCodeName(id: Int): String {
