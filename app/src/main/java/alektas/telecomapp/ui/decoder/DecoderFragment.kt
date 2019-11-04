@@ -14,24 +14,20 @@ import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
-import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.decoder_fragment.*
-import kotlinx.android.synthetic.main.decoder_fragment.source_channel_code_type
-import kotlinx.android.synthetic.main.decoder_fragment.source_channel_count
 import kotlinx.android.synthetic.main.decoder_fragment.channel_list
 import kotlinx.android.synthetic.main.decoder_fragment.generate_channels_btn
 
 class DecoderFragment : Fragment(), ChannelController {
-    private var selectedCodeType: String? = null
 
     companion object {
-        const val TAG = "DecoderFragment"
         fun newInstance() = DecoderFragment()
     }
 
@@ -48,25 +44,26 @@ class DecoderFragment : Fragment(), ChannelController {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DecoderViewModel::class.java)
         setupCodeTypesDropdown()
+        setFieldsValidation()
         setInitValues(viewModel)
 
         val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
 
-        channel_code.setOnEditorActionListener { _, _, _ ->
+        decoder_channel_code.setOnEditorActionListener { _, _, _ ->
             add_channel_btn.performClick()
             false
         }
 
-        source_channel_count.setOnEditorActionListener { _, _, _ ->
+        decoder_channel_count.setOnEditorActionListener { _, _, _ ->
             generate_channels_btn.performClick()
             false
         }
 
         add_channel_btn.setOnClickListener {
             SystemUtils.hideKeyboard(this)
-            val codeString = channel_code.text.toString()
+            val codeString = decoder_channel_code.text.toString()
             if (codeString.isEmpty()) {
                 Toast.makeText(
                     requireContext(),
@@ -106,20 +103,12 @@ class DecoderFragment : Fragment(), ChannelController {
             R.layout.support_simple_spinner_dropdown_item,
             CodeGenerator.codeNames.values.toList()
         )
-        source_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
-
-        source_channel_code_type.setOnItemClickListener { parent, _, position, _ ->
-            val type = parent.getItemAtPosition(position)
-            if (type is String) {
-                selectedCodeType = type
-            }
-        }
+        decoder_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
         val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
-        source_channel_code_type.setText(defaultType)
-        selectedCodeType = defaultType
+        decoder_channel_code_type.setText(defaultType)
 
-        source_channel_code_type_layout.setOnTouchListener { v, _ ->
+        decoder_channel_code_type_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
             (v as AutoCompleteTextView).showDropDown()
             false
@@ -128,27 +117,37 @@ class DecoderFragment : Fragment(), ChannelController {
 
     private fun setInitValues(viewModel: DecoderViewModel) {
         viewModel.initCodeType.observe(viewLifecycleOwner, Observer {
-            source_channel_code_type.setText(CodeGenerator.getCodeName(it))
+            decoder_channel_code_type.setText(CodeGenerator.getCodeName(it))
         })
 
         viewModel.initChannelCount.observe(viewLifecycleOwner, Observer {
-            source_channel_count.setText(it.toString())
+            decoder_channel_count.setText(it.toString())
         })
     }
 
-    private fun decodeChannels() {
-        viewModel.inputSignalData.value?.let {
-            val channelCount = try {
-                val c = source_channel_count.text.toString().toInt()
-                if (c < 0) throw NumberFormatException()
-                else c
-            } catch (e: NumberFormatException) {
-                val msg = "Количество каналов должно быть положительным целым числом"
-                Log.e(TAG, msg, e)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                return
+    private fun setFieldsValidation() {
+        decoder_channel_count.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseChannelCount(text.toString()) > 0) {
+                decoder_channel_count_layout.error = null
+            } else {
+                decoder_channel_count_layout.error = getString(R.string.error_positive_num)
             }
-            val codeType = selectedCodeType?.let { CodeGenerator.getCodeTypeId(it) } ?: 0
+        }
+    }
+
+    private fun decodeChannels() {
+        val channelCount = decoder_channel_count.text.toString()
+        val codeType = decoder_channel_code_type.text.toString()
+
+        if (decoder_channel_count_layout.error != null ||
+            channelCount.isEmpty() ||
+            codeType.isEmpty()
+        ) {
+            Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewModel.inputSignalData.value?.let {
             viewModel.decodeChannels(channelCount, codeType)
             return
         }
