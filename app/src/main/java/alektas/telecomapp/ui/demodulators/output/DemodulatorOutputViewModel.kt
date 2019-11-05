@@ -4,13 +4,16 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.getNormalizedSpectrum
+import alektas.telecomapp.utils.toDataPoints
 import alektas.telecomapp.utils.toFloat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import org.apache.commons.math3.exception.MathIllegalArgumentException
 import org.apache.commons.math3.transform.DftNormalization
 import org.apache.commons.math3.transform.FastFourierTransformer
@@ -28,7 +31,9 @@ class DemodulatorOutputViewModel : ViewModel() {
     init {
         App.component.inject(this)
 
-        disposable.addAll(storage.observeDemodulatedSignal()
+        disposable.addAll(
+            storage.observeDemodulatedSignal()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object : DisposableObserver<Signal>() {
                 override fun onNext(t: Signal) {
@@ -39,11 +44,15 @@ class DemodulatorOutputViewModel : ViewModel() {
 
                 override fun onError(e: Throwable) { }
             }),
+
             storage.observeDemodulatedSignalConstellation()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map { it.toFloat() }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<Pair<Double, Double>>>() {
-                    override fun onNext(t: List<Pair<Double, Double>>) {
-                        constellationData.value = t.toFloat()
+                .subscribeWith(object : DisposableObserver<List<Pair<Float, Float>>>() {
+                    override fun onNext(t: List<Pair<Float, Float>>) {
+                        constellationData.value = t
                     }
 
                     override fun onComplete() { }
@@ -53,16 +62,23 @@ class DemodulatorOutputViewModel : ViewModel() {
     }
 
     private fun extractSignalData(signal: Signal) {
-        outputSignalData.value = signal.getPoints()
-            .map { DataPoint(it.key, it.value) }.toTypedArray()
+        disposable.add(Single.create<Array<DataPoint>> {
+            val s = signal.toDataPoints()
+            it.onSuccess(s)
+        }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { s: Array<DataPoint> -> outputSignalData.value = s })
 
         if (signal.isEmpty()) return
 
-        try {
-            specturmData.value = signal.getNormalizedSpectrum()
-        } catch (e: MathIllegalArgumentException) {
-            e.printStackTrace()
+        disposable.add(Single.create<Array<DataPoint>> {
+            val s = signal.getNormalizedSpectrum()
+            it.onSuccess(s)
         }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { s: Array<DataPoint> -> specturmData.value = s })
     }
 
     override fun onCleared() {

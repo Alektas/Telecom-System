@@ -13,6 +13,7 @@ import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class DemodulatorProcessViewModel : ViewModel() {
@@ -34,6 +35,7 @@ class DemodulatorProcessViewModel : ViewModel() {
 
         disposable.addAll(
             storage.observeDemodulatorConfig()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .take(1)
                 .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
@@ -49,41 +51,58 @@ class DemodulatorProcessViewModel : ViewModel() {
 
                     override fun onError(e: Throwable) {}
                 }),
+
             storage.observeDemodulatedSignal()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map {
+                    val sigData = it.toDataPoints()
+
+                    val iBits = it.bits.filterIndexed { i, _ -> i % 2 == 0 }.toBooleanArray()
+                    val qBits = it.bits.filterIndexed { i, _ -> i % 2 != 0 }.toBooleanArray()
+
+                    val iData = BinarySignal(iBits, it.bitTime * 2).toDataPoints()
+                    val qData = BinarySignal(qBits, it.bitTime * 2).toDataPoints()
+
+                    Triple(sigData, iData, qData)
+                }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<BinarySignal>() {
-                    override fun onNext(t: BinarySignal) {
-                        outputSignalData.value = t.toDataPoints()
-
-                        val iBits = t.bits.filterIndexed { i, _ -> i % 2 == 0 }.toBooleanArray()
-                        val qBits = t.bits.filterIndexed { i, _ -> i % 2 != 0 }.toBooleanArray()
-
-                        iBitsData.value =
-                            BinarySignal(iBits, QpskContract.DEFAULT_SYMBOL_TIME).toDataPoints()
-                        qBitsData.value =
-                            BinarySignal(qBits, QpskContract.DEFAULT_SYMBOL_TIME).toDataPoints()
+                .subscribeWith(object :
+                    DisposableObserver<Triple<Array<DataPoint>, Array<DataPoint>, Array<DataPoint>>>() {
+                    override fun onNext(t: Triple<Array<DataPoint>, Array<DataPoint>, Array<DataPoint>>) {
+                        outputSignalData.value = t.first
+                        iBitsData.value = t.second
+                        qBitsData.value = t.third
                     }
 
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
                 }),
+
             storage.observeFilteredChannelI()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map { it.toDataPoints() }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Signal>() {
-                    override fun onNext(t: Signal) {
-                        iSignalData.value = t.toDataPoints()
+                .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
+                    override fun onNext(t: Array<DataPoint>) {
+                        iSignalData.value = t
                     }
 
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
                 }),
+
             storage.observeFilteredChannelQ()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map { it.toDataPoints() }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Signal>() {
-                    override fun onNext(t: Signal) {
-                        qSignalData.value = t.toDataPoints()
+                .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
+                    override fun onNext(t: Array<DataPoint>) {
+                        qSignalData.value = t
                     }
 
                     override fun onComplete() {}

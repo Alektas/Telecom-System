@@ -10,6 +10,7 @@ import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class QChannelViewModel : ViewModel() {
@@ -24,21 +25,26 @@ class QChannelViewModel : ViewModel() {
 
         disposable.addAll(
             storage.observeChannelQ()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Signal>() {
-                    override fun onNext(t: Signal) {
-                        channelQData.value = t.toDataPoints()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map { it.toDataPoints() }.observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
+                    override fun onNext(t: Array<DataPoint>) {
+                        channelQData.value = t
                     }
 
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
                 }),
+
             storage.observeFilteredChannelQ()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Signal>() {
-                    override fun onNext(t: Signal) {
-                        filteredChannelQData.value = t.toDataPoints()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map { it.toDataPoints() }.observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
+                    override fun onNext(t: Array<DataPoint>) {
+                        filteredChannelQData.value = t
                     }
 
                     override fun onComplete() {}

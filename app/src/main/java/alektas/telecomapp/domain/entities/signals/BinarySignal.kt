@@ -4,7 +4,7 @@ import alektas.telecomapp.domain.entities.Simulator
 
 class BinarySignal(
     val bits: BooleanArray,
-    bitTime: Double,
+    val bitTime: Double,
     magnitude: Double = 1.0,
     bipolar: Boolean = true
 ) : BaseSignal() {

@@ -4,14 +4,17 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
+import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.doOnFirst
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class DemodulatorGeneratorViewModel : ViewModel() {
@@ -26,6 +29,7 @@ class DemodulatorGeneratorViewModel : ViewModel() {
 
         disposable.addAll(
             storage.observeDemodulatorConfig()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnFirst {
                     // Частоты хранятся в Гц, а отображаются МГц, поэтому домножаем на 10^-6.
@@ -53,8 +57,13 @@ class DemodulatorGeneratorViewModel : ViewModel() {
     }
 
     private fun showGeneratorSignal(frequency: Double) {
-        val signal = SignalGenerator().cos(frequency = frequency)
-        generatorSignalData.value = signal.toDataPoints()
+        disposable.add(Single.create<Array<DataPoint>> {
+            val s = SignalGenerator().cos(frequency = frequency).toDataPoints()
+            it.onSuccess(s)
+        }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { s: Array<DataPoint> -> generatorSignalData.value = s })
     }
 
     override fun onCleared() {

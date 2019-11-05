@@ -11,8 +11,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class FirFilterViewModel : ViewModel() {
@@ -21,30 +23,33 @@ class FirFilterViewModel : ViewModel() {
     var initConfigData = MutableLiveData<FilterConfig>()
     var impulseResponseData = MutableLiveData<Array<DataPoint>>()
     private var config: FilterConfig = FilterConfig()
-    private val disposable: Disposable
+    private val disposable = CompositeDisposable()
 
     init {
         App.component.inject(this)
         initConfigData.value = config
         setImpulseResponse(FirFilter(config))
 
-        disposable = system.observeDemodulatorFilterConfig()
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnFirst {
-                initConfigData.value = it
-                val filter = FirFilter(it)
-                setImpulseResponse(filter)
-            }
-            .subscribeWith(object : DisposableObserver<FilterConfig>() {
-                override fun onNext(t: FilterConfig) {
-                    config = t
-                    setImpulseResponse(FirFilter(t))
+        disposable.addAll(
+            system.observeDemodulatorFilterConfig()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnFirst {
+                    initConfigData.value = it
+                    val filter = FirFilter(it)
+                    setImpulseResponse(filter)
                 }
+                .subscribeWith(object : DisposableObserver<FilterConfig>() {
+                    override fun onNext(t: FilterConfig) {
+                        config = t
+                        setImpulseResponse(FirFilter(t))
+                    }
 
-                override fun onComplete() { }
+                    override fun onComplete() {}
 
-                override fun onError(e: Throwable) { }
-            })
+                    override fun onError(e: Throwable) {}
+                })
+        )
     }
 
     fun onOrderChanged(order: Int) {

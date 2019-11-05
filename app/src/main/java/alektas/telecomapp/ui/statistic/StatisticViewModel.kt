@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class StatisticViewModel : ViewModel() {
@@ -25,6 +26,7 @@ class StatisticViewModel : ViewModel() {
 
         disposable.addAll(
             storage.observeChannels()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
                     override fun onNext(t: List<ChannelData>) {
@@ -37,7 +39,9 @@ class StatisticViewModel : ViewModel() {
 
                     override fun onError(e: Throwable) {}
                 }),
+
             storage.observeDecodedChannels()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
                     override fun onNext(t: List<ChannelData>) {
@@ -49,7 +53,9 @@ class StatisticViewModel : ViewModel() {
 
                     override fun onError(e: Throwable) {}
                 }),
+
             storage.observeChannelsErrors()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<List<Int>>>() {
                     override fun onNext(t: List<List<Int>>) {
