@@ -16,6 +16,7 @@ import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class DataSourceViewModel : ViewModel() {
@@ -35,7 +36,9 @@ class DataSourceViewModel : ViewModel() {
     init {
         App.component.inject(this)
 
-        disposable.addAll(storage.observeChannels()
+        disposable.addAll(
+            storage.observeChannels()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnFirst {
                 initChannelCount.value = it.size
@@ -43,29 +46,31 @@ class DataSourceViewModel : ViewModel() {
                 initDataSpeed.value = 1.0e-3 / it.first().bitTime // преобразование в скорость (кБит/с)
                 initFrameSize.value = it.first().data.size
             }
-            .subscribeWith(object: DisposableObserver<List<ChannelData>>() {
-                override fun onNext(t: List<ChannelData>) {
-                    channels.value = t
-                }
+                .subscribeWith(object: DisposableObserver<List<ChannelData>>() {
+                    override fun onNext(it: List<ChannelData>) {
+                        channels.value = it
+                    }
 
-                override fun onComplete() { }
+                    override fun onComplete() { }
 
-                override fun onError(e: Throwable) { }
-            }),
+                    override fun onError(e: Throwable) { }
+                }),
+
             storage.observeEther()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object: DisposableObserver<Signal>() {
                     override fun onNext(s: Signal) {
                         ether.value = s.toDataPoints()
                     }
 
-                    override fun onComplete() {
-                        println("Complete ether stream")
-                    }
+                    override fun onComplete() { }
 
                     override fun onError(e: Throwable) { }
                 }),
+
             storage.observeNoise()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .take(1)
                 .subscribeWith(object: DisposableObserver<Noise>() {

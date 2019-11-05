@@ -7,6 +7,7 @@ import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.utils.doOnFirst
+import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -30,20 +31,23 @@ class DecoderViewModel : ViewModel() {
     init {
         App.component.inject(this)
 
-        disposable.addAll(storage.observeDemodulatedSignal()
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeWith(object : DisposableObserver<BinarySignal>() {
-                override fun onNext(t: BinarySignal) {
-                    inputSignalData.value =
-                        t.getPoints().map { DataPoint(it.key, it.value) }.toTypedArray()
-                }
+        disposable.addAll(
+            storage.observeDemodulatedSignal()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map { it.toDataPoints() }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
+                    override fun onNext(t: Array<DataPoint>) {
+                        inputSignalData.value = t
+                    }
 
-                override fun onComplete() {}
+                    override fun onComplete() {}
 
-                override fun onError(e: Throwable) {}
-            }),
+                    override fun onError(e: Throwable) {}
+                }),
             storage.observeDecodedChannels()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnFirst {
                     initChannelCount.value = it.size

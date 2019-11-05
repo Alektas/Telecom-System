@@ -4,49 +4,62 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.getNormalizedSpectrum
+import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import org.apache.commons.math3.exception.MathIllegalArgumentException
 import javax.inject.Inject
 
 class DemodulatorInputViewModel : ViewModel() {
     @Inject
     lateinit var storage: Repository
-    private val disposable: Disposable
+    private val disposable = CompositeDisposable()
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val specturmData = MutableLiveData<Array<DataPoint>>()
 
     init {
         App.component.inject(this)
 
-        disposable = storage.observeEther()
+        disposable.add(storage.observeEther()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object : DisposableObserver<Signal>() {
                 override fun onNext(t: Signal) {
                     extractData(t)
                 }
 
-                override fun onComplete() { }
+                override fun onComplete() {}
 
-                override fun onError(e: Throwable) { }
+                override fun onError(e: Throwable) {}
             })
+        )
     }
 
     private fun extractData(signal: Signal) {
-        inputSignalData.value = signal.getPoints()
-            .map { DataPoint(it.key, it.value) }.toTypedArray()
+        disposable.add(Single.create<Array<DataPoint>> {
+            val s = signal.toDataPoints()
+            it.onSuccess(s)
+        }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { s: Array<DataPoint> -> inputSignalData.value = s })
 
         if (signal.isEmpty()) return
 
-        try {
-            specturmData.value = signal.getNormalizedSpectrum()
-        } catch (e: MathIllegalArgumentException) {
-            e.printStackTrace()
+        disposable.add(Single.create<Array<DataPoint>> {
+            val s = signal.getNormalizedSpectrum()
+            it.onSuccess(s)
         }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { s: Array<DataPoint> -> specturmData.value = s })
     }
 
     override fun onCleared() {

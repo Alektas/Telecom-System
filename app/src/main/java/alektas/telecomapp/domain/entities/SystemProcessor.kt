@@ -10,10 +10,16 @@ import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
+import alektas.telecomapp.domain.entities.signals.BinarySignal
+import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
+import android.annotation.SuppressLint
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.BiFunction
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -28,14 +34,17 @@ class SystemProcessor {
         App.component.inject(this)
 
         storage.observeChannels()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { generateChannelsSignal(it) }
 
         storage.observeDemodulatorConfig()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { demodulate(it) }
 
         storage.observeDemodulatedSignal()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { s ->
                 codedGroupData = s.bits
@@ -43,12 +52,14 @@ class SystemProcessor {
             }
 
         storage.observeDecodedChannels()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
                 decodedChannels = it
             }
 
         storage.observeNoise()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { noiseSnr = it.snr() }
 
@@ -58,49 +69,60 @@ class SystemProcessor {
             BiFunction<List<ChannelData>, List<ChannelData>, List<List<Int>>> { origin, decoded ->
                 diffChannels(origin, decoded)
             })
+            .subscribeOn(Schedulers.computation())
             .subscribe { storage.setChannelsErrors(it) }
     }
 
+    @SuppressLint("CheckResult")
     fun generateChannels(
         count: Int,
         dataSpeed: Double, // кБит/с
         frameLength: Int,
         codesType: Int = CodeGenerator.WALSH
     ) {
-        val channels = mutableListOf<ChannelData>()
-        val codeGen = CodeGenerator()
-        val codes = when (codesType) {
-            CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
-            else -> codeGen.generateRandomCodes(count, count)
+        Single.create<List<ChannelData>> {
+            val channels = mutableListOf<ChannelData>()
+            val codeGen = CodeGenerator()
+            val codes = when (codesType) {
+                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
+                else -> codeGen.generateRandomCodes(count, count)
+            }
+
+            val bitTime = 1.0e-3 / dataSpeed
+
+            for (i in 0 until count) {
+                val frameData = UserDataProvider.generateData(frameLength)
+                val channel = ChannelData("${i + 1}", frameData, bitTime, codes[i], codesType)
+                channels.add(channel)
+            }
+
+            val dataTime = frameLength * codes[0].size * bitTime
+            Simulator.setSimulationTime(dataTime)
+            noiseSnr?.let { n -> setNoise(n) }
+
+            it.onSuccess(channels)
         }
-
-        val bitTime = 1.0e-3 / dataSpeed
-
-        for (i in 0 until count) {
-            val frameData = UserDataProvider.generateData(frameLength)
-            val channel = ChannelData("${i + 1}", frameData, bitTime, codes[i], codesType)
-            channels.add(channel)
-        }
-
-        val dataTime = frameLength * codes[0].size * bitTime
-        Simulator.setSimulationTime(dataTime)
-        noiseSnr?.let { setNoise(it) }
-
-        storage.setChannels(channels)
+            .subscribeOn(Schedulers.computation())
+            .subscribe { channels: List<ChannelData> -> storage.setChannels(channels) }
     }
 
+    @SuppressLint("CheckResult")
     fun generateChannelsSignal(channels: List<ChannelData>) {
         if (channels.isEmpty()) {
             storage.setChannelsSignal(BaseSignal())
             return
         }
 
-        val groupData = dataAggregation(channels)
+        Single.create<Signal> {
+            val groupData = dataAggregation(channels)
 
-        val carrier = SignalGenerator().cos(frequency = QpskContract.DEFAULT_CARRIER_FREQUENCY)
-        val signal = QpskModulator(channels[0].bitTime).modulate(carrier, groupData)
+            val carrier = SignalGenerator().cos(frequency = QpskContract.DEFAULT_CARRIER_FREQUENCY)
+            val signal = QpskModulator(channels[0].bitTime).modulate(carrier, groupData)
 
-        storage.setChannelsSignal(signal)
+            it.onSuccess(signal)
+        }
+            .subscribeOn(Schedulers.computation())
+            .subscribe { signal: Signal -> storage.setChannelsSignal(signal) }
     }
 
     private fun dataAggregation(channels: List<ChannelData>): BooleanArray {
@@ -114,19 +136,33 @@ class SystemProcessor {
         storage.removeChannel(channel)
     }
 
+    @SuppressLint("CheckResult")
     fun setNoise(snr: Double) {
-        storage.setNoise(WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE))
+        Single.create<Noise> {
+            val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
+            it.onSuccess(noise)
+        }
+            .subscribeOn(Schedulers.computation())
+            .subscribe { noise: Noise -> storage.setNoise(noise) }
     }
 
+    @SuppressLint("CheckResult")
     fun demodulate(config: DemodulatorConfig) {
         val demodulator = QpskDemodulator(config)
-        val demodSignal = demodulator.demodulate(config.inputSignal)
-        storage.setDemodulatedSignal(demodSignal)
-        storage.setChannelI(demodulator.sigI)
-        storage.setFilteredChannelI(demodulator.filteredSigI)
-        storage.setChannelQ(demodulator.sigQ)
-        storage.setFilteredChannelQ(demodulator.filteredSigQ)
-        storage.setDemodulatedSignalConstellation(demodulator.constellation)
+
+        Single.create<BinarySignal> {
+            val demodSignal = demodulator.demodulate(config.inputSignal)
+            it.onSuccess(demodSignal)
+        }
+            .subscribeOn(Schedulers.computation())
+            .subscribe { signal: BinarySignal ->
+                storage.setDemodulatedSignal(signal)
+                storage.setChannelI(demodulator.sigI)
+                storage.setFilteredChannelI(demodulator.filteredSigI)
+                storage.setChannelQ(demodulator.sigQ)
+                storage.setFilteredChannelQ(demodulator.filteredSigQ)
+                storage.setDemodulatedSignalConstellation(demodulator.constellation)
+            }
     }
 
     fun updateDecodedChannels(channels: List<ChannelData>, groupData: BooleanArray) {
@@ -149,23 +185,28 @@ class SystemProcessor {
         }
     }
 
+    @SuppressLint("CheckResult")
     fun setDecodedChannels(count: Int, codesType: Int) {
-        codedGroupData?.let {
-            val channels = mutableListOf<ChannelData>()
-            val codeGen = CodeGenerator()
-            val codes = when (codesType) {
-                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
-                else -> codeGen.generateRandomCodes(count, count)
-            }
+        Single.create<List<ChannelData>> { emitter ->
+            codedGroupData?.let {
+                val channels = mutableListOf<ChannelData>()
+                val codeGen = CodeGenerator()
+                val codes = when (codesType) {
+                    CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
+                    else -> codeGen.generateRandomCodes(count, count)
+                }
 
-            for (i in 0 until count) {
-                val frameData = CdmaCoder().decode(codes[i], it)
-                val channel = ChannelData(data = frameData, code = codes[i])
-                channels.add(channel)
-            }
+                for (i in 0 until count) {
+                    val frameData = CdmaCoder().decode(codes[i], it)
+                    val channel = ChannelData(data = frameData, code = codes[i])
+                    channels.add(channel)
+                }
 
-            storage.setDecodedChannels(channels)
+                emitter.onSuccess(channels)
+            }
         }
+            .subscribeOn(Schedulers.computation())
+            .subscribe { channels: List<ChannelData> -> storage.setDecodedChannels(channels) }
     }
 
     /**
@@ -175,6 +216,7 @@ class SystemProcessor {
      *
      * @return список списков индексов несовпадающих битов каналов
      */
+    @SuppressLint("CheckResult")
     private fun diffChannels(
         first: List<ChannelData>,
         second: List<ChannelData>
