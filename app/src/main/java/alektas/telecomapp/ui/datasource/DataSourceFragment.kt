@@ -86,6 +86,10 @@ class DataSourceFragment : Fragment(), ChannelController {
             source_channel_code_type.setText(CodeGenerator.getCodeName(it))
         })
 
+        viewModel.initCarrierFrequency.observe(viewLifecycleOwner, Observer {
+            source_carrier_frequency.setText(String.format("%.2f", it))
+        })
+
         viewModel.initDataSpeed.observe(viewLifecycleOwner, Observer {
             source_data_speed.setText(it.toString())
         })
@@ -125,14 +129,17 @@ class DataSourceFragment : Fragment(), ChannelController {
 
     private fun generateChannels() {
         val channelCount = source_channel_count.text.toString()
+        val freq = source_carrier_frequency.text.toString()
         val dataSpeed = source_data_speed.text.toString()
         val frameLength = source_frame_length.text.toString()
         val codeType = source_channel_code_type.text.toString()
 
         if (source_channel_count_layout.error != null ||
+            source_carrier_frequency_layout.error != null ||
             source_data_speed_layout.error != null ||
             source_frame_length_layout.error != null ||
             channelCount.isEmpty() ||
+            freq.isEmpty() ||
             dataSpeed.isEmpty() ||
             frameLength.isEmpty() ||
             codeType.isEmpty()
@@ -141,7 +148,7 @@ class DataSourceFragment : Fragment(), ChannelController {
             return
         }
 
-        viewModel.generateChannels(channelCount, dataSpeed, frameLength, codeType)
+        viewModel.generateChannels(channelCount, freq, dataSpeed, frameLength, codeType)
     }
 
     private fun setFieldsValidation() {
@@ -150,6 +157,14 @@ class DataSourceFragment : Fragment(), ChannelController {
                 source_channel_count_layout.error = null
             } else {
                 source_channel_count_layout.error = getString(R.string.error_positive_num)
+            }
+        }
+
+        source_carrier_frequency.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseFrequency(text.toString()) > 0) {
+                source_carrier_frequency_layout.error = null
+            } else {
+                source_carrier_frequency_layout.error = getString(R.string.error_positive_num_decimal)
             }
         }
 

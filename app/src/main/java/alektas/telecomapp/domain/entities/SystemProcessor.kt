@@ -76,6 +76,7 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun generateChannels(
         count: Int,
+        carrierFrequency: Double, // МГц
         dataSpeed: Double, // кБит/с
         frameLength: Int,
         codesType: Int = CodeGenerator.WALSH
@@ -88,11 +89,18 @@ class SystemProcessor {
                 else -> codeGen.generateRandomCodes(count, count)
             }
 
-            val bitTime = 1.0e-3 / dataSpeed
+            val bitTime = 1.0e-3 / dataSpeed // скорость в период бита (в секундах)
 
             for (i in 0 until count) {
                 val frameData = UserDataProvider.generateData(frameLength)
-                val channel = ChannelData("${i + 1}", frameData, bitTime, codes[i], codesType)
+                val channel = ChannelData(
+                    "${i + 1}",
+                    carrierFrequency * 1.0e6, // МГц -> Гц
+                    frameData,
+                    bitTime,
+                    codes[i],
+                    codesType
+                )
                 channels.add(channel)
             }
 
@@ -116,7 +124,7 @@ class SystemProcessor {
         Single.create<Signal> {
             val groupData = dataAggregation(channels)
 
-            val carrier = SignalGenerator().cos(frequency = QpskContract.DEFAULT_CARRIER_FREQUENCY)
+            val carrier = SignalGenerator().cos(frequency = channels[0].carrierFrequency)
             val signal = QpskModulator(channels[0].bitTime).modulate(carrier, groupData)
 
             it.onSuccess(signal)

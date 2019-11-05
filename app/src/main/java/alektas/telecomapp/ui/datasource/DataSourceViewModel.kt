@@ -28,6 +28,7 @@ class DataSourceViewModel : ViewModel() {
     val channels = MutableLiveData<List<ChannelData>>()
     val ether = MutableLiveData<Array<DataPoint>>()
     val initNoiseSnr = MutableLiveData<Double>()
+    val initCarrierFrequency = MutableLiveData<Double>()
     val initDataSpeed = MutableLiveData<Double>()
     val initChannelCount = MutableLiveData<Int>()
     val initCodeType = MutableLiveData<Int>()
@@ -38,67 +39,72 @@ class DataSourceViewModel : ViewModel() {
 
         disposable.addAll(
             storage.observeChannels()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnFirst {
-                initChannelCount.value = it.size
-                initCodeType.value = it.first().codeType
-                initDataSpeed.value = 1.0e-3 / it.first().bitTime // преобразование в скорость (кБит/с)
-                initFrameSize.value = it.first().data.size
-            }
-                .subscribeWith(object: DisposableObserver<List<ChannelData>>() {
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnFirst {
+                    initChannelCount.value = it.size
+                    initCodeType.value = it.first().codeType
+                    initCarrierFrequency.value =
+                        1.0e-6 * it.first().carrierFrequency // Гц -> МГц
+                    initDataSpeed.value =
+                        1.0e-3 / it.first().bitTime // преобразование в скорость (кБит/с)
+                    initFrameSize.value = it.first().data.size
+                }
+                .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
                     override fun onNext(it: List<ChannelData>) {
                         channels.value = it
                     }
 
-                    override fun onComplete() { }
+                    override fun onComplete() {}
 
-                    override fun onError(e: Throwable) { }
+                    override fun onError(e: Throwable) {}
                 }),
 
             storage.observeEther()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object: DisposableObserver<Signal>() {
+                .subscribeWith(object : DisposableObserver<Signal>() {
                     override fun onNext(s: Signal) {
                         ether.value = s.toDataPoints()
                     }
 
-                    override fun onComplete() { }
+                    override fun onComplete() {}
 
-                    override fun onError(e: Throwable) { }
+                    override fun onError(e: Throwable) {}
                 }),
 
             storage.observeNoise()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .take(1)
-                .subscribeWith(object: DisposableObserver<Noise>() {
+                .subscribeWith(object : DisposableObserver<Noise>() {
                     override fun onNext(s: Noise) {
                         initNoiseSnr.value = s.snr()
                     }
 
-                    override fun onComplete() { }
+                    override fun onComplete() {}
 
-                    override fun onError(e: Throwable) { }
+                    override fun onError(e: Throwable) {}
                 })
         )
     }
 
     fun generateChannels(
         countString: String,
+        carrierFrequencyString: String,
         dataSpeedString: String,
         frameLengthString: String,
         codeTypeString: String
     ) {
         val channelCount = parseChannelCount(countString)
+        val freq = parseFrequency(carrierFrequencyString)
         val dataSpeed = parseDataspeed(dataSpeedString)
         val frameLength = parseFrameLength(frameLengthString)
         val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
 
-        if (channelCount <= 0 || dataSpeed <= 0 || frameLength <= 0 || codeType < 0) return
+        if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || frameLength <= 0 || codeType < 0) return
 
-        processor.generateChannels(channelCount, dataSpeed, frameLength, codeType)
+        processor.generateChannels(channelCount, freq, dataSpeed, frameLength, codeType)
     }
 
     fun parseChannelCount(count: String): Int {
@@ -108,6 +114,16 @@ class DataSourceViewModel : ViewModel() {
             c
         } catch (e: NumberFormatException) {
             -1
+        }
+    }
+
+    fun parseFrequency(freqString: String): Double {
+        return try {
+            val c = freqString.toDouble()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
         }
     }
 
