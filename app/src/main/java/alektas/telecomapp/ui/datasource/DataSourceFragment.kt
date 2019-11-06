@@ -12,8 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.utils.SystemUtils
-import android.util.Log
-import android.view.inputmethod.EditorInfo
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
@@ -29,7 +27,6 @@ class DataSourceFragment : Fragment(), ChannelController {
     private lateinit var viewModel: DataSourceViewModel
 
     companion object {
-        const val TAG = "DataSourceFragment"
         fun newInstance() = DataSourceFragment()
     }
 
@@ -57,6 +54,12 @@ class DataSourceFragment : Fragment(), ChannelController {
             false
         }
 
+        adc_frequency.setOnEditorActionListener { tv, _, _ ->
+            SystemUtils.hideKeyboard(this)
+            changeAdcFrequency(tv.text.toString())
+            false
+        }
+
         source_frame_length.setOnEditorActionListener { _, _, _ ->
             generate_channels_btn.performClick()
             false
@@ -80,6 +83,10 @@ class DataSourceFragment : Fragment(), ChannelController {
     private fun setInitValues(viewModel: DataSourceViewModel) {
         viewModel.initNoiseSnr.observe(viewLifecycleOwner, Observer {
             ether_snr.setText(it.toString())
+        })
+
+        viewModel.initAdcFrequency.observe(viewLifecycleOwner, Observer {
+            adc_frequency.setText(String.format("%.2f", it))
         })
 
         viewModel.initCodeType.observe(viewLifecycleOwner, Observer {
@@ -122,7 +129,8 @@ class DataSourceFragment : Fragment(), ChannelController {
 
         source_channel_code_type_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
-            (v as AutoCompleteTextView).showDropDown()
+            val dropDown = v.findViewById<AutoCompleteTextView>(R.id.source_channel_code_type)
+            dropDown.showDropDown()
             false
         }
     }
@@ -152,6 +160,14 @@ class DataSourceFragment : Fragment(), ChannelController {
     }
 
     private fun setFieldsValidation() {
+        adc_frequency.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseFrequency(text.toString()) > 0) {
+                adc_frequency_layout.error = null
+            } else {
+                adc_frequency_layout.error = getString(R.string.error_positive_num_decimal)
+            }
+        }
+
         source_channel_count.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseChannelCount(text.toString()) > 0) {
                 source_channel_count_layout.error = null
@@ -186,15 +202,23 @@ class DataSourceFragment : Fragment(), ChannelController {
     }
 
     private fun changeNoisePower(text: String) {
-        val snr = try {
-            text.toDouble()
+        try {
+            val snr = text.toDouble()
+            viewModel.setNoise(snr)
         } catch (e: NumberFormatException) {
-            val msg = "Отношение сигнал/шум должно быть числом"
-            Log.e(TAG, msg, e)
+            val msg = getString(R.string.error_num)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            0.0
         }
-        viewModel.setNoise(snr)
+    }
+
+    private fun changeAdcFrequency(freqString: String) {
+        val freq = viewModel.parseFrequency(freqString)
+        if (freq > 0) {
+            viewModel.setAdcFrequency(freq)
+        } else {
+            val msg = getString(R.string.error_positive_num_decimal)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        }
     }
 
 }

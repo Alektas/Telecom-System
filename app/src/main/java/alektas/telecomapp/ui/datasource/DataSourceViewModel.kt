@@ -4,18 +4,20 @@ import alektas.telecomapp.App
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.utils.doOnFirst
 import alektas.telecomapp.utils.toDataPoints
-import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import io.reactivex.observers.DisposableSingleObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
@@ -27,6 +29,7 @@ class DataSourceViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val channels = MutableLiveData<List<ChannelData>>()
     val ether = MutableLiveData<Array<DataPoint>>()
+    val initAdcFrequency = MutableLiveData<Double>()
     val initNoiseSnr = MutableLiveData<Double>()
     val initCarrierFrequency = MutableLiveData<Double>()
     val initDataSpeed = MutableLiveData<Double>()
@@ -85,6 +88,16 @@ class DataSourceViewModel : ViewModel() {
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
+                }),
+
+            Single.just(Simulator.samplingRate)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object: DisposableSingleObserver<Double>() {
+                    override fun onSuccess(t: Double) {
+                        initAdcFrequency.value = t * 1.0e-6
+                    }
+
+                    override fun onError(e: Throwable) { }
                 })
         )
     }
@@ -149,6 +162,10 @@ class DataSourceViewModel : ViewModel() {
 
     fun removeChannel(channel: ChannelData) {
         processor.removeChannel(channel)
+    }
+
+    fun setAdcFrequency(frequency: Double) {
+        processor.setAdcFrequency(frequency)
     }
 
     fun setNoise(snr: Double) {

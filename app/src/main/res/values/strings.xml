@@ -57,4 +57,5 @@
     <string name="error_positive_num">Введите положительное целое число</string>
     <string name="error_positive_num_decimal">Введите положительное число</string>
     <string name="error_num">Введите число</string>
+    <string name="adc">АЦП</string>
 </resources>

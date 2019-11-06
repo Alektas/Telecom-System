@@ -27,6 +27,7 @@ class SystemProcessor {
     @Inject
     lateinit var storage: Repository
     private var codedGroupData: BooleanArray? = null
+    private var transmittedChannels: List<ChannelData>? = null
     private var decodedChannels: List<ChannelData>? = null
     private var noiseSnr: Double? = null
 
@@ -36,7 +37,10 @@ class SystemProcessor {
         storage.observeChannels()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { generateChannelsSignal(it) }
+            .subscribe {
+                transmittedChannels = it
+                generateChannelsSignal(it)
+            }
 
         storage.observeDemodulatorConfig()
             .subscribeOn(Schedulers.io())
@@ -73,6 +77,15 @@ class SystemProcessor {
             .subscribe { storage.setChannelsErrors(it) }
     }
 
+    fun setAdcFrequency(frequency: Double) {
+        val freq = frequency * 1.0e6 // МГц -> Гц
+        Simulator.samplingRate = freq
+        noiseSnr?.let { n -> setNoise(n) }
+        val filterConfig = storage.getDemodulatorFilterConfig().apply { samplingRate = freq }
+        storage.setDemodulatorFilterConfig(filterConfig)
+        transmittedChannels?.let { generateChannelsSignal(it) }
+    }
+
     @SuppressLint("CheckResult")
     fun generateChannels(
         count: Int,
@@ -105,7 +118,7 @@ class SystemProcessor {
             }
 
             val dataTime = frameLength * codes[0].size * bitTime
-            Simulator.setSimulationTime(dataTime)
+            Simulator.simulationTime = dataTime
             noiseSnr?.let { n -> setNoise(n) }
 
             it.onSuccess(channels)
