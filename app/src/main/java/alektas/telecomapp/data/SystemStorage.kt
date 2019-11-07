@@ -24,6 +24,7 @@ class SystemStorage : Repository {
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Noise>()
+    private var noise: Noise? = null
     private val demodulatedSignalSource = BehaviorSubject.create<BinarySignal>()
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
@@ -109,7 +110,16 @@ class SystemStorage : Repository {
     }
 
     override fun setNoise(signal: Noise) {
+        noise = signal
         noiseSource.onNext(signal)
+    }
+
+    override fun enableNoise() {
+        noise?.let { noiseSource.onNext(it) }
+    }
+
+    override fun disableNoise() {
+        noiseSource.onNext(BaseNoise())
     }
 
     override fun observeNoise(): Observable<Noise> {

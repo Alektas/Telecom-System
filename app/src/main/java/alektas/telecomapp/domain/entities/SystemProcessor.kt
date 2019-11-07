@@ -12,6 +12,7 @@ import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import android.annotation.SuppressLint
@@ -165,6 +166,15 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .subscribe { noise: Noise -> storage.setNoise(noise) }
+    }
+
+    fun disableNoise() {
+        storage.disableNoise()
+    }
+
+
+    fun enableNoise() {
+        storage.enableNoise()
     }
 
     @SuppressLint("CheckResult")

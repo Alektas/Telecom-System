@@ -12,6 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.utils.SystemUtils
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
@@ -25,6 +27,7 @@ import java.lang.NumberFormatException
 
 class DataSourceFragment : Fragment(), ChannelController {
     private lateinit var viewModel: DataSourceViewModel
+    private lateinit var prefs: SharedPreferences
 
     companion object {
         fun newInstance() = DataSourceFragment()
@@ -40,6 +43,10 @@ class DataSourceFragment : Fragment(), ChannelController {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DataSourceViewModel::class.java)
+        prefs = requireContext().getSharedPreferences(
+            getString(R.string.settings_source_key),
+            MODE_PRIVATE
+        )
         setupCodeTypesDropdown()
         setFieldsValidation()
         setInitValues(viewModel)
@@ -47,6 +54,18 @@ class DataSourceFragment : Fragment(), ChannelController {
         val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
+
+        ether_noise_checkbox.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                viewModel.enableNoise()
+                ether_snr_layout.isEnabled = true
+                prefs.edit().putBoolean(getString(R.string.source_noise_enable_key), true).apply()
+            } else {
+                viewModel.disableNoise()
+                ether_snr_layout.isEnabled = false
+                prefs.edit().putBoolean(getString(R.string.source_noise_enable_key), false).apply()
+            }
+        }
 
         ether_snr.setOnEditorActionListener { tv, _, _ ->
             SystemUtils.hideKeyboard(this)
@@ -81,6 +100,11 @@ class DataSourceFragment : Fragment(), ChannelController {
     }
 
     private fun setInitValues(viewModel: DataSourceViewModel) {
+        val isNoiseEnabled = prefs.getBoolean(getString(R.string.source_noise_enable_key), true)
+        ether_noise_checkbox.isChecked = isNoiseEnabled
+
+        ether_snr_layout.isEnabled = isNoiseEnabled
+
         viewModel.initNoiseSnr.observe(viewLifecycleOwner, Observer {
             ether_snr.setText(it.toString())
         })
@@ -180,7 +204,8 @@ class DataSourceFragment : Fragment(), ChannelController {
             if (viewModel.parseFrequency(text.toString()) > 0) {
                 source_carrier_frequency_layout.error = null
             } else {
-                source_carrier_frequency_layout.error = getString(R.string.error_positive_num_decimal)
+                source_carrier_frequency_layout.error =
+                    getString(R.string.error_positive_num_decimal)
             }
         }
 

@@ -176,4 +176,12 @@ class DataSourceViewModel : ViewModel() {
         disposable.dispose()
         super.onCleared()
     }
+
+    fun disableNoise() {
+        processor.disableNoise()
+    }
+
+    fun enableNoise() {
+        processor.enableNoise()
+    }
 }
