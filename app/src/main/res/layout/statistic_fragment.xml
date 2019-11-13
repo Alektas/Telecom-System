@@ -133,4 +133,15 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.9" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_ber_calculation_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/ber_calculation"
+        app:layout_constraintTop_toBottomOf="@id/statistic_ber_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

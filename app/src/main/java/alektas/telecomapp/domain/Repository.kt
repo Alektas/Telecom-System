@@ -58,4 +58,6 @@ interface Repository {
     fun setChannelsErrors(errors: List<List<Int>>)
     fun observeChannelsErrors(): Observable<List<List<Int>>>
 
+    fun observeBer(): Observable<Pair<Double, Double>>
+
 }

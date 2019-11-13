@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/padding_horiz_page"
+    android:layout_marginEnd="@dimen/padding_horiz_page"
+    android:layout_marginTop="@dimen/padding_top_page"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.statistic.ber.BerFragment">
+
+    <TextView
+        android:id="@+id/ber_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ber"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/ber_graph"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_ber_graph"
+        app:layout_constraintTop_toBottomOf="@id/ber_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/ber_from_snr_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:layout_marginEnd="@dimen/margin_start_body"
+        android:hint="@string/from_snr_in_db"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toStartOf="@id/ber_to_snr_layout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ber_graph">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ber_from_snr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:imeOptions="actionNext"
+            android:inputType="numberSigned|numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/ber_to_snr_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/to_snr_in_db"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ber_from_snr_layout"
+        app:layout_constraintBaseline_toBaselineOf="@id/ber_from_snr_layout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ber_to_snr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:imeOptions="actionDone"
+            android:inputType="numberSigned|numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/ber_draw_graph_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:text="@string/draw_graph"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ber_to_snr_layout" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

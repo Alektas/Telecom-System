@@ -15,5 +15,6 @@
     <dimen name="padding_horiz_page">32dp</dimen>
     <dimen name="textsize_graph_view_label">16sp</dimen>
     <dimen name="margin_top_text">8dp</dimen>
+    <dimen name="height_ber_graph">250dp</dimen>
 
 </resources>
