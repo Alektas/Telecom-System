@@ -2,7 +2,10 @@ package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.R
 import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -49,7 +52,8 @@ class DataSourceFragment : Fragment(), ChannelController {
         )
         setupCodeTypesDropdown()
         setFieldsValidation()
-        setInitValues(viewModel)
+        setInitValues(prefs)
+        observeSettings(viewModel, prefs)
 
         val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
@@ -99,38 +103,90 @@ class DataSourceFragment : Fragment(), ChannelController {
         })
     }
 
-    private fun setInitValues(viewModel: DataSourceViewModel) {
+    private fun setInitValues(prefs: SharedPreferences) {
         val isNoiseEnabled = prefs.getBoolean(getString(R.string.source_noise_enable_key), true)
         ether_noise_checkbox.isChecked = isNoiseEnabled
-
         ether_snr_layout.isEnabled = isNoiseEnabled
 
-        viewModel.initNoiseSnr.observe(viewLifecycleOwner, Observer {
+        prefs.getFloat(
+            getString(R.string.source_noise_snr_key),
+            QpskContract.DEFAULT_SIGNAL_NOISE_RATE.toFloat()
+        ).let {
             ether_snr.setText(it.toString())
-        })
+        }
 
-        viewModel.initAdcFrequency.observe(viewLifecycleOwner, Observer {
-            adc_frequency.setText(String.format("%.2f", it))
-        })
+        val defaultAdcFreq = (1.0e-6 / Simulator.DEFAULT_SAMPLING_RATE).toFloat()
+        prefs.getFloat(
+            getString(R.string.source_adc_freq_key),
+            defaultAdcFreq
+        ).let {
+            adc_frequency.setText(String.format("%.3f", it))
+        }
 
-        viewModel.initCodeType.observe(viewLifecycleOwner, Observer {
+        prefs.getInt(
+            getString(R.string.source_channels_codetype_key),
+            CdmaContract.DEFAULT_CODE_TYPE
+        ).let {
             source_channel_code_type.setText(CodeGenerator.getCodeName(it))
-        })
+        }
 
-        viewModel.initCarrierFrequency.observe(viewLifecycleOwner, Observer {
-            source_carrier_frequency.setText(String.format("%.2f", it))
-        })
+        val defaultCarFreq = (1.0e-6 * QpskContract.DEFAULT_CARRIER_FREQUENCY).toFloat()
+        prefs.getFloat(
+            getString(R.string.source_channels_freq_key),
+            defaultCarFreq
+        ).let {
+            source_carrier_frequency.setText(String.format("%.3f", it))
+        }
 
-        viewModel.initDataSpeed.observe(viewLifecycleOwner, Observer {
+        val defaultDataspeed = (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
+        prefs.getFloat(getString(R.string.source_channels_dataspeed_key), defaultDataspeed).let {
             source_data_speed.setText(it.toString())
-        })
+        }
 
-        viewModel.initChannelCount.observe(viewLifecycleOwner, Observer {
+        prefs.getInt(
+            getString(R.string.source_channels_count_key),
+            CdmaContract.DEFAULT_CHANNEL_COUNT
+        ).let {
             source_channel_count.setText(it.toString())
+        }
+
+        prefs.getInt(
+            getString(R.string.source_channels_framesize_key),
+            CdmaContract.DEFAULT_FRAME_SIZE
+        ).let {
+            source_frame_length.setText(it.toString())
+        }
+    }
+
+    private fun observeSettings(viewModel: DataSourceViewModel, prefs: SharedPreferences) {
+        viewModel.noiseSnr.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.source_noise_snr_key), it.toFloat()).apply()
         })
 
-        viewModel.initFrameSize.observe(viewLifecycleOwner, Observer {
-            source_frame_length.setText(it.toString())
+        viewModel.adcFrequency.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.source_adc_freq_key), it.toFloat()).apply()
+        })
+
+        viewModel.codeType.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_channels_codetype_key), it).apply()
+        })
+
+        viewModel.carrierFrequency.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.source_channels_freq_key), it.toFloat())
+                .apply()
+        })
+
+        viewModel.dataSpeed.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.source_channels_dataspeed_key), it.toFloat())
+                .apply()
+        })
+
+        viewModel.channelCount.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_channels_count_key), it).apply()
+        })
+
+        viewModel.frameSize.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_channels_framesize_key), it).apply()
         })
     }
 
