@@ -8,11 +8,13 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.utils.SystemUtils
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
-import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.data_source_fragment.*
@@ -22,6 +24,7 @@ import java.lang.NumberFormatException
 private const val TAG = "GeneratorFragment"
 
 class DemodulatorGeneratorFragment : Fragment() {
+    private lateinit var prefs: SharedPreferences
 
     companion object {
         fun newInstance() = DemodulatorGeneratorFragment()
@@ -39,7 +42,12 @@ class DemodulatorGeneratorFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DemodulatorGeneratorViewModel::class.java)
-        setInitValues(viewModel)
+        prefs = requireContext().getSharedPreferences(
+            getString(R.string.settings_demodulator_key),
+            Context.MODE_PRIVATE
+        )
+        setInitValues(prefs)
+        observeSettings(viewModel, prefs)
 
         generator_frequency.setOnEditorActionListener { tv, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -64,9 +72,19 @@ class DemodulatorGeneratorFragment : Fragment() {
         })
     }
 
-    private fun setInitValues(viewModel: DemodulatorGeneratorViewModel) {
-        viewModel.initFrequency.observe(viewLifecycleOwner, Observer {
-            generator_frequency.setText(it.toString())
+    private fun setInitValues(prefs: SharedPreferences) {
+        val defaultCarFreq = (1.0e-6 * QpskContract.DEFAULT_CARRIER_FREQUENCY).toFloat()
+        prefs.getFloat(
+            getString(R.string.demodulator_generator_freq_key),
+            defaultCarFreq
+        ).let {
+            generator_frequency.setText(String.format("%.3f", it))
+        }
+    }
+
+    private fun observeSettings(viewModel: DemodulatorGeneratorViewModel, prefs: SharedPreferences) {
+        viewModel.generatorFrequency.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.demodulator_generator_freq_key), it).apply()
         })
     }
 

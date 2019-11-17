@@ -68,4 +68,6 @@
     <string name="source_channels_count_key">source_channels_count_key</string>
     <string name="source_adc_freq_key">source_adc_freq_key</string>
     <string name="source_noise_snr_key">source_noise_snr_key</string>
+    <string name="settings_demodulator_key">settings_demodulator_key</string>
+    <string name="demodulator_generator_freq_key">demodulator_generator_freq_key</string>
 </resources>

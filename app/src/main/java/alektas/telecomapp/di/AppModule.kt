@@ -3,12 +3,19 @@ package alektas.telecomapp.di
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.SystemProcessor
+import android.app.Application
+import android.content.Context
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
 @Module
 class AppModule {
+
+    @Provides
+    @Singleton
+    fun providesApplicationContext(app: Application): Context = app.applicationContext
+
     @Provides
     @Singleton
     fun providesSystemStorage(): Repository {

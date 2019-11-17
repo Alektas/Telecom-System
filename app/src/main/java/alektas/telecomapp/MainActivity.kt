@@ -1,5 +1,6 @@
 package alektas.telecomapp
 
+import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.datasource.DataSourceFragment
 import alektas.telecomapp.ui.decoder.DecoderFragment
 import alektas.telecomapp.ui.demodulators.QpskDemodulatorFragment
@@ -14,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import alektas.telecomapp.ui.main.MainFragment
 import alektas.telecomapp.ui.statistic.StatisticFragment
+import android.content.Context
+import android.content.SharedPreferences
 import android.view.View
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +29,8 @@ class MainActivity : AppCompatActivity() {
                 .replace(R.id.container, MainFragment.newInstance())
                 .commitNow()
         }
+
+        loadSettings()
     }
 
     fun onNavigateBtnClick(view: View) {
@@ -49,6 +54,22 @@ class MainActivity : AppCompatActivity() {
             )
             .addToBackStack(null)
             .commit()
+    }
+
+    private fun loadSettings() {
+        val sourcePrefs = getSharedPreferences(
+            getString(R.string.settings_source_key),
+            Context.MODE_PRIVATE
+        )
+        loadSourceSettings(sourcePrefs)
+    }
+
+    private fun loadSourceSettings(prefs: SharedPreferences) {
+        val samplingRate = prefs.getFloat(
+            getString(R.string.source_adc_freq_key),
+            Simulator.DEFAULT_SAMPLING_RATE.toFloat()
+        ).let { it * 1.0e6 } // МГц -> Гц
+        Simulator.samplingRate = samplingRate
     }
 
 }

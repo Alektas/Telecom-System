@@ -6,6 +6,14 @@ import android.app.Application
 
 class App: Application() {
     companion object {
-        val component: AppComponent = DaggerAppComponent.builder().build()
+        lateinit var component: AppComponent
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        component = DaggerAppComponent
+            .builder()
+            .application(this)
+            .build()
     }
 }

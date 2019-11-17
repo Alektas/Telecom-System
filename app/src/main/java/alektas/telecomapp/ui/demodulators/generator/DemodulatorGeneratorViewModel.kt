@@ -4,8 +4,6 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
-import alektas.telecomapp.domain.entities.signals.Signal
-import alektas.telecomapp.utils.doOnFirst
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,7 +20,7 @@ class DemodulatorGeneratorViewModel : ViewModel() {
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
     val generatorSignalData = MutableLiveData<Array<DataPoint>>()
-    val initFrequency = MutableLiveData<Float>()
+    val generatorFrequency = MutableLiveData<Float>()
 
     init {
         App.component.inject(this)
@@ -31,12 +29,6 @@ class DemodulatorGeneratorViewModel : ViewModel() {
             storage.observeDemodulatorConfig()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnFirst {
-                    // Частоты хранятся в Гц, а отображаются МГц, поэтому домножаем на 10^-6.
-                    // Переводим в Float, потому что в Double число некрасивое ;)
-                    val freq = (it.carrierFrequency * 1.0e-6).toFloat()
-                    initFrequency.value = freq
-                }
                 .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
                     override fun onNext(t: DemodulatorConfig) {
                         showGeneratorSignal(t.carrierFrequency)
@@ -53,6 +45,7 @@ class DemodulatorGeneratorViewModel : ViewModel() {
      * Частота генератор задается в МГц, поэтому введенное число умножается на 10^6
      */
     fun setGeneratorFrequency(frequency: Double) {
+        generatorFrequency.value = frequency.toFloat()
         storage.setDemodulatorFrequency(frequency * 1.0e6)
     }
 

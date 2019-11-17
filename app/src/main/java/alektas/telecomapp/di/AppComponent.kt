@@ -1,5 +1,6 @@
 package alektas.telecomapp.di
 
+import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.ui.datasource.DataSourceViewModel
 import alektas.telecomapp.ui.decoder.DecoderViewModel
@@ -12,11 +13,13 @@ import alektas.telecomapp.ui.demodulators.generator.DemodulatorGeneratorViewMode
 import alektas.telecomapp.ui.demodulators.input.DemodulatorInputViewModel
 import alektas.telecomapp.ui.demodulators.output.DemodulatorOutputViewModel
 import alektas.telecomapp.ui.statistic.StatisticViewModel
+import android.app.Application
+import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [AppModule::class])
+@Component(modules = [AppModule::class, PreferencesModule::class])
 interface AppComponent {
     fun inject(proc: SystemProcessor)
     fun inject(vm: DataSourceViewModel)
@@ -30,4 +33,12 @@ interface AppComponent {
     fun inject(vm: IChannelViewModel)
     fun inject(vm: QChannelViewModel)
     fun inject(vm: StatisticViewModel)
+    fun inject(storage: SystemStorage)
+
+    @Component.Builder
+    interface Builder {
+        @BindsInstance
+        fun application(app: Application): Builder
+        fun build(): AppComponent
+    }
 }
