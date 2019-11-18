@@ -1,6 +1,7 @@
 package alektas.telecomapp.di
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
@@ -34,15 +35,41 @@ class PreferencesModule {
     @Provides
     fun providesDemodulatorConfig(
         context: Context,
-        @Named("demodulatorPrefs") demodulatorPrefs: SharedPreferences,
+        @Named("demodulatorPrefs") prefs: SharedPreferences,
         filterConfig: FilterConfig
     ): DemodulatorConfig {
-        val genFreq = demodulatorPrefs.getFloat(
+        val genFreq = prefs.getFloat(
             context.getString(R.string.demodulator_generator_freq_key),
             QpskContract.DEFAULT_CARRIER_FREQUENCY.toFloat()
         ).let { it * 1.0e6 }
+
+        val dataspeed = prefs.getFloat(
+            context.getString(R.string.demodulator_process_dataspeed_key),
+            (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
+        ).let { it * 1.0e3 }
+        val bitTime = 1 / dataspeed
+
+        val threshold = prefs.getFloat(
+            context.getString(R.string.demodulator_process_threshold_key),
+            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
+        ).toDouble()
+
+        val frameLength = prefs.getInt(
+            context.getString(R.string.demodulator_process_frame_length_key),
+            CdmaContract.DEFAULT_FRAME_SIZE
+        )
+
+        val codeLength = prefs.getInt(
+            context.getString(R.string.demodulator_process_code_length_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        )
+
         return DemodulatorConfig(
             carrierFrequency = genFreq,
+            frameLength = frameLength,
+            codeLength = codeLength,
+            bitTime = bitTime,
+            bitThreshold = threshold,
             filterConfig = filterConfig
         )
     }

@@ -2,10 +2,7 @@ package alektas.telecomapp.ui.demodulators.processing
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.QpskContract
-import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.signals.BinarySignal
-import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,33 +22,15 @@ class DemodulatorProcessViewModel : ViewModel() {
     val qSignalData = MutableLiveData<Array<DataPoint>>()
     val iBitsData = MutableLiveData<Array<DataPoint>>()
     val qBitsData = MutableLiveData<Array<DataPoint>>()
-    val initFrameLength = MutableLiveData<Int>()
-    val initCodeLength = MutableLiveData<Int>()
-    val initDataSpeed = MutableLiveData<Double>()
-    val initThreshold = MutableLiveData<Double>()
+    val frameLength = MutableLiveData<Int>()
+    val codeLength = MutableLiveData<Int>()
+    val dataSpeed = MutableLiveData<Float>()
+    val threshold = MutableLiveData<Float>()
 
     init {
         App.component.inject(this)
 
         disposable.addAll(
-            storage.observeDemodulatorConfig()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .take(1)
-                .subscribeWith(object : DisposableObserver<DemodulatorConfig>() {
-                    override fun onNext(t: DemodulatorConfig) {
-                        if (t.frameLength != 0) initFrameLength.value = t.frameLength
-                        if (t.codeLength != 0) initCodeLength.value = t.codeLength
-                        initDataSpeed.value =
-                            1.0e-3 / t.bitTime // преобразование в скорость (кБит/с)
-                        initThreshold.value = t.bitThreshold
-                    }
-
-                    override fun onComplete() {}
-
-                    override fun onError(e: Throwable) {}
-                }),
-
             storage.observeDemodulatedSignal()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
@@ -112,11 +91,6 @@ class DemodulatorProcessViewModel : ViewModel() {
         )
     }
 
-    override fun onCleared() {
-        disposable.dispose()
-        super.onCleared()
-    }
-
     fun processData(
         frameLengthString: String,
         dataSpeedString: String,
@@ -130,6 +104,11 @@ class DemodulatorProcessViewModel : ViewModel() {
         val threshold = parseThreshold(thresholdString)
 
         if (codeLength <= 0 || dataSpeed <= 0 || frameLength <= 0 || threshold < 0) return
+
+        this.frameLength.value = frameLength
+        this.codeLength.value = codeLength
+        this.dataSpeed.value = dataSpeed.toFloat()
+        this.threshold.value = threshold.toFloat()
 
         storage.updateDemodulatorConfig(frameLength, bitTime, codeLength, threshold)
     }
@@ -172,6 +151,11 @@ class DemodulatorProcessViewModel : ViewModel() {
         } catch (e: NumberFormatException) {
             -1
         }
+    }
+
+    override fun onCleared() {
+        disposable.dispose()
+        super.onCleared()
     }
 
 }

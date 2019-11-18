@@ -8,7 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.CdmaContract
+import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.utils.SystemUtils
+import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
@@ -16,13 +20,12 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.data_source_fragment.*
 import kotlinx.android.synthetic.main.demodulator_process_channel_fragment.*
 import kotlinx.android.synthetic.main.demodulator_process_fragment.*
-import java.lang.NumberFormatException
 
 class DemodulatorProcessFragment : Fragment() {
     private lateinit var pagerAdapter: ProcessPagerAdapter
+    private lateinit var prefs: SharedPreferences
 
     companion object {
         private const val TAG = "DemodulatorProcess"
@@ -50,8 +53,13 @@ class DemodulatorProcessFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DemodulatorProcessViewModel::class.java)
-        setInitValues(viewModel)
+        prefs = requireContext().getSharedPreferences(
+            getString(R.string.settings_demodulator_key),
+            Context.MODE_PRIVATE
+        )
         setFieldsValidation()
+        setInitValues(prefs)
+        observeSettings(viewModel, prefs)
 
         process_threshold.setOnEditorActionListener { _, _, _ ->
             process_btn.performClick()
@@ -124,23 +132,54 @@ class DemodulatorProcessFragment : Fragment() {
         }
     }
 
-    private fun setInitValues(viewModel: DemodulatorProcessViewModel) {
-        viewModel.initFrameLength.observe(viewLifecycleOwner, Observer {
-            process_frame_length.setText(it.toString())
-        })
+    private fun setInitValues(prefs: SharedPreferences) {
+        prefs.getFloat(
+            getString(R.string.demodulator_process_dataspeed_key),
+            (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
+        ).let {
+            process_data_speed.setText(it.toString())
+        }
 
-        viewModel.initCodeLength.observe(viewLifecycleOwner, Observer {
-            process_code_length.setText(it.toString())
-        })
-
-        viewModel.initDataSpeed.observe(viewLifecycleOwner, Observer {
-            process_data_speed.setText(it.toBigDecimal().toPlainString())
-        })
-
-        viewModel.initThreshold.observe(viewLifecycleOwner, Observer {
+        prefs.getFloat(
+            getString(R.string.demodulator_process_threshold_key),
+            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
+        ).let {
             process_threshold.setText(it.toString())
+        }
+
+        prefs.getInt(
+            getString(R.string.demodulator_process_frame_length_key),
+            CdmaContract.DEFAULT_FRAME_SIZE
+        ).let {
+            process_frame_length.setText(it.toString())
+        }
+
+        prefs.getInt(
+            getString(R.string.demodulator_process_code_length_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        ).let {
+            process_code_length.setText(it.toString())
+        }
+    }
+
+    private fun observeSettings(viewModel: DemodulatorProcessViewModel, prefs: SharedPreferences) {
+        viewModel.frameLength.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.demodulator_process_frame_length_key), it).apply()
+        })
+
+        viewModel.codeLength.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.demodulator_process_code_length_key), it).apply()
+        })
+
+        viewModel.dataSpeed.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.demodulator_process_dataspeed_key), it).apply()
+        })
+
+        viewModel.threshold.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.demodulator_process_threshold_key), it).apply()
         })
     }
+
 }
 
 class ProcessPagerAdapter(fm: FragmentManager, behavior: Int) :

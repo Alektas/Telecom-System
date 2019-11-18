@@ -73,4 +73,8 @@
     <string name="demodulator_filter_cutoff_freq_key">demodulator_filter_cutoff_freq_key</string>
     <string name="demodulator_filter_window_type_key">demodulator_filter_window_type_key</string>
     <string name="demodulator_filter_order_key">demodulator_filter_order_key</string>
+    <string name="demodulator_process_threshold_key">demodulator_process_threshold_key</string>
+    <string name="demodulator_process_dataspeed_key">demodulator_process_dataspeed_key</string>
+    <string name="demodulator_process_code_length_key">demodulator_process_code_length_key</string>
+    <string name="demodulator_process_frame_length_key">demodulator_process_frame_length_key</string>
 </resources>
