@@ -18,10 +18,6 @@ class DemodulatorProcessViewModel : ViewModel() {
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
     val outputSignalData = MutableLiveData<Array<DataPoint>>()
-    val iSignalData = MutableLiveData<Array<DataPoint>>()
-    val qSignalData = MutableLiveData<Array<DataPoint>>()
-    val iBitsData = MutableLiveData<Array<DataPoint>>()
-    val qBitsData = MutableLiveData<Array<DataPoint>>()
     val frameLength = MutableLiveData<Int>()
     val codeLength = MutableLiveData<Int>()
     val dataSpeed = MutableLiveData<Float>()
@@ -34,54 +30,11 @@ class DemodulatorProcessViewModel : ViewModel() {
             storage.observeDemodulatedSignal()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
-                .map {
-                    val sigData = it.toDataPoints()
-
-                    val iBits = it.bits.filterIndexed { i, _ -> i % 2 == 0 }.toBooleanArray()
-                    val qBits = it.bits.filterIndexed { i, _ -> i % 2 != 0 }.toBooleanArray()
-
-                    val iData = BinarySignal(iBits, it.bitTime * 2).toDataPoints()
-                    val qData = BinarySignal(qBits, it.bitTime * 2).toDataPoints()
-
-                    Triple(sigData, iData, qData)
-                }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object :
-                    DisposableObserver<Triple<Array<DataPoint>, Array<DataPoint>, Array<DataPoint>>>() {
-                    override fun onNext(t: Triple<Array<DataPoint>, Array<DataPoint>, Array<DataPoint>>) {
-                        outputSignalData.value = t.first
-                        iBitsData.value = t.second
-                        qBitsData.value = t.third
-                    }
-
-                    override fun onComplete() {}
-
-                    override fun onError(e: Throwable) {}
-                }),
-
-            storage.observeFilteredChannelI()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.computation())
                 .map { it.toDataPoints() }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
                     override fun onNext(t: Array<DataPoint>) {
-                        iSignalData.value = t
-                    }
-
-                    override fun onComplete() {}
-
-                    override fun onError(e: Throwable) {}
-                }),
-
-            storage.observeFilteredChannelQ()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.computation())
-                .map { it.toDataPoints() }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
-                    override fun onNext(t: Array<DataPoint>) {
-                        qSignalData.value = t
+                        outputSignalData.value = t
                     }
 
                     override fun onComplete() {}

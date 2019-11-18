@@ -11,6 +11,7 @@ import alektas.telecomapp.R
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
@@ -23,6 +24,8 @@ import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.decoder_fragment.*
 import kotlinx.android.synthetic.main.decoder_fragment.channel_list
@@ -31,6 +34,7 @@ import kotlinx.android.synthetic.main.decoder_fragment.generate_channels_btn
 class DecoderFragment : Fragment(), ChannelController {
     private lateinit var viewModel: DecoderViewModel
     private lateinit var prefs: SharedPreferences
+    private val graphPoints = LineGraphSeries<DataPoint>()
 
     companion object {
         fun newInstance() = DecoderFragment()
@@ -42,6 +46,18 @@ class DecoderFragment : Fragment(), ChannelController {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.decoder_fragment, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        view.findViewById<GraphView>(R.id.decoder_input_chart).apply {
+            addSeries(graphPoints)
+            viewport.apply {
+                isScrollable = true
+                isXAxisBoundsManual = true
+                setMaxX(10 * QpskContract.DEFAULT_DATA_BIT_TIME)
+            }
+        }
+        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -95,8 +111,7 @@ class DecoderFragment : Fragment(), ChannelController {
 
 
         viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
-            input_chart.removeAllSeries()
-            input_chart.addSeries(LineGraphSeries(it))
+            graphPoints.resetData(it)
         })
     }
 

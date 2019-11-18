@@ -18,13 +18,13 @@ import kotlinx.android.synthetic.main.ber_fragment.*
 import kotlinx.android.synthetic.main.data_source_fragment.*
 
 class BerFragment : Fragment() {
+    private lateinit var viewModel: BerViewModel
+    private val graphPoints = LineGraphSeries<DataPoint>()
 
     companion object {
         fun newInstance() = BerFragment()
-    }
 
-    private lateinit var viewModel: BerViewModel
-    private val graphPoints = LineGraphSeries<DataPoint>()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

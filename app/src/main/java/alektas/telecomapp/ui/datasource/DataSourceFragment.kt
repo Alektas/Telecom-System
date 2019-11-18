@@ -23,6 +23,7 @@ import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.data_source_fragment.*
@@ -31,6 +32,7 @@ import java.lang.NumberFormatException
 class DataSourceFragment : Fragment(), ChannelController {
     private lateinit var viewModel: DataSourceViewModel
     private lateinit var prefs: SharedPreferences
+    private val graphPoints = LineGraphSeries<DataPoint>()
 
     companion object {
         fun newInstance() = DataSourceFragment()
@@ -41,6 +43,18 @@ class DataSourceFragment : Fragment(), ChannelController {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.data_source_fragment, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        view.findViewById<GraphView>(R.id.ether_chart).apply {
+            addSeries(graphPoints)
+            viewport.apply {
+                isScrollable = true
+                isXAxisBoundsManual = true
+                setMaxX(10 * QpskContract.DEFAULT_DATA_BIT_TIME)
+            }
+        }
+        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -98,8 +112,7 @@ class DataSourceFragment : Fragment(), ChannelController {
         })
 
         viewModel.ether.observe(viewLifecycleOwner, Observer {
-            ether_chart.removeAllSeries()
-            ether_chart.addSeries(LineGraphSeries<DataPoint>(it))
+            graphPoints.resetData(it)
         })
     }
 

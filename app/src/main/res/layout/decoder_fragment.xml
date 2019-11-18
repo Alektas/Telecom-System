@@ -24,7 +24,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.jjoe64.graphview.GraphView
-            android:id="@+id/input_chart"
+            android:id="@+id/decoder_input_chart"
             android:layout_width="match_parent"
             android:layout_height="@dimen/height_graph_signal"
             android:layout_marginTop="16dp"
@@ -38,7 +38,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
             android:background="?android:attr/listDivider"
-            app:layout_constraintTop_toBottomOf="@id/input_chart" />
+            app:layout_constraintTop_toBottomOf="@id/decoder_input_chart" />
 
         <TextView
             android:id="@+id/channels_label"
