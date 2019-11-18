@@ -25,6 +25,7 @@ class DecoderViewModel : ViewModel() {
     val channels = MutableLiveData<List<ChannelData>>()
     val codeType = MutableLiveData<Int>()
     val channelCount = MutableLiveData<Int>()
+    val codeLength = MutableLiveData<Int>()
 
     init {
         App.component.inject(this)
@@ -66,17 +67,20 @@ class DecoderViewModel : ViewModel() {
 
     fun decodeChannels(
         countString: String,
+        codeLengthString: String,
         codeTypeString: String
     ) {
         val channelCount = parseChannelCount(countString)
+        val codeLength = parseChannelCount(codeLengthString)
         val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
 
-        if (channelCount <= 0 || codeType < 0) return
+        if (channelCount <= 0 || codeLength <= 0 || codeType < 0) return
 
         this.codeType.value = codeType
         this.channelCount.value = channelCount
+        this.codeLength.value = codeLength
 
-        processor.setDecodedChannels(channelCount, codeType)
+        processor.setDecodedChannels(channelCount, codeLength, codeType)
     }
 
     fun parseChannelCount(count: String): Int {

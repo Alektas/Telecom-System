@@ -5,7 +5,6 @@ import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
-import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -31,6 +30,7 @@ class DataSourceViewModel : ViewModel() {
     val channelCount = MutableLiveData<Int>()
     val codeType = MutableLiveData<Int>()
     val frameSize = MutableLiveData<Int>()
+    val codeSize = MutableLiveData<Int>()
 
     init {
         App.component.inject(this)
@@ -70,26 +70,29 @@ class DataSourceViewModel : ViewModel() {
         countString: String,
         carrierFrequencyString: String,
         dataSpeedString: String,
+        codeLengthString: String,
         frameLengthString: String,
         codeTypeString: String
     ) {
         val channelCount = parseChannelCount(countString)
         val freq = parseFrequency(carrierFrequencyString)
         val dataSpeed = parseDataspeed(dataSpeedString)
+        val codeLength = parseFrameLength(codeLengthString)
         val frameLength = parseFrameLength(frameLengthString)
         val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
 
-        if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || frameLength <= 0 || codeType < 0) return
+        if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || codeLength <= 0 || frameLength <= 0 || codeType < 0) return
 
-        saveChannelsSettings(channelCount, freq, dataSpeed, frameLength, codeType)
+        saveChannelsSettings(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
 
-        processor.generateChannels(channelCount, freq, dataSpeed, frameLength, codeType)
+        processor.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
     }
 
     private fun saveChannelsSettings(
         channelCount: Int,
         freq: Double,
         dataSpeed: Double,
+        codeLength: Int,
         frameLength: Int,
         codeType: Int
     ) {
@@ -97,6 +100,7 @@ class DataSourceViewModel : ViewModel() {
         carrierFrequency.value = freq
         this.dataSpeed.value = dataSpeed
         frameSize.value = frameLength
+        codeSize.value = codeLength
         this.codeType.value = codeType
     }
 

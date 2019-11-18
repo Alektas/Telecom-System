@@ -164,6 +164,13 @@ class DataSourceFragment : Fragment(), ChannelController {
         }
 
         prefs.getInt(
+            getString(R.string.source_channels_codesize_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        ).let {
+            source_code_length.setText(it.toString())
+        }
+
+        prefs.getInt(
             getString(R.string.source_channels_framesize_key),
             CdmaContract.DEFAULT_FRAME_SIZE
         ).let {
@@ -196,6 +203,10 @@ class DataSourceFragment : Fragment(), ChannelController {
 
         viewModel.channelCount.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.source_channels_count_key), it).apply()
+        })
+
+        viewModel.codeSize.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_channels_codesize_key), it).apply()
         })
 
         viewModel.frameSize.observe(viewLifecycleOwner, Observer {
@@ -233,15 +244,18 @@ class DataSourceFragment : Fragment(), ChannelController {
         val freq = source_carrier_frequency.text.toString()
         val dataSpeed = source_data_speed.text.toString()
         val frameLength = source_frame_length.text.toString()
+        val codeLength = source_code_length.text.toString()
         val codeType = source_channel_code_type.text.toString()
 
         if (source_channel_count_layout.error != null ||
             source_carrier_frequency_layout.error != null ||
             source_data_speed_layout.error != null ||
+            source_code_length_layout.error != null ||
             source_frame_length_layout.error != null ||
             channelCount.isEmpty() ||
             freq.isEmpty() ||
             dataSpeed.isEmpty() ||
+            codeLength.isEmpty() ||
             frameLength.isEmpty() ||
             codeType.isEmpty()
         ) {
@@ -249,7 +263,7 @@ class DataSourceFragment : Fragment(), ChannelController {
             return
         }
 
-        viewModel.generateChannels(channelCount, freq, dataSpeed, frameLength, codeType)
+        viewModel.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
     }
 
     private fun setFieldsValidation() {
@@ -283,6 +297,14 @@ class DataSourceFragment : Fragment(), ChannelController {
                 source_data_speed_layout.error = null
             } else {
                 source_data_speed_layout.error = getString(R.string.error_positive_num_decimal)
+            }
+        }
+
+        source_code_length.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseFrameLength(text.toString()) > 0) {
+                source_code_length_layout.error = null
+            } else {
+                source_code_length_layout.error = getString(R.string.error_positive_num)
             }
         }
 

@@ -38,7 +38,6 @@ class DecoderFragment : Fragment(), ChannelController {
 
     companion object {
         fun newInstance() = DecoderFragment()
-
     }
 
     override fun onCreateView(
@@ -148,6 +147,13 @@ class DecoderFragment : Fragment(), ChannelController {
         }
 
         prefs.getInt(
+            getString(R.string.decoder_code_length_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        ).let {
+            decoder_code_length.setText(it.toString())
+        }
+
+        prefs.getInt(
             getString(R.string.decoder_channels_count_key),
             CdmaContract.DEFAULT_CHANNEL_COUNT
         ).let {
@@ -160,12 +166,24 @@ class DecoderFragment : Fragment(), ChannelController {
             prefs.edit().putInt(getString(R.string.decoder_channels_codetype_key), it).apply()
         })
 
+        viewModel.codeLength.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.decoder_code_length_key), it).apply()
+        })
+
         viewModel.channelCount.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.decoder_channels_count_key), it).apply()
         })
     }
 
     private fun setFieldsValidation() {
+        decoder_code_length.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseChannelCount(text.toString()) > 0) {
+                decoder_code_length_layout.error = null
+            } else {
+                decoder_code_length_layout.error = getString(R.string.error_positive_num)
+            }
+        }
+
         decoder_channel_count.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseChannelCount(text.toString()) > 0) {
                 decoder_channel_count_layout.error = null
@@ -177,10 +195,13 @@ class DecoderFragment : Fragment(), ChannelController {
 
     private fun decodeChannels() {
         val channelCount = decoder_channel_count.text.toString()
+        val codeLength = decoder_code_length.text.toString()
         val codeType = decoder_channel_code_type.text.toString()
 
         if (decoder_channel_count_layout.error != null ||
+            decoder_code_length_layout.error != null ||
             channelCount.isEmpty() ||
+            codeLength.isEmpty() ||
             codeType.isEmpty()
         ) {
             Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
@@ -188,7 +209,7 @@ class DecoderFragment : Fragment(), ChannelController {
         }
 
         viewModel.inputSignalData.value?.let {
-            viewModel.decodeChannels(channelCount, codeType)
+            viewModel.decodeChannels(channelCount, codeLength, codeType)
             return
         }
 

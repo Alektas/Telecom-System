@@ -18,7 +18,7 @@ import android.annotation.SuppressLint
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.rxkotlin.toObservable
 import io.reactivex.rxkotlin.zipWith
@@ -35,52 +35,54 @@ class SystemProcessor {
     private var transmittedChannels: List<ChannelData>? = null
     private var decodedChannels: List<ChannelData>? = null
     private var noiseSnr: Double? = null
-    private lateinit var berDisposable: Disposable
+    private var disposable = CompositeDisposable()
 
     init {
         App.component.inject(this)
 
-        storage.observeChannels()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                transmittedChannels = it
-                generateChannelsSignal(it)
-            }
+        disposable.addAll(
+            storage.observeChannels()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    transmittedChannels = it
+                    generateChannelsSignal(it)
+                },
 
-        storage.observeDemodulatorConfig()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { demodulate(it) }
+            storage.observeDemodulatorConfig()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { demodulate(it) },
 
-        storage.observeDemodulatedSignal()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { s ->
-                codedGroupData = s.bits
-                decodedChannels?.let { updateDecodedChannels(it, s.bits) }
-            }
+            storage.observeDemodulatedSignal()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { s ->
+                    codedGroupData = s.bits
+                    decodedChannels?.let { updateDecodedChannels(it, s.bits) }
+                },
 
-        storage.observeDecodedChannels()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                decodedChannels = it
-            }
+            storage.observeDecodedChannels()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    decodedChannels = it
+                },
 
-        storage.observeNoise()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { noiseSnr = it.snr() }
+            storage.observeNoise()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { noiseSnr = it.snr() },
 
-        Observable.combineLatest(
-            storage.observeChannels(),
-            storage.observeDecodedChannels(),
-            BiFunction<List<ChannelData>, List<ChannelData>, List<List<Int>>> { origin, decoded ->
-                diffChannels(origin, decoded)
-            })
-            .subscribeOn(Schedulers.computation())
-            .subscribe { storage.setChannelsErrors(it) }
+            Observable.combineLatest(
+                storage.observeChannels(),
+                storage.observeDecodedChannels(),
+                BiFunction<List<ChannelData>, List<ChannelData>, List<List<Int>>> { origin, decoded ->
+                    diffChannels(origin, decoded)
+                })
+                .subscribeOn(Schedulers.computation())
+                .subscribe { storage.setChannelsErrors(it) }
+        )
     }
 
     fun setAdcFrequency(frequency: Double) {
@@ -97,6 +99,7 @@ class SystemProcessor {
         count: Int,
         carrierFrequency: Double, // МГц
         dataSpeed: Double, // кБит/с
+        codeLength: Int,
         frameLength: Int,
         codesType: Int = CodeGenerator.WALSH
     ) {
@@ -104,8 +107,8 @@ class SystemProcessor {
             val channels = mutableListOf<ChannelData>()
             val codeGen = CodeGenerator()
             val codes = when (codesType) {
-                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
-                else -> codeGen.generateRandomCodes(count, count)
+                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(codeLength)
+                else -> codeGen.generateRandomCodes(count, codeLength)
             }
 
             val bitTime = 1.0e-3 / dataSpeed // скорость в период бита (в секундах)
@@ -222,14 +225,14 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun setDecodedChannels(count: Int, codesType: Int) {
+    fun setDecodedChannels(count: Int, codeLength: Int, codesType: Int) {
         Single.create<List<ChannelData>> { emitter ->
             codedGroupData?.let {
                 val channels = mutableListOf<ChannelData>()
                 val codeGen = CodeGenerator()
                 val codes = when (codesType) {
-                    CodeGenerator.WALSH -> codeGen.generateWalshMatrix(count)
-                    else -> codeGen.generateRandomCodes(count, count)
+                    CodeGenerator.WALSH -> codeGen.generateWalshMatrix(codeLength)
+                    else -> codeGen.generateRandomCodes(count, codeLength)
                 }
 
                 for (i in 0 until count) {
@@ -312,11 +315,11 @@ class SystemProcessor {
     fun calculateBer(fromSnr: Double, toSnr: Double) {
         val step = (toSnr - fromSnr) / BER_POINTS_COUNT
         val snrs = DoubleArray(BER_POINTS_COUNT) { fromSnr + it * step }
-        berDisposable = snrs.toObservable()
+        disposable.add(snrs.toObservable()
             .skip(1)
             .zipWith(storage.observeBer()) { snr, _ -> snr }
             .doOnSubscribe { setNoise(fromSnr, true) }
-            .subscribe { setNoise(it, true) }
+            .subscribe { setNoise(it, true) })
     }
 
 }
