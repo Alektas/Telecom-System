@@ -11,20 +11,6 @@
         android:orientation="vertical"
         tools:context=".ui.demodulators.processing.DemodulatorProcessFragment">
 
-        <androidx.viewpager.widget.ViewPager
-            android:id="@+id/demodulation_process_pager"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/height_demodulation_process_channel"
-            android:elevation="8dp"
-            android:background="@color/colorSecondaryBackground">
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/demodulation_process_tab_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/colorSecondaryBackground"/>
-        </androidx.viewpager.widget.ViewPager>
-
         <TextView
             android:id="@+id/signal_label"
             android:layout_width="match_parent"

@@ -51,10 +51,12 @@ class DataSourceViewModel : ViewModel() {
 
             storage.observeEther()
                 .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .map { it.toDataPoints() }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<Signal>() {
-                    override fun onNext(s: Signal) {
-                        ether.value = s.toDataPoints()
+                .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
+                    override fun onNext(s: Array<DataPoint>) {
+                        ether.value = s
                     }
 
                     override fun onComplete() {}

@@ -14,17 +14,12 @@ import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
 import android.content.SharedPreferences
 import android.widget.Toast
-import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.demodulator_process_channel_fragment.*
 import kotlinx.android.synthetic.main.demodulator_process_fragment.*
 
 class DemodulatorProcessFragment : Fragment() {
-    private lateinit var pagerAdapter: ProcessPagerAdapter
     private lateinit var prefs: SharedPreferences
 
     companion object {
@@ -39,15 +34,6 @@ class DemodulatorProcessFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.demodulator_process_fragment, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        pagerAdapter = ProcessPagerAdapter(
-            childFragmentManager,
-            FragmentPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
-        )
-        demodulation_process_pager.adapter = pagerAdapter
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -180,78 +166,4 @@ class DemodulatorProcessFragment : Fragment() {
         })
     }
 
-}
-
-class ProcessPagerAdapter(fm: FragmentManager, behavior: Int) :
-    FragmentPagerAdapter(fm, behavior) {
-    override fun getItem(position: Int): Fragment {
-        return ChannelFragment().apply {
-            arguments = bundleOf(
-                ARG_CHANNEL to when (position) {
-                    0 -> CHANNEL_I
-                    else -> CHANNEL_Q
-                }
-            )
-        }
-    }
-
-    override fun getCount(): Int = 2
-
-    override fun getPageTitle(position: Int): CharSequence? {
-        return when (position) {
-            0 -> "I-канал"
-            else -> "Q-канал"
-        }
-    }
-
-}
-
-private const val ARG_CHANNEL = "channel"
-private const val CHANNEL_I = 0
-private const val CHANNEL_Q = 1
-
-class ChannelFragment : Fragment() {
-    private lateinit var viewModel: DemodulatorProcessViewModel
-    private var type: Int = 0
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.demodulator_process_channel_fragment, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        arguments?.takeIf { it.containsKey(ARG_CHANNEL) }?.apply {
-            type = getInt(ARG_CHANNEL)
-        }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(DemodulatorProcessViewModel::class.java)
-
-        if (type == CHANNEL_I) {
-            viewModel.iSignalData.observe(viewLifecycleOwner, Observer {
-                signal_chart.removeAllSeries()
-                signal_chart.addSeries(LineGraphSeries(it))
-            })
-
-            viewModel.iBitsData.observe(viewLifecycleOwner, Observer {
-                data_chart.removeAllSeries()
-                data_chart.addSeries(LineGraphSeries(it))
-            })
-        } else {
-            viewModel.qSignalData.observe(viewLifecycleOwner, Observer {
-                signal_chart.removeAllSeries()
-                signal_chart.addSeries(LineGraphSeries(it))
-            })
-
-            viewModel.qBitsData.observe(viewLifecycleOwner, Observer {
-                data_chart.removeAllSeries()
-                data_chart.addSeries(LineGraphSeries(it))
-            })
-        }
-    }
 }

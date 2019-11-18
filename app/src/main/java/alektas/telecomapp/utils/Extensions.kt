@@ -8,8 +8,6 @@ import org.apache.commons.math3.transform.DftNormalization
 import org.apache.commons.math3.transform.FastFourierTransformer
 import org.apache.commons.math3.transform.TransformType
 
-class Extensions
-
 fun Signal.toDataPoints(): Array<DataPoint> = this.getPoints()
         .map { DataPoint(it.key, it.value) }
         .toTypedArray()
