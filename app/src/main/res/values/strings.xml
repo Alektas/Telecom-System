@@ -77,4 +77,6 @@
     <string name="demodulator_process_dataspeed_key">demodulator_process_dataspeed_key</string>
     <string name="demodulator_process_code_length_key">demodulator_process_code_length_key</string>
     <string name="demodulator_process_frame_length_key">demodulator_process_frame_length_key</string>
+    <string name="decoder_channels_codetype_key">decoder_channels_codetype_key</string>
+    <string name="decoder_channels_count_key">decoder_channels_count_key</string>
 </resources>

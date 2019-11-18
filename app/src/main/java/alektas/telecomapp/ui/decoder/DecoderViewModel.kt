@@ -5,8 +5,6 @@ import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
-import alektas.telecomapp.domain.entities.signals.BinarySignal
-import alektas.telecomapp.utils.doOnFirst
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,8 +23,8 @@ class DecoderViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val channels = MutableLiveData<List<ChannelData>>()
-    val initCodeType = MutableLiveData<Int>()
-    val initChannelCount = MutableLiveData<Int>()
+    val codeType = MutableLiveData<Int>()
+    val channelCount = MutableLiveData<Int>()
 
     init {
         App.component.inject(this)
@@ -49,10 +47,6 @@ class DecoderViewModel : ViewModel() {
             storage.observeDecodedChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnFirst {
-                    initChannelCount.value = it.size
-                    initCodeType.value = it.first().codeType
-                }
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
                     override fun onNext(t: List<ChannelData>) {
                         channels.value = t
@@ -78,6 +72,9 @@ class DecoderViewModel : ViewModel() {
         val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
 
         if (channelCount <= 0 || codeType < 0) return
+
+        this.codeType.value = codeType
+        this.channelCount.value = channelCount
 
         processor.setDecodedChannels(channelCount, codeType)
     }

@@ -9,11 +9,14 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.CdmaContract
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
+import android.content.Context
+import android.content.SharedPreferences
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
@@ -26,12 +29,13 @@ import kotlinx.android.synthetic.main.decoder_fragment.channel_list
 import kotlinx.android.synthetic.main.decoder_fragment.generate_channels_btn
 
 class DecoderFragment : Fragment(), ChannelController {
+    private lateinit var viewModel: DecoderViewModel
+    private lateinit var prefs: SharedPreferences
 
     companion object {
         fun newInstance() = DecoderFragment()
-    }
 
-    private lateinit var viewModel: DecoderViewModel
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,9 +47,14 @@ class DecoderFragment : Fragment(), ChannelController {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DecoderViewModel::class.java)
+        prefs = requireContext().getSharedPreferences(
+            getString(R.string.settings_source_key),
+            Context.MODE_PRIVATE
+        )
         setupCodeTypesDropdown()
         setFieldsValidation()
-        setInitValues(viewModel)
+        setInitValues(prefs)
+        observeSettings(viewModel, prefs)
 
         val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
@@ -115,13 +124,29 @@ class DecoderFragment : Fragment(), ChannelController {
         }
     }
 
-    private fun setInitValues(viewModel: DecoderViewModel) {
-        viewModel.initCodeType.observe(viewLifecycleOwner, Observer {
+    private fun setInitValues(prefs: SharedPreferences) {
+        prefs.getInt(
+            getString(R.string.decoder_channels_codetype_key),
+            CdmaContract.DEFAULT_CODE_TYPE
+        ).let {
             decoder_channel_code_type.setText(CodeGenerator.getCodeName(it))
+        }
+
+        prefs.getInt(
+            getString(R.string.decoder_channels_count_key),
+            CdmaContract.DEFAULT_CHANNEL_COUNT
+        ).let {
+            decoder_channel_count.setText(it.toString())
+        }
+    }
+
+    private fun observeSettings(viewModel: DecoderViewModel, prefs: SharedPreferences) {
+        viewModel.codeType.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.decoder_channels_codetype_key), it).apply()
         })
 
-        viewModel.initChannelCount.observe(viewLifecycleOwner, Observer {
-            decoder_channel_count.setText(it.toString())
+        viewModel.channelCount.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.decoder_channels_count_key), it).apply()
         })
     }
 
