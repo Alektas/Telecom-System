@@ -1,5 +1,6 @@
 package alektas.telecomapp.data
 
+import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
@@ -13,8 +14,13 @@ import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 class SystemStorage : Repository {
+    @Inject
+    public lateinit var demodulatorConfig: DemodulatorConfig
+    private var filterConfig: FilterConfig = FilterConfig()
+    private var noise: Noise? = null
     private var channelList = mutableListOf<ChannelData>()
     private var decodedChannelList = mutableListOf<ChannelData>()
     private val channelsSource = BehaviorSubject.create<List<ChannelData>>()
@@ -24,7 +30,6 @@ class SystemStorage : Repository {
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Noise>()
-    private var noise: Noise? = null
     private val demodulatedSignalSource = BehaviorSubject.create<BinarySignal>()
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
@@ -42,25 +47,23 @@ class SystemStorage : Repository {
                 demodulatorConfigSource.onNext(demodulatorConfig)
             }
         }
-    private var filterConfig: FilterConfig = FilterConfig()
     private val filterConfigSource = BehaviorSubject.create<FilterConfig>().apply {
         subscribe { fConf ->
             demodulatorConfig.filterConfig = fConf
             demodulatorConfigSource.onNext(demodulatorConfig)
         }
     }
-    private var demodulatorConfig: DemodulatorConfig = DemodulatorConfig()
     private val demodulatorConfigSource = BehaviorSubject.create<DemodulatorConfig>()
 
-    override fun getDemodulatorConfig(): DemodulatorConfig {
-        return demodulatorConfig
+    init {
+        App.component.inject(this)
     }
 
     override fun observeDemodulatorConfig(): Observable<DemodulatorConfig> {
         return demodulatorConfigSource
     }
 
-    override fun setDemodulatorConfig(config: DemodulatorConfig) {
+    override fun changeDemodulatorConfig(config: DemodulatorConfig) {
         demodulatorConfig = config
         demodulatorConfigSource.onNext(demodulatorConfig)
     }
@@ -93,7 +96,7 @@ class SystemStorage : Repository {
 
     override fun setDemodulatorFrequency(frequency: Double) {
         demodulatorConfig.carrierFrequency = frequency
-        setDemodulatorConfig(demodulatorConfig)
+        changeDemodulatorConfig(demodulatorConfig)
     }
 
     override fun setChannels(channels: List<ChannelData>) {

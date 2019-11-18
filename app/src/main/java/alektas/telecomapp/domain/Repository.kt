@@ -9,9 +9,8 @@ import alektas.telecomapp.domain.entities.signals.noises.Noise
 import io.reactivex.Observable
 
 interface Repository {
-    fun getDemodulatorConfig(): DemodulatorConfig
     fun observeDemodulatorConfig(): Observable<DemodulatorConfig>
-    fun setDemodulatorConfig(config: DemodulatorConfig)
+    fun changeDemodulatorConfig(config: DemodulatorConfig)
     fun getDemodulatorFilterConfig(): FilterConfig
     fun observeDemodulatorFilterConfig(): Observable<FilterConfig>
     fun setDemodulatorFilterConfig(config: FilterConfig)

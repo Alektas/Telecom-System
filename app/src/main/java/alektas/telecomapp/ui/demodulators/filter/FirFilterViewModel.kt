@@ -20,25 +20,22 @@ import javax.inject.Inject
 class FirFilterViewModel : ViewModel() {
     @Inject
     lateinit var system: Repository
-    var initConfigData = MutableLiveData<FilterConfig>()
+    @Inject
+    lateinit var config: FilterConfig
+    var order = MutableLiveData<Int>()
+    var cutoffFreq = MutableLiveData<Float>()
+    var windowType = MutableLiveData<Int>()
     var impulseResponseData = MutableLiveData<Array<DataPoint>>()
-    private var config: FilterConfig = FilterConfig()
     private val disposable = CompositeDisposable()
 
     init {
         App.component.inject(this)
-        initConfigData.value = config
         setImpulseResponse(FirFilter(config))
 
         disposable.addAll(
             system.observeDemodulatorFilterConfig()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnFirst {
-                    initConfigData.value = it
-                    val filter = FirFilter(it)
-                    setImpulseResponse(filter)
-                }
                 .subscribeWith(object : DisposableObserver<FilterConfig>() {
                     override fun onNext(t: FilterConfig) {
                         config = t
@@ -54,6 +51,7 @@ class FirFilterViewModel : ViewModel() {
 
     fun onOrderChanged(order: Int) {
         if (order != config.order) {
+            this.order.value = order
             config.order = order
             system.setDemodulatorFilterConfig(config)
         }
@@ -61,6 +59,7 @@ class FirFilterViewModel : ViewModel() {
 
     fun onCutoffFrequencyChanged(frequency: Double) {
         if (frequency != config.bandwidth) {
+            cutoffFreq.value = frequency.toFloat()
             config.bandwidth = frequency
             system.setDemodulatorFilterConfig(config)
         }
@@ -69,6 +68,7 @@ class FirFilterViewModel : ViewModel() {
     fun onWindowChanged(windowName: String) {
         val windowType = Window.getIdBy(windowName)
         if (windowType != config.windowType) {
+            this.windowType.value = windowType
             config.windowType = windowType
             system.setDemodulatorFilterConfig(config)
         }

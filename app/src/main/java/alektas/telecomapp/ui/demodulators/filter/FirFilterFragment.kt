@@ -8,9 +8,15 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.domain.entities.Window
+import alektas.telecomapp.domain.entities.filters.FilterConfig
+import alektas.telecomapp.domain.entities.filters.FirFilter
+import alektas.telecomapp.ui.demodulators.generator.DemodulatorGeneratorViewModel
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
+import android.content.Context
+import android.content.SharedPreferences
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
@@ -18,10 +24,12 @@ import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
+import kotlinx.android.synthetic.main.demodulator_generator_fragment.*
 import kotlinx.android.synthetic.main.fir_filter_fragment.*
 
 class FirFilterFragment : Fragment() {
     private lateinit var viewModel: FirFilterViewModel
+    private lateinit var prefs: SharedPreferences
 
     companion object {
         fun newInstance() = FirFilterFragment()
@@ -37,9 +45,14 @@ class FirFilterFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(FirFilterViewModel::class.java)
+        prefs = requireContext().getSharedPreferences(
+            getString(R.string.settings_demodulator_key),
+            Context.MODE_PRIVATE
+        )
         setupWindowsDropdown(viewModel)
         setFieldsValidation()
-        setInitValues(viewModel)
+        setInitValues(prefs)
+        observeSettings(viewModel, prefs)
 
         filter_order_input.setOnEditorActionListener { tv, _, _ ->
             SystemUtils.hideKeyboard(this)
@@ -101,12 +114,41 @@ class FirFilterFragment : Fragment() {
         }
     }
 
-    private fun setInitValues(viewModel: FirFilterViewModel) {
-        viewModel.initConfigData.observe(viewLifecycleOwner, Observer { data ->
-            filter_order_input.setText(data.order.toString())
-            filter_cutoff_freq_input.setText(data.bandwidth.toString())
-            val winName: String = Window.getName(data.windowType)
+    private fun setInitValues(prefs: SharedPreferences) {
+        prefs.getFloat(
+            getString(R.string.demodulator_filter_cutoff_freq_key),
+            FilterConfig.DEFAULT_BANDWIDTH.toFloat()
+        ).let {
+            filter_cutoff_freq_input.setText(String.format("%.3f", it))
+        }
+
+        prefs.getInt(
+            getString(R.string.demodulator_filter_order_key),
+            FilterConfig.DEFAULT_ORDER
+        ).let {
+            filter_order_input.setText(it.toString())
+        }
+
+        prefs.getInt(
+            getString(R.string.demodulator_filter_window_type_key),
+            FilterConfig.DEFAULT_WINDOW_TYPE
+        ).let {
+            val winName: String = Window.getName(it)
             filter_window_input.setText(winName, false)
+        }
+    }
+
+    private fun observeSettings(viewModel: FirFilterViewModel, prefs: SharedPreferences) {
+        viewModel.order.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.demodulator_filter_order_key), it).apply()
+        })
+
+        viewModel.cutoffFreq.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.demodulator_filter_cutoff_freq_key), it).apply()
+        })
+
+        viewModel.windowType.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.demodulator_filter_window_type_key), it).apply()
         })
     }
 
