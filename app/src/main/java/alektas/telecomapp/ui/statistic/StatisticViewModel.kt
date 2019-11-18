@@ -61,9 +61,19 @@ class StatisticViewModel : ViewModel() {
                     override fun onNext(t: List<List<Int>>) {
                         val errorBitCount = t.sumBy { it.size }
                         errorBitCountData.value = errorBitCount
-                        val bitCount = bitTransmittedData.value ?: 0
-                        if (bitCount == 0) berData.value
-                        if (bitCount != 0) berData.value = (errorBitCount / bitCount.toDouble()) * 100
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeBer()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
+                    override fun onNext(t: Pair<Double, Double>) {
+                        berData.value = t.second * 100
                     }
 
                     override fun onComplete() {}
@@ -71,6 +81,11 @@ class StatisticViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 })
         )
+    }
+
+    override fun onCleared() {
+        disposable.dispose()
+        super.onCleared()
     }
 
 }

@@ -15,6 +15,7 @@ import alektas.telecomapp.ui.demodulators.output.DemodulatorOutputViewModel
 import alektas.telecomapp.ui.statistic.StatisticViewModel
 import android.app.Application
 import dagger.BindsInstance
+import alektas.telecomapp.ui.statistic.ber.BerViewModel
 import dagger.Component
 import javax.inject.Singleton
 
@@ -33,6 +34,7 @@ interface AppComponent {
     fun inject(vm: IChannelViewModel)
     fun inject(vm: QChannelViewModel)
     fun inject(vm: StatisticViewModel)
+    fun inject(vm: BerViewModel)
     fun inject(storage: SystemStorage)
 
     @Component.Builder

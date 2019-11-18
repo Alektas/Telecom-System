@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:imeOptions="actionDone"
-                android:inputType="numberDecimal" />
+                android:inputType="numberSigned|numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.jjoe64.graphview.GraphView

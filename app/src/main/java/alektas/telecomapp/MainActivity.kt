@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import alektas.telecomapp.ui.main.MainFragment
 import alektas.telecomapp.ui.statistic.StatisticFragment
+import alektas.telecomapp.ui.statistic.ber.BerFragment
 import android.content.Context
 import android.content.SharedPreferences
 import android.view.View
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.to_demodulator_output_btn -> DemodulatorOutputFragment.newInstance()
                     R.id.to_decoding_btn -> DecoderFragment.newInstance()
                     R.id.to_statistics_btn -> StatisticFragment.newInstance()
+                    R.id.to_ber_calculation_btn -> BerFragment.newInstance()
                     else -> MainFragment.newInstance()
                 }
             )

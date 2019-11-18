@@ -12,17 +12,21 @@ import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.Signal
-import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import android.annotation.SuppressLint
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
+import io.reactivex.rxkotlin.toObservable
+import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 import kotlin.math.max
+
+private const val BER_POINTS_COUNT = 20
 
 class SystemProcessor {
     @Inject
@@ -31,6 +35,7 @@ class SystemProcessor {
     private var transmittedChannels: List<ChannelData>? = null
     private var decodedChannels: List<ChannelData>? = null
     private var noiseSnr: Double? = null
+    private lateinit var berDisposable: Disposable
 
     init {
         App.component.inject(this)
@@ -159,12 +164,12 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun setNoise(snr: Double) {
+    fun setNoise(snr: Double, singleThread: Boolean = false) {
         Single.create<Noise> {
             val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
             it.onSuccess(noise)
         }
-            .subscribeOn(Schedulers.computation())
+            .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
             .subscribe { noise: Noise -> storage.setNoise(noise) }
     }
 
@@ -302,6 +307,16 @@ class SystemProcessor {
         }
 
         return indices
+    }
+
+    fun calculateBer(fromSnr: Double, toSnr: Double) {
+        val step = (toSnr - fromSnr) / BER_POINTS_COUNT
+        val snrs = DoubleArray(BER_POINTS_COUNT) { fromSnr + it * step }
+        berDisposable = snrs.toObservable()
+            .skip(1)
+            .zipWith(storage.observeBer()) { snr, _ -> snr }
+            .doOnSubscribe { setNoise(fromSnr, true) }
+            .subscribe { setNoise(it, true) }
     }
 
 }

@@ -61,6 +61,10 @@
     <string name="ether_noise_enable">Включить шумы</string>
     <string name="settings_source_key">SETTINGS_SOURCE_KEY</string>
     <string name="source_noise_enable_key">SOURCE_NOISE_ENABLE_KEY</string>
+    <string name="draw_graph">Построить график</string>
+    <string name="from_snr_in_db">от С/Ш, дБ</string>
+    <string name="to_snr_in_db">до С/Ш, дБ</string>
+    <string name="ber_calculation">Рассчет BER</string>
     <string name="source_channels_freq_key">source_channels_freq_key</string>
     <string name="source_channels_dataspeed_key">source_channels_dataspeed_key</string>
     <string name="source_channels_codetype_key">source_channels_codetype_key</string>

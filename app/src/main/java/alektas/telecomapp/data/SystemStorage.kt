@@ -54,6 +54,19 @@ class SystemStorage : Repository {
         }
     }
     private val demodulatorConfigSource = BehaviorSubject.create<DemodulatorConfig>()
+    private val berSource = Observable.zip(
+        channelsErrorsSource, noiseSource,
+        BiFunction { errors: List<List<Int>>, noise: Noise ->
+            Pair(noise.snr(), errors.sumBy { it.size })
+        })
+        .withLatestFrom(
+            channelsSource,
+            BiFunction { pair: Pair<Double, Int>, chs: List<ChannelData> ->
+                val ber = pair.second / chs.sumBy { it.data.size }.toDouble()
+                println("BER calculation. SNR = ${pair.first}, BER = $ber")
+                Pair(pair.first, ber)
+            }
+        )
 
     init {
         App.component.inject(this)
@@ -214,5 +227,9 @@ class SystemStorage : Repository {
 
     override fun observeChannelsErrors(): Observable<List<List<Int>>> {
         return channelsErrorsSource
+    }
+
+    override fun observeBer(): Observable<Pair<Double, Double>> {
+        return berSource
     }
 }
