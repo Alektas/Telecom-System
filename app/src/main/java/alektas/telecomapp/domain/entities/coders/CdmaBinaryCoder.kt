@@ -1,6 +1,6 @@
 package alektas.telecomapp.domain.entities.coders
 
-class CdmaCoder : Coder<BooleanArray> {
+class CdmaBinaryCoder : Coder<BooleanArray> {
 
     /**
      * Кодирование информации путем сложения каждого бита информации с кодом по модулю 2 (XOR)

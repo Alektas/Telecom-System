@@ -4,13 +4,15 @@ import alektas.telecomapp.App
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.coders.CdmaCoder
+import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
+import alektas.telecomapp.domain.entities.coders.toBipolar
+import alektas.telecomapp.domain.entities.coders.toUnipolar
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
-import alektas.telecomapp.domain.entities.signals.BinarySignal
+import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
@@ -31,7 +33,7 @@ private const val BER_POINTS_COUNT = 20
 class SystemProcessor {
     @Inject
     lateinit var storage: Repository
-    private var codedGroupData: BooleanArray? = null
+    private var codedGroupData: DoubleArray? = null
     private var transmittedChannels: List<ChannelData>? = null
     private var decodedChannels: List<ChannelData>? = null
     private var noiseSnr: Double? = null
@@ -58,8 +60,8 @@ class SystemProcessor {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { s ->
-                    codedGroupData = s.bits
-                    decodedChannels?.let { updateDecodedChannels(it, s.bits) }
+                    codedGroupData = s.dataValues
+                    decodedChannels?.let { updateDecodedChannels(it, s.dataValues) }
                 },
 
             storage.observeDecodedChannels()
@@ -107,7 +109,7 @@ class SystemProcessor {
             val channels = mutableListOf<ChannelData>()
             val codeGen = CodeGenerator()
             val codes = when (codesType) {
-                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(codeLength)
+                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
                 else -> codeGen.generateRandomCodes(count, codeLength)
             }
 
@@ -144,7 +146,7 @@ class SystemProcessor {
         }
 
         Single.create<Signal> {
-            val groupData = dataAggregation(channels)
+            val groupData = aggregate(channels)
 
             val carrier = SignalGenerator().cos(frequency = channels[0].carrierFrequency)
             val signal = QpskModulator(channels[0].bitTime).modulate(carrier, groupData)
@@ -155,10 +157,16 @@ class SystemProcessor {
             .subscribe { signal: Signal -> storage.setChannelsSignal(signal) }
     }
 
-    private fun dataAggregation(channels: List<ChannelData>): BooleanArray {
-        return channels.map { CdmaCoder().encode(it.code, it.data) }
+    private fun aggregate(channels: List<ChannelData>): DoubleArray {
+        return channels
+            .map { channel ->
+                // Преобразование однополярных двоичных данных в биполярные
+                val code = channel.code.toBipolar()
+                val data = channel.data.toBipolar()
+                CdmaDecimalCoder().encode(code, data)
+            }
             .reduce { acc, data ->
-                data.mapIndexed { i, bit -> acc[i].xor(bit) }.toBooleanArray()
+                data.mapIndexed { i, value -> acc[i] + value }.toDoubleArray()
             }
     }
 
@@ -189,12 +197,12 @@ class SystemProcessor {
     fun demodulate(config: DemodulatorConfig) {
         val demodulator = QpskDemodulator(config)
 
-        Single.create<BinarySignal> {
+        Single.create<DigitalSignal> {
             val demodSignal = demodulator.demodulate(config.inputSignal)
             it.onSuccess(demodSignal)
         }
             .subscribeOn(Schedulers.computation())
-            .subscribe { signal: BinarySignal ->
+            .subscribe { signal: DigitalSignal ->
                 storage.setDemodulatedSignal(signal)
                 storage.setChannelI(demodulator.sigI)
                 storage.setFilteredChannelI(demodulator.filteredSigI)
@@ -204,12 +212,12 @@ class SystemProcessor {
             }
     }
 
-    fun updateDecodedChannels(channels: List<ChannelData>, groupData: BooleanArray) {
+    fun updateDecodedChannels(channels: List<ChannelData>, groupData: DoubleArray) {
         val newChannels = mutableListOf<ChannelData>()
 
         for (c in channels) {
-            val frameData = CdmaCoder().decode(c.code, groupData)
-            c.data = frameData
+            val frameData = CdmaDecimalCoder().decode(c.code.toBipolar(), groupData)
+            c.data = frameData.toUnipolar()
             newChannels.add(c)
         }
 
@@ -218,8 +226,8 @@ class SystemProcessor {
 
     fun addDecodedChannel(code: BooleanArray) {
         codedGroupData?.let {
-            val data = CdmaCoder().decode(code, it)
-            val channel = ChannelData(data = data, code = code)
+            val data = CdmaDecimalCoder().decode(code.toBipolar(), it)
+            val channel = ChannelData(data = data.toUnipolar(), code = code)
             storage.addDecodedChannel(channel)
         }
     }
@@ -231,13 +239,13 @@ class SystemProcessor {
                 val channels = mutableListOf<ChannelData>()
                 val codeGen = CodeGenerator()
                 val codes = when (codesType) {
-                    CodeGenerator.WALSH -> codeGen.generateWalshMatrix(codeLength)
+                    CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
                     else -> codeGen.generateRandomCodes(count, codeLength)
                 }
 
                 for (i in 0 until count) {
-                    val frameData = CdmaCoder().decode(codes[i], it)
-                    val channel = ChannelData(data = frameData, code = codes[i])
+                    val frameData = CdmaDecimalCoder().decode(codes[i].toBipolar(), it)
+                    val channel = ChannelData(data = frameData.toUnipolar(), code = codes[i])
                     channels.add(channel)
                 }
 

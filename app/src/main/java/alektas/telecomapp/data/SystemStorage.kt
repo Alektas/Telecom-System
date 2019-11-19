@@ -6,7 +6,7 @@ import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BaseSignal
-import alektas.telecomapp.domain.entities.signals.BinarySignal
+import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
@@ -30,7 +30,7 @@ class SystemStorage : Repository {
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Noise>()
-    private val demodulatedSignalSource = BehaviorSubject.create<BinarySignal>()
+    private val demodulatedSignalSource = BehaviorSubject.create<DigitalSignal>()
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
@@ -154,11 +154,11 @@ class SystemStorage : Repository {
         return etherSource
     }
 
-    override fun setDemodulatedSignal(signal: BinarySignal) {
+    override fun setDemodulatedSignal(signal: DigitalSignal) {
         demodulatedSignalSource.onNext(signal)
     }
 
-    override fun observeDemodulatedSignal(): Observable<BinarySignal> {
+    override fun observeDemodulatedSignal(): Observable<DigitalSignal> {
         return demodulatedSignalSource
     }
 

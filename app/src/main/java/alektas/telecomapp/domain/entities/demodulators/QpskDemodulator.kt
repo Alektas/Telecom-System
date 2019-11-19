@@ -7,11 +7,11 @@ import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.filters.FirFilter
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
-import alektas.telecomapp.domain.entities.signals.BinarySignal
+import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import kotlin.math.abs
 
-class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
+class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
     private val isBit: (Double) -> Boolean = { abs(it) > config.bitThreshold }
     private val filter: Filter = when (config.filterConfig.type) {
         FilterConfig.FIR -> FirFilter(config.filterConfig)
@@ -37,8 +37,8 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
      * @param signal ФМн-4 (QPSK) сигнал
      * @return двоичный биполярный сигнал из -1 и 1
      */
-    override fun demodulate(signal: Signal): BinarySignal {
-        if (signal.isEmpty()) return BinarySignal(booleanArrayOf(), bitTime)
+    override fun demodulate(signal: Signal): DigitalSignal {
+        if (signal.isEmpty()) return DigitalSignal(doubleArrayOf(), bitTime)
 
         val gen = SignalGenerator()
         val cos = gen.cos(frequency = carrierFrequency)
@@ -49,29 +49,27 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
         filteredSigQ = filter.filter(sigQ)
         constellation = getConstellation(sigI, sigQ)
 
-        val dataI = extractBinaryData(
+        val dataI = integrate(
             filteredSigI,
             timeOffset,
             dataTime + timeOffset,
-            Simulator.samplesFor(symbolTime),
-            isBit
-        ).first
+            Simulator.samplesFor(symbolTime)
+        )
 
-        val dataQ = extractBinaryData(
+        val dataQ = integrate(
             filteredSigQ,
             timeOffset,
             dataTime + timeOffset,
-            Simulator.samplesFor(symbolTime),
-            isBit
-        ).first
+            Simulator.samplesFor(symbolTime)
+        )
 
-        val data = mutableListOf<Boolean>()
+        val data = mutableListOf<Double>()
         dataI.forEachIndexed { i, bitI ->
             data.add(bitI)
             data.add(dataQ[i])
         }
 
-        return BinarySignal(data.toBooleanArray(), bitTime)
+        return DigitalSignal(data.toDoubleArray(), bitTime)
     }
 
     /**
@@ -85,14 +83,14 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
         val cos = gen.cos(frequency = carrierFrequency)
         val sin = gen.sin(frequency = carrierFrequency)
 
-        val dataI = extractDigitalData(
+        val dataI = integrate(
             signal * cos,
             timeOffset,
             dataTime + timeOffset,
             Simulator.samplesFor(symbolTime)
         )
 
-        val dataQ = extractDigitalData(
+        val dataQ = integrate(
             signal * sin,
             timeOffset,
             dataTime + timeOffset,
@@ -112,14 +110,14 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
      * первое значение - I-компонента сигнала, второе - Q-компонента.
      */
     private fun getConstellation(sigI: Signal, sigQ: Signal): List<Pair<Double, Double>> {
-        val dataI = extractDigitalData(
+        val dataI = integrate(
             sigI,
             timeOffset,
             dataTime + timeOffset,
             Simulator.samplesFor(symbolTime)
         )
 
-        val dataQ = extractDigitalData(
+        val dataQ = integrate(
             sigQ,
             timeOffset,
             dataTime + timeOffset,
@@ -171,7 +169,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<BinarySignal> {
      * @param to до какого времени извлекать информацию, в секундах
      * @param interval с какой периодичностью усреднять информацию, в сэмплах
      */
-    private fun extractDigitalData(
+    private fun integrate(
         signal: Signal,
         from: Double,
         to: Double,

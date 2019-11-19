@@ -1,17 +1,17 @@
 package alektas.telecomapp.domain.entities
 
-import alektas.telecomapp.domain.entities.coders.CdmaCoder
+import alektas.telecomapp.domain.entities.coders.CdmaBinaryCoder
 import org.junit.Test
 
 import org.junit.Assert.*
 import org.junit.Before
 
-class CdmaCoderTest {
-    private lateinit var coder: CdmaCoder
+class CdmaBinaryCoderTest {
+    private lateinit var coder: CdmaBinaryCoder
 
     @Before
     fun prepare() {
-        coder = CdmaCoder()
+        coder = CdmaBinaryCoder()
     }
 
     /**
