@@ -55,8 +55,8 @@ interface Repository {
     fun setDecodedChannels(channels: List<ChannelData>)
     fun observeDecodedChannels(): Observable<List<ChannelData>>
 
-    fun setChannelsErrors(errors: List<List<Int>>)
-    fun observeChannelsErrors(): Observable<List<List<Int>>>
+    fun setChannelsErrors(errors: Map<BooleanArray, List<Int>>)
+    fun observeChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
     fun observeBer(): Observable<Pair<Double, Double>>
 

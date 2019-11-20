@@ -57,9 +57,9 @@ class StatisticViewModel : ViewModel() {
             storage.observeChannelsErrors()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<List<Int>>>() {
-                    override fun onNext(t: List<List<Int>>) {
-                        val errorBitCount = t.sumBy { it.size }
+                .subscribeWith(object : DisposableObserver<Map<BooleanArray, List<Int>>>() {
+                    override fun onNext(t: Map<BooleanArray, List<Int>>) {
+                        val errorBitCount = t.values.sumBy { it.size }
                         errorBitCountData.value = errorBitCount
                     }
 

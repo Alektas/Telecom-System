@@ -34,7 +34,7 @@ class SystemStorage : Repository {
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
-    private val channelsErrorsSource = BehaviorSubject.create<List<List<Int>>>()
+    private val channelsErrorsSource = BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
     private val etherSource = Observable.combineLatest(
         channelsSignalSource.startWith(BaseSignal()),
         noiseSource.startWith(BaseNoise()),
@@ -56,8 +56,8 @@ class SystemStorage : Repository {
     private val demodulatorConfigSource = BehaviorSubject.create<DemodulatorConfig>()
     private val berSource = Observable.zip(
         channelsErrorsSource, noiseSource,
-        BiFunction { errors: List<List<Int>>, noise: Noise ->
-            Pair(noise.snr(), errors.sumBy { it.size })
+        BiFunction { errors: Map<BooleanArray, List<Int>>, noise: Noise ->
+            Pair(noise.snr(), errors.values.sumBy { it.size })
         })
         .withLatestFrom(
             channelsSource,
@@ -221,11 +221,11 @@ class SystemStorage : Repository {
         return decodedChannelsSource
     }
 
-    override fun setChannelsErrors(errors: List<List<Int>>) {
+    override fun setChannelsErrors(errors: Map<BooleanArray, List<Int>>) {
         channelsErrorsSource.onNext(errors)
     }
 
-    override fun observeChannelsErrors(): Observable<List<List<Int>>> {
+    override fun observeChannelsErrors(): Observable<Map<BooleanArray, List<Int>>> {
         return channelsErrorsSource
     }
 

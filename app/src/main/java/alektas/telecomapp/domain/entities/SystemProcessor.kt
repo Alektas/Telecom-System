@@ -79,7 +79,7 @@ class SystemProcessor {
             Observable.combineLatest(
                 storage.observeChannels(),
                 storage.observeDecodedChannels(),
-                BiFunction<List<ChannelData>, List<ChannelData>, List<List<Int>>> { origin, decoded ->
+                BiFunction<List<ChannelData>, List<ChannelData>, Map<BooleanArray, List<Int>>> { origin, decoded ->
                     diffChannels(origin, decoded)
                 })
                 .subscribeOn(Schedulers.computation())
@@ -257,39 +257,36 @@ class SystemProcessor {
     }
 
     /**
-     * Поиск несовпадающих битов двух массивах каналов.
-     * Если размер одного из массивов больше другого, то все данные "лишних" каналов
-     * считются несовпадающими.
+     * Определение ошибочно принятых битов каналов.
+     * Декодированные каналы, которые не передавались источником, не учитываются.
+     * Если передаваемые каналы не декодировались, то все данные этих каналов
+     * считются неправильно принятыми.
      *
-     * @return список списков индексов несовпадающих битов каналов
+     * @return словарь, где ключ - код канала, значение - список индексов несовпадающих битов канала
      */
     @SuppressLint("CheckResult")
     private fun diffChannels(
-        first: List<ChannelData>,
-        second: List<ChannelData>
-    ): List<List<Int>> {
-        val channelsErrorBits = mutableListOf<List<Int>>()
+        transmitted: List<ChannelData>,
+        received: List<ChannelData>
+    ): Map<BooleanArray, List<Int>> {
+        val channelsErrorBits = mutableMapOf<BooleanArray, List<Int>>()
 
-        if (first.isEmpty()) {
-            second.forEach { channelsErrorBits.add(it.data.indices.toList()) }
+        if (transmitted.isEmpty()) {
             return channelsErrorBits
         }
-        if (second.isEmpty()) {
-            first.forEach { channelsErrorBits.add(it.data.indices.toList()) }
+        if (received.isEmpty()) {
+            transmitted.forEach { channelsErrorBits[it.code] = it.data.indices.toList() }
             return channelsErrorBits
         }
 
-        val maxSize = max(first.size, second.size)
-        for (i in 0 until maxSize) {
-            try {
-                channelsErrorBits.add(diffIndices(first[i].data, second[i].data))
-            } catch (e: IndexOutOfBoundsException) {
-                val erBits = if (first.size > second.size) {
-                    first[i].data.indices.toList()
-                } else {
-                    second[i].data.indices.toList()
+        for (transCh in transmitted) {
+            val recCh = received.find { it.code.contentEquals(transCh.code) }
+            if (recCh == null) {
+                channelsErrorBits[transCh.code] = transCh.data.indices.toList()
+            } else {
+                diff(transCh.data, recCh.data).let {
+                    if (it.isNotEmpty()) channelsErrorBits[transCh.code] = it
                 }
-                channelsErrorBits.add(erBits)
             }
         }
 
@@ -302,7 +299,7 @@ class SystemProcessor {
      *
      * @return список индексов несовпадающих битов
      */
-    private fun diffIndices(first: BooleanArray, second: BooleanArray): List<Int> {
+    private fun diff(first: BooleanArray, second: BooleanArray): List<Int> {
         if (first.isEmpty()) return second.indices.toList()
         if (second.isEmpty()) return first.indices.toList()
 
