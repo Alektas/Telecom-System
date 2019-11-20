@@ -11,6 +11,7 @@ data class ChannelData(
     val codeType: Int = CodeGenerator.WALSH
 ) {
     private val id: Int
+    var errors: List<Int>? = null
 
     init {
         channelsCount++
@@ -22,11 +23,11 @@ data class ChannelData(
     }
 
     fun getDataString(): String {
-        return data.joinToString { if (it) "1" else "0" }
+        return data.joinToString(separator = " ") { if (it) "1" else "0" }
     }
 
     fun getCodeString(): String {
-        return code.joinToString { if (it) "1" else "0" }
+        return code.joinToString(separator = " ") { if (it) "1" else "0" }
     }
 
     override fun equals(other: Any?): Boolean {

@@ -2,6 +2,10 @@ package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.ChannelData
+import android.graphics.Color
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.BackgroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,8 +47,33 @@ class ChannelAdapter(private val controller: ChannelController) :
 
         fun bind(channel: ChannelData) {
             channelName.text = channel.name
-            channelData.text = channel.getDataString()
             channelCode.text = channel.getCodeString()
+
+            channelData.text = if (channel.errors == null) {
+                channel.getDataString()
+            } else {
+                withHighlightedErrors(channel)
+            }
+        }
+
+        private fun withHighlightedErrors(channel: ChannelData): Spannable {
+            val spanBuilder = SpannableStringBuilder()
+
+            channel.data.forEachIndexed { i, b ->
+                if (i != 0) spanBuilder.append(" ")
+                val isError = channel.errors?.contains(i) ?: false
+                if (isError) {
+                    spanBuilder.append(
+                        if (b) "1" else "0",
+                        BackgroundColorSpan(Color.argb(80, 255, 0, 0)),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                } else {
+                    spanBuilder.append(if (b) "1" else "0")
+                }
+            }
+
+            return spanBuilder
         }
     }
 }
