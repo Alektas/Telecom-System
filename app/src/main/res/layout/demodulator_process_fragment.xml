@@ -79,28 +79,8 @@
                 android:id="@+id/process_data_speed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:imeOptions="actionNext"
-                android:nextFocusDown="@id/process_threshold"
-                android:ems="10"
-                android:inputType="numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/process_threshold_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_start_field"
-            android:layout_marginEnd="@dimen/margin_start_field"
-            app:errorEnabled="true"
-            android:hint="@string/threshold">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/process_threshold"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
                 android:imeOptions="actionDone"
+                android:ems="10"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 

@@ -78,13 +78,11 @@ class SystemStorage : Repository {
     override fun updateDemodulatorConfig(
         frameLength: Int,
         bitTime: Double,
-        codeLength: Int,
-        threshold: Double
+        codeLength: Int
     ) {
         demodulatorConfig.frameLength = frameLength
         demodulatorConfig.bitTime = bitTime
         demodulatorConfig.codeLength = codeLength
-        demodulatorConfig.bitThreshold = threshold
         demodulatorConfigSource.onNext(demodulatorConfig)
     }
 

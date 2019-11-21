@@ -11,6 +11,5 @@ class DemodulatorConfig(
     var frameLength: Int = 0,
     var codeLength: Int = 0,
     var bitTime: Double = QpskContract.DEFAULT_DATA_BIT_TIME,
-    var bitThreshold: Double = QpskContract.DEFAULT_SIGNAL_THRESHOLD,
     var filterConfig: FilterConfig = FilterConfig()
 )

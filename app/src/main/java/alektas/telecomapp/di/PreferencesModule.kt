@@ -49,11 +49,6 @@ class PreferencesModule {
         ).let { it * 1.0e3 }
         val bitTime = 1 / dataspeed
 
-        val threshold = prefs.getFloat(
-            context.getString(R.string.demodulator_process_threshold_key),
-            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
-        ).toDouble()
-
         val frameLength = prefs.getInt(
             context.getString(R.string.demodulator_process_frame_length_key),
             CdmaContract.DEFAULT_FRAME_SIZE
@@ -69,7 +64,6 @@ class PreferencesModule {
             frameLength = frameLength,
             codeLength = codeLength,
             bitTime = bitTime,
-            bitThreshold = threshold,
             filterConfig = filterConfig
         )
     }

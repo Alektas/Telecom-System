@@ -27,6 +27,7 @@ class DecoderViewModel : ViewModel() {
     val channels = MutableLiveData<List<ChannelData>>()
     val codeType = MutableLiveData<Int>()
     val channelCount = MutableLiveData<Int>()
+    val threshold = MutableLiveData<Float>()
     val codeLength = MutableLiveData<Int>()
 
     init {
@@ -63,27 +64,30 @@ class DecoderViewModel : ViewModel() {
         )
     }
 
-    fun decodeCustomChannel(codeString: String) {
+    fun decodeCustomChannel(codeString: String, threshold: Float) {
         val code = parseChannelCode(codeString)
-        processor.addDecodedChannel(code)
+        processor.addDecodedChannel(code, threshold)
     }
 
     fun decodeChannels(
         countString: String,
         codeLengthString: String,
-        codeTypeString: String
+        codeTypeString: String,
+        thresholdString: String
     ) {
         val channelCount = parseChannelCount(countString)
         val codeLength = parseChannelCount(codeLengthString)
         val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+        val threshold = parseThreshold(thresholdString)
 
-        if (channelCount <= 0 || codeLength <= 0 || codeType < 0) return
+        if (channelCount <= 0 || codeLength <= 0 || codeType < 0 || threshold < 0) return
 
         this.codeType.value = codeType
         this.channelCount.value = channelCount
         this.codeLength.value = codeLength
+        this.threshold.value = threshold
 
-        processor.setDecodedChannels(channelCount, codeLength, codeType)
+        processor.setDecodedChannels(channelCount, codeLength, codeType, threshold)
     }
 
     fun parseChannelCount(count: String): Int {
@@ -98,6 +102,17 @@ class DecoderViewModel : ViewModel() {
 
     fun parseChannelCode(codeString: String): BooleanArray {
         return codeString.filter { it == '1' || it == '0' }.map { it == '1' }.toBooleanArray()
+    }
+
+
+    fun parseThreshold(threshold: String): Float {
+        return try {
+            val c = threshold.toFloat()
+            if (c < 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0f
+        }
     }
 
     fun removeChannel(channel: ChannelData) {

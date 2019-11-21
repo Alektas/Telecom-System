@@ -87,16 +87,7 @@ class DecoderFragment : Fragment(), ChannelController {
 
         add_channel_btn.setOnClickListener {
             SystemUtils.hideKeyboard(this)
-            val codeString = decoder_channel_code.text.toString()
-            if (codeString.isEmpty()) {
-                Toast.makeText(
-                    requireContext(),
-                    "Введите код из нулей и единиц",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
-            viewModel.decodeCustomChannel(codeString)
+            decodeCustomChannel()
         }
 
         generate_channels_btn.setOnClickListener {
@@ -153,6 +144,13 @@ class DecoderFragment : Fragment(), ChannelController {
             decoder_code_length.setText(it.toString())
         }
 
+        prefs.getFloat(
+            getString(R.string.decoder_threshold_key),
+            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
+        ).let {
+            decoder_threshold.setText(it.toString())
+        }
+
         prefs.getInt(
             getString(R.string.decoder_channels_count_key),
             CdmaContract.DEFAULT_CHANNEL_COUNT
@@ -170,6 +168,10 @@ class DecoderFragment : Fragment(), ChannelController {
             prefs.edit().putInt(getString(R.string.decoder_code_length_key), it).apply()
         })
 
+        viewModel.threshold.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.decoder_threshold_key), it).apply()
+        })
+
         viewModel.channelCount.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.decoder_channels_count_key), it).apply()
         })
@@ -181,6 +183,14 @@ class DecoderFragment : Fragment(), ChannelController {
                 decoder_code_length_layout.error = null
             } else {
                 decoder_code_length_layout.error = getString(R.string.error_positive_num)
+            }
+        }
+
+        decoder_threshold.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseThreshold(text.toString()) >= 0) {
+                decoder_threshold_layout.error = null
+            } else {
+                decoder_threshold_layout.error = getString(R.string.error_num)
             }
         }
 
@@ -197,19 +207,22 @@ class DecoderFragment : Fragment(), ChannelController {
         val channelCount = decoder_channel_count.text.toString()
         val codeLength = decoder_code_length.text.toString()
         val codeType = decoder_channel_code_type.text.toString()
+        val threshold = decoder_threshold.text.toString()
 
         if (decoder_channel_count_layout.error != null ||
             decoder_code_length_layout.error != null ||
+            decoder_threshold_layout.error != null ||
             channelCount.isEmpty() ||
             codeLength.isEmpty() ||
-            codeType.isEmpty()
+            codeType.isEmpty() ||
+            threshold.isEmpty()
         ) {
             Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
             return
         }
 
         viewModel.inputSignalData.value?.let {
-            viewModel.decodeChannels(channelCount, codeLength, codeType)
+            viewModel.decodeChannels(channelCount, codeLength, codeType, threshold)
             return
         }
 
@@ -218,6 +231,29 @@ class DecoderFragment : Fragment(), ChannelController {
             "Сначала необходимо настроить источник данных",
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    private fun decodeCustomChannel() {
+        val codeString = decoder_channel_code.text.toString()
+        if (codeString.isEmpty()) {
+            Toast.makeText(
+                requireContext(),
+                "Введите код из нулей и единиц",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        val thresholdString = decoder_threshold.text.toString()
+        val threshold = viewModel.parseThreshold(thresholdString)
+        if (threshold < 0) {
+            Toast.makeText(
+                requireContext(),
+                "Введите неотрицательное пороговое значение",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        viewModel.decodeCustomChannel(codeString, threshold)
     }
 
 }

@@ -19,8 +19,7 @@ interface Repository {
     fun updateDemodulatorConfig(
         frameLength: Int,
         bitTime: Double,
-        codeLength: Int,
-        threshold: Double
+        codeLength: Int
     )
 
     fun setChannels(channels: List<ChannelData>)

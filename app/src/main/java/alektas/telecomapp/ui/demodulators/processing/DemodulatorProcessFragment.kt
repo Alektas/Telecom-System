@@ -47,7 +47,7 @@ class DemodulatorProcessFragment : Fragment() {
         setInitValues(prefs)
         observeSettings(viewModel, prefs)
 
-        process_threshold.setOnEditorActionListener { _, _, _ ->
+        process_data_speed.setOnEditorActionListener { _, _, _ ->
             process_btn.performClick()
         }
 
@@ -66,22 +66,19 @@ class DemodulatorProcessFragment : Fragment() {
         val frameLength = process_frame_length.text.toString()
         val dataSpeed = process_data_speed.text.toString()
         val codeLength = process_code_length.text.toString()
-        val threshold = process_threshold.text.toString()
 
         if (process_code_length_layout.error != null ||
             process_data_speed_layout.error != null ||
             process_frame_length_layout.error != null ||
-            process_threshold_layout.error != null ||
             codeLength.isEmpty() ||
             dataSpeed.isEmpty() ||
-            frameLength.isEmpty() ||
-            threshold.isEmpty()
+            frameLength.isEmpty()
         ) {
             Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
             return
         }
 
-        viewModel.processData(frameLength, dataSpeed, codeLength, threshold)
+        viewModel.processData(frameLength, dataSpeed, codeLength)
     }
 
     private fun setFieldsValidation() {
@@ -108,14 +105,6 @@ class DemodulatorProcessFragment : Fragment() {
                 process_data_speed_layout.error = getString(R.string.error_positive_num_decimal)
             }
         }
-
-        process_threshold.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseThreshold(text.toString()) >= 0) {
-                process_threshold_layout.error = null
-            } else {
-                process_threshold_layout.error = getString(R.string.error_num)
-            }
-        }
     }
 
     private fun setInitValues(prefs: SharedPreferences) {
@@ -124,13 +113,6 @@ class DemodulatorProcessFragment : Fragment() {
             (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
         ).let {
             process_data_speed.setText(it.toString())
-        }
-
-        prefs.getFloat(
-            getString(R.string.demodulator_process_threshold_key),
-            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
-        ).let {
-            process_threshold.setText(it.toString())
         }
 
         prefs.getInt(
@@ -159,10 +141,6 @@ class DemodulatorProcessFragment : Fragment() {
 
         viewModel.dataSpeed.observe(viewLifecycleOwner, Observer {
             prefs.edit().putFloat(getString(R.string.demodulator_process_dataspeed_key), it).apply()
-        })
-
-        viewModel.threshold.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.demodulator_process_threshold_key), it).apply()
         })
     }
 

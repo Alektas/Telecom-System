@@ -9,10 +9,8 @@ import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
-import kotlin.math.abs
 
 class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
-    private val isBit: (Double) -> Boolean = { abs(it) > config.bitThreshold }
     private val filter: Filter = when (config.filterConfig.type) {
         FilterConfig.FIR -> FirFilter(config.filterConfig)
         else -> DummyFilter()

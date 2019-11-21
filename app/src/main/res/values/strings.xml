@@ -85,4 +85,5 @@
     <string name="decoder_channels_count_key">decoder_channels_count_key</string>
     <string name="source_channels_codesize_key">source_channels_codesize_key</string>
     <string name="decoder_code_length_key">decoder_code_length_key</string>
+    <string name="decoder_threshold_key">decoder_threshold_key</string>
 </resources>

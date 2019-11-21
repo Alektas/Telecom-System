@@ -21,7 +21,6 @@ class DemodulatorProcessViewModel : ViewModel() {
     val frameLength = MutableLiveData<Int>()
     val codeLength = MutableLiveData<Int>()
     val dataSpeed = MutableLiveData<Float>()
-    val threshold = MutableLiveData<Float>()
 
     init {
         App.component.inject(this)
@@ -47,33 +46,20 @@ class DemodulatorProcessViewModel : ViewModel() {
     fun processData(
         frameLengthString: String,
         dataSpeedString: String,
-        codeLengthString: String,
-        thresholdString: String
+        codeLengthString: String
     ) {
         val frameLength = parseFrameLength(frameLengthString)
         val dataSpeed = parseDataspeed(dataSpeedString)
         val bitTime = 1.0e-3 / dataSpeed // преобразование в скорость (кБит/с)
         val codeLength = parseCodeLength(codeLengthString)
-        val threshold = parseThreshold(thresholdString)
 
-        if (codeLength <= 0 || dataSpeed <= 0 || frameLength <= 0 || threshold < 0) return
+        if (codeLength <= 0 || dataSpeed <= 0 || frameLength <= 0) return
 
         this.frameLength.value = frameLength
         this.codeLength.value = codeLength
         this.dataSpeed.value = dataSpeed.toFloat()
-        this.threshold.value = threshold.toFloat()
 
-        storage.updateDemodulatorConfig(frameLength, bitTime, codeLength, threshold)
-    }
-
-    fun parseThreshold(threshold: String): Double {
-        return try {
-            val c = threshold.toDouble()
-            if (c < 0) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1.0
-        }
+        storage.updateDemodulatorConfig(frameLength, bitTime, codeLength)
     }
 
     fun parseDataspeed(speed: String): Double {

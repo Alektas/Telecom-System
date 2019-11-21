@@ -37,6 +37,7 @@ class SystemProcessor {
     private var transmittedChannels: List<ChannelData>? = null
     private var decodedChannels: List<ChannelData>? = null
     private var noiseSnr: Double? = null
+    private var decodingThreshold = QpskContract.DEFAULT_SIGNAL_THRESHOLD
     private var disposable = CompositeDisposable()
 
     init {
@@ -216,7 +217,7 @@ class SystemProcessor {
         val newChannels = mutableListOf<ChannelData>()
 
         for (c in channels) {
-            val frameData = CdmaDecimalCoder().decode(c.code.toBipolar(), groupData)
+            val frameData = CdmaDecimalCoder(decodingThreshold).decode(c.code.toBipolar(), groupData)
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
             c.errors = errors
@@ -227,9 +228,11 @@ class SystemProcessor {
         storage.setDecodedChannels(channels)
     }
 
-    fun addDecodedChannel(code: BooleanArray) {
+    fun addDecodedChannel(code: BooleanArray, threshold: Float) {
+        decodingThreshold = threshold.toDouble()
+
         codedGroupData?.let {
-            val frameData = CdmaDecimalCoder().decode(code.toBipolar(), it)
+            val frameData = CdmaDecimalCoder(decodingThreshold).decode(code.toBipolar(), it)
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
             val channel = ChannelData(data = frameData.toUnipolar(), code = code)
@@ -239,7 +242,9 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun setDecodedChannels(count: Int, codeLength: Int, codesType: Int) {
+    fun setDecodedChannels(count: Int, codeLength: Int, codesType: Int, threshold: Float) {
+        decodingThreshold = threshold.toDouble()
+
         Single.create<List<ChannelData>> { emitter ->
             codedGroupData?.let {
                 val channels = mutableListOf<ChannelData>()
@@ -250,7 +255,7 @@ class SystemProcessor {
                 }
 
                 for (i in 0 until count) {
-                    val frameData = CdmaDecimalCoder().decode(codes[i].toBipolar(), it)
+                    val frameData = CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
                     val errors = mutableListOf<Int>()
                     frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
                     val channel = ChannelData(data = frameData.toUnipolar(), code = codes[i])
