@@ -1,9 +1,9 @@
 package alektas.telecomapp.di
 
 import alektas.telecomapp.R
-import alektas.telecomapp.domain.entities.CdmaContract
-import alektas.telecomapp.domain.entities.QpskContract
-import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
+import alektas.telecomapp.domain.entities.contracts.CdmaContract
+import alektas.telecomapp.domain.entities.contracts.QpskContract
+import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import android.content.Context
 import android.content.SharedPreferences

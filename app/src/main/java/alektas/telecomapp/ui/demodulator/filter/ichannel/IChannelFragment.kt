@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.demodulators.filter.ichannel
+package alektas.telecomapp.ui.demodulator.filter.ichannel
 
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle

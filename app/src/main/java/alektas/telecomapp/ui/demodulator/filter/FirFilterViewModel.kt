@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.demodulators.filter
+package alektas.telecomapp.ui.demodulator.filter
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
@@ -6,13 +6,11 @@ import alektas.telecomapp.domain.entities.Window
 import alektas.telecomapp.domain.entities.filters.Filter
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.filters.FirFilter
-import alektas.telecomapp.utils.doOnFirst
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject

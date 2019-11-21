@@ -2,9 +2,9 @@ package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.R
 import alektas.telecomapp.data.CodeGenerator
-import alektas.telecomapp.domain.entities.CdmaContract
+import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.ChannelData
-import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import androidx.lifecycle.ViewModelProviders

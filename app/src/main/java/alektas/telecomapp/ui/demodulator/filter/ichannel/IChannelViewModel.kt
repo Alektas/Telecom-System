@@ -1,8 +1,7 @@
-package alektas.telecomapp.ui.demodulators.filter.qchannel
+package alektas.telecomapp.ui.demodulator.filter.ichannel
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,24 +12,25 @@ import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
-class QChannelViewModel : ViewModel() {
+class IChannelViewModel : ViewModel() {
     @Inject
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
-    val channelQData = MutableLiveData<Array<DataPoint>>()
-    val filteredChannelQData = MutableLiveData<Array<DataPoint>>()
+    val channelIData = MutableLiveData<Array<DataPoint>>()
+    val filteredChannelIData = MutableLiveData<Array<DataPoint>>()
 
     init {
         App.component.inject(this)
 
         disposable.addAll(
-            storage.observeChannelQ()
+            storage.observeChannelI()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
-                .map { it.toDataPoints() }.observeOn(AndroidSchedulers.mainThread())
+                .map { it.toDataPoints() }
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
                     override fun onNext(t: Array<DataPoint>) {
-                        channelQData.value = t
+                        channelIData.value = t
                     }
 
                     override fun onComplete() {}
@@ -38,13 +38,14 @@ class QChannelViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            storage.observeFilteredChannelQ()
+            storage.observeFilteredChannelI()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
-                .map { it.toDataPoints() }.observeOn(AndroidSchedulers.mainThread())
+                .map { it.toDataPoints() }
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Array<DataPoint>>() {
                     override fun onNext(t: Array<DataPoint>) {
-                        filteredChannelQData.value = t
+                        filteredChannelIData.value = t
                     }
 
                     override fun onComplete() {}

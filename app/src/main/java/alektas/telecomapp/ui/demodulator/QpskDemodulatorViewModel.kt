@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.demodulators
+package alektas.telecomapp.ui.demodulator
 
 import androidx.lifecycle.ViewModel
 

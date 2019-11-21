@@ -1,11 +1,10 @@
-package alektas.telecomapp.ui.demodulators.output
+package alektas.telecomapp.ui.demodulator.input
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.utils.getNormalizedSpectrum
 import alektas.telecomapp.utils.toDataPoints
-import alektas.telecomapp.utils.toFloat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -14,61 +13,41 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
-import org.apache.commons.math3.exception.MathIllegalArgumentException
-import org.apache.commons.math3.transform.DftNormalization
-import org.apache.commons.math3.transform.FastFourierTransformer
-import org.apache.commons.math3.transform.TransformType
 import javax.inject.Inject
 
-class DemodulatorOutputViewModel : ViewModel() {
+class DemodulatorInputViewModel : ViewModel() {
     @Inject
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
-    val outputSignalData = MutableLiveData<Array<DataPoint>>()
+    val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val specturmData = MutableLiveData<Array<DataPoint>>()
-    val constellationData = MutableLiveData<List<Pair<Float, Float>>>()
 
     init {
         App.component.inject(this)
 
-        disposable.addAll(
-            storage.observeDemodulatedSignal()
+        disposable.add(storage.observeEther()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object : DisposableObserver<Signal>() {
                 override fun onNext(t: Signal) {
-                    extractSignalData(t)
+                    extractData(t)
                 }
 
-                override fun onComplete() { }
+                override fun onComplete() {}
 
-                override fun onError(e: Throwable) { }
-            }),
-
-            storage.observeDemodulatedSignalConstellation()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.computation())
-                .map { it.toFloat() }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<Pair<Float, Float>>>() {
-                    override fun onNext(t: List<Pair<Float, Float>>) {
-                        constellationData.value = t
-                    }
-
-                    override fun onComplete() { }
-
-                    override fun onError(e: Throwable) { }
-                }))
+                override fun onError(e: Throwable) {}
+            })
+        )
     }
 
-    private fun extractSignalData(signal: Signal) {
+    private fun extractData(signal: Signal) {
         disposable.add(Single.create<Array<DataPoint>> {
             val s = signal.toDataPoints()
             it.onSuccess(s)
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { s: Array<DataPoint> -> outputSignalData.value = s })
+            .subscribe { s: Array<DataPoint> -> inputSignalData.value = s })
 
         if (signal.isEmpty()) return
 

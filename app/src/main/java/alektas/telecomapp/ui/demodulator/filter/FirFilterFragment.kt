@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.demodulators.filter
+package alektas.telecomapp.ui.demodulator.filter
 
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -8,11 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
-import alektas.telecomapp.domain.entities.QpskContract
 import alektas.telecomapp.domain.entities.Window
 import alektas.telecomapp.domain.entities.filters.FilterConfig
-import alektas.telecomapp.domain.entities.filters.FirFilter
-import alektas.telecomapp.ui.demodulators.generator.DemodulatorGeneratorViewModel
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
@@ -24,7 +21,6 @@ import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.demodulator_generator_fragment.*
 import kotlinx.android.synthetic.main.fir_filter_fragment.*
 
 class FirFilterFragment : Fragment() {

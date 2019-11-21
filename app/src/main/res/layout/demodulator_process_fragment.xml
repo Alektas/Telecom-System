@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        tools:context=".ui.demodulators.processing.DemodulatorProcessFragment">
+        tools:context=".ui.demodulator.processing.DemodulatorProcessFragment">
 
         <TextView
             android:id="@+id/signal_label"

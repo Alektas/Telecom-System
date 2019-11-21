@@ -9,9 +9,9 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import alektas.telecomapp.data.CodeGenerator
-import alektas.telecomapp.domain.entities.CdmaContract
+import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.ChannelData
-import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter

@@ -7,7 +7,7 @@
     android:layout_marginTop="@dimen/padding_top_page"
     android:layout_marginStart="@dimen/padding_horiz_page"
     android:layout_marginEnd="@dimen/padding_horiz_page"
-    tools:context=".ui.demodulators.QpskDemodulatorFragment">
+    tools:context=".ui.demodulator.QpskDemodulatorFragment">
 
     <TextView
         android:id="@+id/filter_pulse_response_label"

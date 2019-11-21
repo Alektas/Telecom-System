@@ -1,8 +1,8 @@
-package alektas.telecomapp.ui.demodulators.generator
+package alektas.telecomapp.ui.demodulator.generator
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
+import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData

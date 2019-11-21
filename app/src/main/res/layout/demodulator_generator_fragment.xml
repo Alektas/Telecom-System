@@ -7,7 +7,7 @@
     android:paddingTop="@dimen/padding_top_page"
     android:paddingStart="@dimen/padding_horiz_page"
     android:paddingEnd="@dimen/padding_horiz_page"
-    tools:context=".ui.demodulators.generator.DemodulatorGeneratorFragment">
+    tools:context=".ui.demodulator.generator.DemodulatorGeneratorFragment">
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/generator_signal_chart"

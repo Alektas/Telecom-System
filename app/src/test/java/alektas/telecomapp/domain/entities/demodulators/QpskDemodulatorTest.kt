@@ -1,5 +1,6 @@
 package alektas.telecomapp.domain.entities.demodulators
 
+import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator
@@ -12,10 +13,11 @@ class QpskDemodulatorTest {
     private val carrier = SignalGenerator().cos(frequency = 100000.0)
     private val dummyFilterConfig = FilterConfig(type = FilterConfig.NONE)
     private val inSig = QpskModulator().modulate(carrier, inData)
-    private val config = DemodulatorConfig(
-        inSig, carrier.frequency, 4, 2,
-        filterConfig = dummyFilterConfig
-    )
+    private val config =
+        DemodulatorConfig(
+            inSig, carrier.frequency, 4, 2,
+            filterConfig = dummyFilterConfig
+        )
     private val demodulator = QpskDemodulator(config)
 
     @Test

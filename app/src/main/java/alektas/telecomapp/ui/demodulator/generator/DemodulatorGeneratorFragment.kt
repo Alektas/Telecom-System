@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.demodulators.generator
+package alektas.telecomapp.ui.demodulator.generator
 
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
-import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
 import android.content.SharedPreferences
@@ -17,7 +17,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.data_source_fragment.*
 import kotlinx.android.synthetic.main.demodulator_generator_fragment.*
 import java.lang.NumberFormatException
 

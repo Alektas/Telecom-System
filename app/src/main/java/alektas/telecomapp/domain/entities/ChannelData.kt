@@ -1,6 +1,7 @@
 package alektas.telecomapp.domain.entities
 
 import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.contracts.QpskContract
 
 data class ChannelData(
     val name: String = "${channelsCount + 1}",

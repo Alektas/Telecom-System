@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/padding_horiz_page"
-    tools:context=".ui.demodulators.QpskDemodulatorFragment">
+    tools:context=".ui.demodulator.QpskDemodulatorFragment">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/to_demodulator_input_btn"

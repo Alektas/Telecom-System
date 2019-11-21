@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.chart.polar
+package alektas.telecomapp.ui.charts.polar
 
 import alektas.telecomapp.R
 import android.content.Context

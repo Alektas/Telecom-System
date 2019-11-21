@@ -1,6 +1,6 @@
 package alektas.telecomapp.domain.entities.coders
 
-import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.contracts.QpskContract
 
 class CdmaDecimalCoder(private val threshold: Double = QpskContract.DEFAULT_SIGNAL_THRESHOLD) : Coder<DoubleArray> {
 

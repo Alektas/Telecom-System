@@ -3,7 +3,7 @@ package alektas.telecomapp.data
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
-import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
+import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
@@ -70,11 +70,6 @@ class SystemStorage : Repository {
         return demodulatorConfigSource
     }
 
-    override fun changeDemodulatorConfig(config: DemodulatorConfig) {
-        demodulatorConfig = config
-        demodulatorConfigSource.onNext(demodulatorConfig)
-    }
-
     override fun updateDemodulatorConfig(
         frameLength: Int,
         bitTime: Double,
@@ -83,6 +78,11 @@ class SystemStorage : Repository {
         demodulatorConfig.frameLength = frameLength
         demodulatorConfig.bitTime = bitTime
         demodulatorConfig.codeLength = codeLength
+        demodulatorConfigSource.onNext(demodulatorConfig)
+    }
+
+    override fun setDemodulatorFrequency(frequency: Double) {
+        demodulatorConfig.carrierFrequency = frequency
         demodulatorConfigSource.onNext(demodulatorConfig)
     }
 
@@ -97,11 +97,6 @@ class SystemStorage : Repository {
     override fun setDemodulatorFilterConfig(config: FilterConfig) {
         filterConfig = config
         filterConfigSource.onNext(filterConfig)
-    }
-
-    override fun setDemodulatorFrequency(frequency: Double) {
-        demodulatorConfig.carrierFrequency = frequency
-        changeDemodulatorConfig(demodulatorConfig)
     }
 
     override fun setChannels(channels: List<ChannelData>) {

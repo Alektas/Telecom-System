@@ -1,8 +1,7 @@
-package alektas.telecomapp.ui.demodulators.processing
+package alektas.telecomapp.ui.demodulator.processing
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

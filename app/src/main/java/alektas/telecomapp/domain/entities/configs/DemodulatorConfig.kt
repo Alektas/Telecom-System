@@ -1,6 +1,6 @@
-package alektas.telecomapp.domain.entities.demodulators
+package alektas.telecomapp.domain.entities.configs
 
-import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.Signal

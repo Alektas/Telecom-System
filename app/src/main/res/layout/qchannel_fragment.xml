@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.demodulators.filter.qchannel.QChannelFragment">
+    tools:context=".ui.demodulator.filter.qchannel.QChannelFragment">
 
     <TextView
         android:id="@+id/q_signal_label"

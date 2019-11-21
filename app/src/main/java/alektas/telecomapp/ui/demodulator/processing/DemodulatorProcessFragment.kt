@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.demodulators.processing
+package alektas.telecomapp.ui.demodulator.processing
 
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -8,8 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
-import alektas.telecomapp.domain.entities.CdmaContract
-import alektas.telecomapp.domain.entities.QpskContract
+import alektas.telecomapp.domain.entities.contracts.CdmaContract
+import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
 import android.content.SharedPreferences

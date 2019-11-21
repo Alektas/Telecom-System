@@ -7,7 +7,8 @@ import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
 import alektas.telecomapp.domain.entities.coders.toBipolar
 import alektas.telecomapp.domain.entities.coders.toUnipolar
-import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
+import alektas.telecomapp.domain.entities.contracts.QpskContract
+import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
 import alektas.telecomapp.domain.entities.modulators.QpskModulator

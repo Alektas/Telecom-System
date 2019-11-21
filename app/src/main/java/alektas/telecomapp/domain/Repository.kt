@@ -1,9 +1,8 @@
 package alektas.telecomapp.domain
 
 import alektas.telecomapp.domain.entities.ChannelData
-import alektas.telecomapp.domain.entities.demodulators.DemodulatorConfig
+import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
-import alektas.telecomapp.domain.entities.signals.BinarySignal
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
@@ -11,7 +10,6 @@ import io.reactivex.Observable
 
 interface Repository {
     fun observeDemodulatorConfig(): Observable<DemodulatorConfig>
-    fun changeDemodulatorConfig(config: DemodulatorConfig)
     fun getDemodulatorFilterConfig(): FilterConfig
     fun observeDemodulatorFilterConfig(): Observable<FilterConfig>
     fun setDemodulatorFilterConfig(config: FilterConfig)
@@ -24,8 +22,8 @@ interface Repository {
 
     fun setChannels(channels: List<ChannelData>)
     fun removeChannel(channel: ChannelData)
-
     fun observeChannels(): Observable<List<ChannelData>>
+
     fun setChannelsSignal(signal: Signal)
     fun observeChannelsSignal(): Observable<Signal>
 
@@ -33,6 +31,7 @@ interface Repository {
     fun enableNoise()
     fun disableNoise()
     fun observeNoise(): Observable<Noise>
+
     fun observeEther(): Observable<Signal>
 
     fun setDemodulatedSignal(signal: DigitalSignal)

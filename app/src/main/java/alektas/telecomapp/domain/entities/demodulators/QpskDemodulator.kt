@@ -1,6 +1,7 @@
 package alektas.telecomapp.domain.entities.demodulators
 
 import alektas.telecomapp.domain.entities.Simulator
+import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.DummyFilter
 import alektas.telecomapp.domain.entities.filters.Filter
 import alektas.telecomapp.domain.entities.filters.FilterConfig

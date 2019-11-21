@@ -1,4 +1,4 @@
-package alektas.telecomapp.domain.entities
+package alektas.telecomapp.domain.entities.contracts
 
 class QpskContract {
 
