@@ -48,15 +48,7 @@ class DecoderViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            Observable.combineLatest(
-                storage.observeDecodedChannels(),
-                storage.observeChannelsErrors().startWith(mapOf()),
-                BiFunction<List<ChannelData>, Map<BooleanArray, List<Int>>, List<ChannelData>> { channels, errorsMap ->
-                    errorsMap.forEach { (code, errors) ->
-                        channels.find { it.code.contentEquals(code) }?.let { it.errors = errors }
-                    }
-                    channels
-                })
+            storage.observeDecodedChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {

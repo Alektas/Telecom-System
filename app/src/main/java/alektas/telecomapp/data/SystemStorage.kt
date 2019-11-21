@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 class SystemStorage : Repository {
     @Inject
-    public lateinit var demodulatorConfig: DemodulatorConfig
+    lateinit var demodulatorConfig: DemodulatorConfig
     private var filterConfig: FilterConfig = FilterConfig()
     private var noise: Noise? = null
     private var channelList = mutableListOf<ChannelData>()
@@ -55,18 +55,12 @@ class SystemStorage : Repository {
     }
     private val demodulatorConfigSource = BehaviorSubject.create<DemodulatorConfig>()
     private val berSource = Observable.zip(
-        channelsErrorsSource, noiseSource,
-        BiFunction { errors: Map<BooleanArray, List<Int>>, noise: Noise ->
-            Pair(noise.snr(), errors.values.sumBy { it.size })
+        decodedChannelsSource, noiseSource,
+        BiFunction { channels: List<ChannelData>, noise: Noise ->
+            val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
+            val bitsReceived = channels.sumBy { it.data.size }.toDouble()
+            Pair(noise.snr(), errorsCount / bitsReceived * 100)
         })
-        .withLatestFrom(
-            channelsSource,
-            BiFunction { pair: Pair<Double, Int>, chs: List<ChannelData> ->
-                val ber = pair.second / chs.sumBy { it.data.size }.toDouble()
-                println("BER calculation. SNR = ${pair.first}, BER = $ber")
-                Pair(pair.first, ber)
-            }
-        )
 
     init {
         App.component.inject(this)
@@ -221,11 +215,11 @@ class SystemStorage : Repository {
         return decodedChannelsSource
     }
 
-    override fun setChannelsErrors(errors: Map<BooleanArray, List<Int>>) {
+    override fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>) {
         channelsErrorsSource.onNext(errors)
     }
 
-    override fun observeChannelsErrors(): Observable<Map<BooleanArray, List<Int>>> {
+    override fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>> {
         return channelsErrorsSource
     }
 

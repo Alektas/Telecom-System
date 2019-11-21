@@ -83,7 +83,7 @@ class SystemProcessor {
                     diffChannels(origin, decoded)
                 })
                 .subscribeOn(Schedulers.computation())
-                .subscribe { storage.setChannelsErrors(it) }
+                .subscribe { storage.setSimulatedChannelsErrors(it) }
         )
     }
 
@@ -217,6 +217,9 @@ class SystemProcessor {
 
         for (c in channels) {
             val frameData = CdmaDecimalCoder().decode(c.code.toBipolar(), groupData)
+            val errors = mutableListOf<Int>()
+            frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
+            c.errors = errors
             c.data = frameData.toUnipolar()
             newChannels.add(c)
         }
@@ -226,8 +229,11 @@ class SystemProcessor {
 
     fun addDecodedChannel(code: BooleanArray) {
         codedGroupData?.let {
-            val data = CdmaDecimalCoder().decode(code.toBipolar(), it)
-            val channel = ChannelData(data = data.toUnipolar(), code = code)
+            val frameData = CdmaDecimalCoder().decode(code.toBipolar(), it)
+            val errors = mutableListOf<Int>()
+            frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
+            val channel = ChannelData(data = frameData.toUnipolar(), code = code)
+            channel.errors = errors
             storage.addDecodedChannel(channel)
         }
     }
@@ -245,7 +251,10 @@ class SystemProcessor {
 
                 for (i in 0 until count) {
                     val frameData = CdmaDecimalCoder().decode(codes[i].toBipolar(), it)
+                    val errors = mutableListOf<Int>()
+                    frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
                     val channel = ChannelData(data = frameData.toUnipolar(), code = codes[i])
+                    channel.errors = errors
                     channels.add(channel)
                 }
 

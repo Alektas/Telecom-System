@@ -49,7 +49,7 @@ class ChannelAdapter(private val controller: ChannelController) :
             channelName.text = channel.name
             channelCode.text = channel.getCodeString()
 
-            channelData.text = if (channel.errors == null) {
+            channelData.text = if (channel.errors?.isEmpty() == true) {
                 channel.getDataString()
             } else {
                 withHighlightedErrors(channel)

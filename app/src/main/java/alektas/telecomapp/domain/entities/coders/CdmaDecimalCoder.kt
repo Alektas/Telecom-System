@@ -1,6 +1,8 @@
 package alektas.telecomapp.domain.entities.coders
 
-class CdmaDecimalCoder : Coder<DoubleArray> {
+import alektas.telecomapp.domain.entities.QpskContract
+
+class CdmaDecimalCoder(private val threshold: Double = QpskContract.DEFAULT_SIGNAL_THRESHOLD) : Coder<DoubleArray> {
 
     /**
      * Кодирование биполярной информации.
@@ -26,7 +28,8 @@ class CdmaDecimalCoder : Coder<DoubleArray> {
      *
      * @param code биполярный код (массив из -1 и 1)
      * @param codedData массив кодированных данных (любые значения)
-     * @return информационная посылка (из -1 и 1). Если код пустой, то возвращается кодированная информация.
+     * @return информационная посылка из -1, 1 и 0, где 0 - это неопределенный бит (ошибка, либо отсутствие)
+     * Если код пустой, то возвращается кодированная информация.
      * Если информация отсутствует, то возвращается пустой массив.
      */
     override fun decode(code: DoubleArray, codedData: DoubleArray): DoubleArray {
@@ -36,14 +39,14 @@ class CdmaDecimalCoder : Coder<DoubleArray> {
             .chunked(code.size) {
                 it.foldIndexed(0.0) { i, acc, v -> acc + v * code[i] }
             }
-            .map { normalize(it) }
+            .map { normalize(it, threshold) }
             .toDoubleArray()
     }
 
-    private fun normalize(value: Double): Double {
+    private fun normalize(value: Double, threshold: Double): Double {
         return when {
-            value > 0.0 -> 1.0
-            value < 0.0 -> -1.0
+            value > threshold -> 1.0
+            value < -threshold -> -1.0
             else -> 0.0
         }
     }
