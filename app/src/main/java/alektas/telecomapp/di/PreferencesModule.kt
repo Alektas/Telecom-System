@@ -33,6 +33,21 @@ class PreferencesModule {
     }
 
     @Provides
+    @Named("sourceSnr")
+    fun providesSourceSnr(context: Context, @Named("sourcePrefs") prefs: SharedPreferences): Double {
+        return prefs.getFloat(
+            context.getString(R.string.source_noise_snr_key),
+            QpskContract.DEFAULT_SIGNAL_NOISE_RATE.toFloat()
+        ).toDouble()
+    }
+
+    @Provides
+    @Named("sourceSnrEnabled")
+    fun providesSourceSnrEnabled(context: Context, @Named("sourcePrefs") prefs: SharedPreferences): Boolean {
+        return prefs.getBoolean(context.getString(R.string.source_noise_enable_key), false)
+    }
+
+    @Provides
     fun providesDemodulatorConfig(
         context: Context,
         @Named("demodulatorPrefs") prefs: SharedPreferences,

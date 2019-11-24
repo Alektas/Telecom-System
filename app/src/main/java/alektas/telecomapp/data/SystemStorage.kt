@@ -15,12 +15,21 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Named
 
 class SystemStorage : Repository {
     @Inject
     lateinit var demodulatorConfig: DemodulatorConfig
-    private var filterConfig: FilterConfig = FilterConfig()
+    var filterConfig: FilterConfig = FilterConfig()
+    /**
+     * Шум источника.
+     * Если шум отключен с помощью метода {@see #disableNoise}, то этот объект сохраняется,
+     * а потребителям выдается пустой сигнал. При включении шума методом {@see #enableNoise}
+     * потребителям снова выдается данный объект (если он не был нулевым)
+     */
     private var noise: Noise? = null
+    @JvmField
+    @field:[Inject Named("sourceSnrEnabled")] var isNoiseEnabled: Boolean = false
     private var channelList = mutableListOf<ChannelData>()
     private var decodedChannelList = mutableListOf<ChannelData>()
     private val channelsSource = BehaviorSubject.create<List<ChannelData>>()
@@ -114,15 +123,25 @@ class SystemStorage : Repository {
 
     override fun setNoise(signal: Noise) {
         noise = signal
-        noiseSource.onNext(signal)
+        if (isNoiseEnabled) noiseSource.onNext(signal)
     }
 
-    override fun enableNoise() {
-        noise?.let { noiseSource.onNext(it) }
+    /**
+     * Включить шум.
+     * @param fromCache Если <code>true</code>, то сохраненный в кэше экземпляр шума добавляется в эфир.
+     */
+    override fun enableNoise(fromCache: Boolean) {
+        isNoiseEnabled = true
+        if (fromCache) noise?.let { noiseSource.onNext(it) }
     }
 
     override fun disableNoise() {
+        isNoiseEnabled = false
         noiseSource.onNext(BaseNoise())
+    }
+
+    override fun isNoiseEnabled(): Boolean {
+        return isNoiseEnabled
     }
 
     override fun observeNoise(): Observable<Noise> {

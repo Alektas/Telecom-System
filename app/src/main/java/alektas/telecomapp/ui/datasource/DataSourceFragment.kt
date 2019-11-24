@@ -239,33 +239,6 @@ class DataSourceFragment : Fragment(), ChannelController {
         }
     }
 
-    private fun generateChannels() {
-        val channelCount = source_channel_count.text.toString()
-        val freq = source_carrier_frequency.text.toString()
-        val dataSpeed = source_data_speed.text.toString()
-        val frameLength = source_frame_length.text.toString()
-        val codeLength = source_code_length.text.toString()
-        val codeType = source_channel_code_type.text.toString()
-
-        if (source_channel_count_layout.error != null ||
-            source_carrier_frequency_layout.error != null ||
-            source_data_speed_layout.error != null ||
-            source_code_length_layout.error != null ||
-            source_frame_length_layout.error != null ||
-            channelCount.isEmpty() ||
-            freq.isEmpty() ||
-            dataSpeed.isEmpty() ||
-            codeLength.isEmpty() ||
-            frameLength.isEmpty() ||
-            codeType.isEmpty()
-        ) {
-            Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        viewModel.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
-    }
-
     private fun setFieldsValidation() {
         adc_frequency.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseFrequency(text.toString()) > 0) {
@@ -315,26 +288,59 @@ class DataSourceFragment : Fragment(), ChannelController {
                 source_frame_length_layout.error = getString(R.string.error_positive_num)
             }
         }
-    }
 
-    private fun changeNoisePower(text: String) {
-        try {
-            val snr = text.toDouble()
-            viewModel.setNoise(snr)
-        } catch (e: NumberFormatException) {
-            val msg = getString(R.string.error_num)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        ether_snr.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseSnr(text.toString()) != DataSourceViewModel.INVALID_SNR) {
+                ether_snr_layout.error = null
+            } else {
+                ether_snr_layout.error = getString(R.string.error_num)
+            }
         }
     }
 
-    private fun changeAdcFrequency(freqString: String) {
-        val freq = viewModel.parseFrequency(freqString)
-        if (freq > 0) {
-            viewModel.setAdcFrequency(freq)
-        } else {
-            val msg = getString(R.string.error_positive_num_decimal)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+    private fun generateChannels() {
+        val channelCount = source_channel_count.text.toString()
+        val freq = source_carrier_frequency.text.toString()
+        val dataSpeed = source_data_speed.text.toString()
+        val frameLength = source_frame_length.text.toString()
+        val codeLength = source_code_length.text.toString()
+        val codeType = source_channel_code_type.text.toString()
+
+        if (source_channel_count_layout.error != null ||
+            source_carrier_frequency_layout.error != null ||
+            source_data_speed_layout.error != null ||
+            source_code_length_layout.error != null ||
+            source_frame_length_layout.error != null ||
+            channelCount.isEmpty() ||
+            freq.isEmpty() ||
+            dataSpeed.isEmpty() ||
+            codeLength.isEmpty() ||
+            frameLength.isEmpty() ||
+            codeType.isEmpty()
+        ) {
+            Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        viewModel.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
+    }
+
+    private fun changeNoisePower(snr: String) {
+        if (snr.isEmpty() || ether_snr_layout.error != null) {
+            Toast.makeText(requireContext(), getString(R.string.error_num), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewModel.setNoise(snr)
+    }
+
+    private fun changeAdcFrequency(freq: String) {
+        if (freq.isEmpty() || ether_snr_layout.error != null) {
+            Toast.makeText(requireContext(), getString(R.string.error_positive_num_decimal), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewModel.setAdcFrequency(freq)
     }
 
 }

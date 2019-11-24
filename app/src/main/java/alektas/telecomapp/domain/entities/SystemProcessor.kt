@@ -27,6 +27,7 @@ import io.reactivex.rxkotlin.toObservable
 import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
+import javax.inject.Named
 import kotlin.math.max
 
 private const val BER_POINTS_COUNT = 20
@@ -37,12 +38,17 @@ class SystemProcessor {
     private var codedGroupData: DoubleArray? = null
     private var transmittedChannels: List<ChannelData>? = null
     private var decodedChannels: List<ChannelData>? = null
-    private var noiseSnr: Double? = null
+    @JvmField
+    @field:[Inject Named("sourceSnr")] var noiseSnr: Double? = null
     private var decodingThreshold = QpskContract.DEFAULT_SIGNAL_THRESHOLD
     private var disposable = CompositeDisposable()
 
     init {
         App.component.inject(this)
+
+        if (noiseSnr != null) {
+            setNoise(noiseSnr ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE)
+        }
 
         disposable.addAll(
             storage.observeChannels()
@@ -192,7 +198,7 @@ class SystemProcessor {
 
 
     fun enableNoise() {
-        storage.enableNoise()
+        storage.enableNoise(true)
     }
 
     @SuppressLint("CheckResult")
@@ -335,11 +341,19 @@ class SystemProcessor {
     fun calculateBer(fromSnr: Double, toSnr: Double) {
         val step = (toSnr - fromSnr) / BER_POINTS_COUNT
         val snrs = DoubleArray(BER_POINTS_COUNT) { fromSnr + it * step }
+        val isNoiseWasEnabled = storage.isNoiseEnabled()
+
         disposable.add(snrs.toObservable()
             .skip(1)
             .zipWith(storage.observeBer()) { snr, _ -> snr }
-            .doOnSubscribe { setNoise(fromSnr, true) }
-            .subscribe { setNoise(it, true) })
+            .doOnSubscribe {
+                if (!isNoiseWasEnabled) storage.enableNoise(false)
+                setNoise(fromSnr, true)
+            }
+            .doOnComplete { if (!isNoiseWasEnabled) disableNoise() } // Восстановить исходное состояние
+            .subscribe {
+                setNoise(it, true)
+            })
     }
 
 }

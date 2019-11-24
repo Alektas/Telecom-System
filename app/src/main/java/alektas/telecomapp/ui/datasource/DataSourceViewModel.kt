@@ -66,6 +66,40 @@ class DataSourceViewModel : ViewModel() {
         )
     }
 
+    companion object {
+        const val INVALID_SNR = -1000.0
+    }
+
+    fun enableNoise() {
+        processor.enableNoise()
+    }
+
+    fun disableNoise() {
+        processor.disableNoise()
+    }
+
+    fun setNoise(snrString: String) {
+        val snr = parseSnr(snrString)
+
+        if (snr == INVALID_SNR) return
+
+        noiseSnr.value = snr
+        processor.setNoise(snr)
+    }
+
+    fun setAdcFrequency(freqString: String) {
+        val freq = parseFrequency(freqString)
+
+        if (freq <= 0) return
+
+        adcFrequency.value = freq
+        processor.setAdcFrequency(freq)
+    }
+
+    fun removeChannel(channel: ChannelData) {
+        processor.removeChannel(channel)
+    }
+
     fun generateChannels(
         countString: String,
         carrierFrequencyString: String,
@@ -144,18 +178,12 @@ class DataSourceViewModel : ViewModel() {
         }
     }
 
-    fun removeChannel(channel: ChannelData) {
-        processor.removeChannel(channel)
-    }
-
-    fun setAdcFrequency(frequency: Double) {
-        adcFrequency.value = frequency
-        processor.setAdcFrequency(frequency)
-    }
-
-    fun setNoise(snr: Double) {
-        noiseSnr.value = snr
-        processor.setNoise(snr)
+    fun parseSnr(snr: String): Double {
+        return try {
+            snr.toDouble()
+        } catch (e: NumberFormatException) {
+            INVALID_SNR
+        }
     }
 
     override fun onCleared() {
@@ -163,11 +191,4 @@ class DataSourceViewModel : ViewModel() {
         super.onCleared()
     }
 
-    fun disableNoise() {
-        processor.disableNoise()
-    }
-
-    fun enableNoise() {
-        processor.enableNoise()
-    }
 }
