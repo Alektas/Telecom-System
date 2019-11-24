@@ -2,6 +2,7 @@ package alektas.telecomapp.ui.statistic.ber
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
+import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.SystemProcessor
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -21,6 +22,7 @@ class BerViewModel : ViewModel() {
     val viewportData = MutableLiveData<Pair<Double, Double>>()
     val berData = MutableLiveData<Array<DataPoint>>()
     val berList = mutableListOf<DataPoint>()
+    var channels = listOf<ChannelData>()
 
     companion object {
         const val INVALID_SNR = -1000.0
@@ -46,19 +48,35 @@ class BerViewModel : ViewModel() {
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeDecodedChannels()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
+                    override fun onNext(t: List<ChannelData>) {
+                        channels = t
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
                 })
         )
     }
 
-    fun calculateBer(from: String, to: String) {
+    fun calculateBer(from: String, to: String): Boolean {
         val fromSnr = parseSnr(from)
         val toSnr = parseSnr(to)
 
-        if (fromSnr != INVALID_SNR && toSnr != INVALID_SNR && fromSnr < toSnr) {
+        if (fromSnr != INVALID_SNR && toSnr != INVALID_SNR && fromSnr < toSnr && channels.isNotEmpty()) {
             viewportData.value = Pair(fromSnr, toSnr)
             berList.clear()
             processor.calculateBer(fromSnr, toSnr)
+            return true
         }
+
+        return false
     }
 
     fun parseSnr(snr: String): Double {

@@ -9,6 +9,7 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import alektas.telecomapp.utils.SystemUtils
+import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import com.jjoe64.graphview.GraphView
@@ -71,7 +72,14 @@ class BerFragment : Fragment() {
     private fun calculateBer() {
         val from = ber_from_snr.text.toString()
         val to = ber_to_snr.text.toString()
-        viewModel.calculateBer(from, to)
+        val isSuccess = viewModel.calculateBer(from, to)
+        if (!isSuccess) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.error_ber_graph_invalid_data),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     private fun setFieldsValidation() {
