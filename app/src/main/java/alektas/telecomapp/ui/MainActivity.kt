@@ -1,4 +1,4 @@
-package alektas.telecomapp
+package alektas.telecomapp.ui
 
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.datasource.DataSourceFragment
