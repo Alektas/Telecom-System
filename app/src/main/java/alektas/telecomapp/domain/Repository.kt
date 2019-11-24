@@ -28,8 +28,9 @@ interface Repository {
     fun observeChannelsSignal(): Observable<Signal>
 
     fun setNoise(signal: Noise)
-    fun enableNoise()
+    fun enableNoise(fromCache: Boolean)
     fun disableNoise()
+    fun isNoiseEnabled(): Boolean
     fun observeNoise(): Observable<Noise>
 
     fun observeEther(): Observable<Signal>
