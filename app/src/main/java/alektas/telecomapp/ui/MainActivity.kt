@@ -1,5 +1,6 @@
 package alektas.telecomapp.ui
 
+import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.datasource.DataSourceFragment
 import alektas.telecomapp.ui.decoder.DecoderFragment
@@ -19,8 +20,12 @@ import alektas.telecomapp.ui.statistic.ber.BerFragment
 import android.content.Context
 import android.content.SharedPreferences
 import android.view.View
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import kotlinx.android.synthetic.main.main_activity.*
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +37,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         loadSettings()
+
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+
+        viewModel.berProgress.observe(this, Observer {
+            progress_bar.progress = it
+            progress_bar.visibility = if (it in 1..99) View.VISIBLE else View.INVISIBLE
+        })
     }
 
     fun onNavigateBtnClick(view: View) {
