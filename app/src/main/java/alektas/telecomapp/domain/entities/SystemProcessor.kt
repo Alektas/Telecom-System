@@ -26,6 +26,7 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.rxkotlin.toObservable
 import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.max
@@ -39,9 +40,11 @@ class SystemProcessor {
     private var transmittedChannels: List<ChannelData>? = null
     private var decodedChannels: List<ChannelData>? = null
     @JvmField
-    @field:[Inject Named("sourceSnr")] var noiseSnr: Double? = null
+    @field:[Inject Named("sourceSnr")]
+    var noiseSnr: Double? = null
     private var decodingThreshold = QpskContract.DEFAULT_SIGNAL_THRESHOLD
     private var disposable = CompositeDisposable()
+    val berProcess = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
@@ -224,7 +227,8 @@ class SystemProcessor {
         val newChannels = mutableListOf<ChannelData>()
 
         for (c in channels) {
-            val frameData = CdmaDecimalCoder(decodingThreshold).decode(c.code.toBipolar(), groupData)
+            val frameData =
+                CdmaDecimalCoder(decodingThreshold).decode(c.code.toBipolar(), groupData)
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
             c.errors = errors
@@ -262,7 +266,8 @@ class SystemProcessor {
                 }
 
                 for (i in 0 until count) {
-                    val frameData = CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
+                    val frameData =
+                        CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
                     val errors = mutableListOf<Int>()
                     frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
                     val channel = ChannelData(data = frameData.toUnipolar(), code = codes[i])
@@ -344,16 +349,27 @@ class SystemProcessor {
         val isNoiseWasEnabled = storage.isNoiseEnabled()
 
         disposable.add(snrs.toObservable()
-            .skip(1)
-            .zipWith(storage.observeBer()) { snr, _ -> snr }
+            .skip(1) // Первое SNR вручную запускается в doOnSubscribe, поэтому пропускаем
+            .zipWith(storage.observeBer()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
             .doOnSubscribe {
+                berProcess.onNext(0)
                 if (!isNoiseWasEnabled) storage.enableNoise(false)
                 setNoise(fromSnr, true)
             }
-            .doOnComplete { if (!isNoiseWasEnabled) disableNoise() } // Восстановить исходное состояние
-            .subscribe {
+            .subscribe({
+                val index = snrs.indexOf(it)
+                if (index > 0) {
+                    val progress = (index / BER_POINTS_COUNT.toDouble() * 100).toInt()
+                    berProcess.onNext(progress)
+                }
                 setNoise(it, true)
+            }, {
+                berProcess.onNext(100)
+            }, {
+                if (!isNoiseWasEnabled) disableNoise() // Восстановить исходное состояние
+                berProcess.onNext(100)
             })
+        )
     }
 
 }

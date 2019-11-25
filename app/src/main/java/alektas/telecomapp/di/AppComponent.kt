@@ -2,6 +2,7 @@ package alektas.telecomapp.di
 
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.ui.MainViewModel
 import alektas.telecomapp.ui.datasource.DataSourceViewModel
 import alektas.telecomapp.ui.decoder.DecoderViewModel
 import alektas.telecomapp.ui.demodulator.QpskDemodulatorViewModel
@@ -35,6 +36,7 @@ interface AppComponent {
     fun inject(vm: QChannelViewModel)
     fun inject(vm: StatisticViewModel)
     fun inject(vm: BerViewModel)
+    fun inject(vm: MainViewModel)
     fun inject(storage: SystemStorage)
 
     @Component.Builder
