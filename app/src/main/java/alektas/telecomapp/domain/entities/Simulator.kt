@@ -38,6 +38,7 @@ class Simulator {
          */
         var simulationTime = sampleCount * sampleTime
         set(value) {
+            if (field == value) return
             field = value
             sampleCount = ceil(value * samplingRate).toInt()
         }

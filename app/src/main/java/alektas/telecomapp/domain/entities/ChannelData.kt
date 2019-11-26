@@ -6,7 +6,7 @@ import alektas.telecomapp.domain.entities.contracts.QpskContract
 data class ChannelData(
     val name: String = "${channelsCount + 1}",
     val carrierFrequency: Double = QpskContract.DEFAULT_CARRIER_FREQUENCY,
-    var data: BooleanArray = booleanArrayOf(),
+    var frameData: BooleanArray = booleanArrayOf(),
     val bitTime: Double = QpskContract.DEFAULT_DATA_BIT_TIME,
     val code: BooleanArray = booleanArrayOf(),
     val codeType: Int = CodeGenerator.WALSH
@@ -24,7 +24,7 @@ data class ChannelData(
     }
 
     fun getDataString(): String {
-        return data.joinToString(separator = " ") { if (it) "1" else "0" }
+        return frameData.joinToString(separator = " ") { if (it) "1" else "0" }
     }
 
     fun getCodeString(): String {
@@ -36,7 +36,7 @@ data class ChannelData(
         if (other !is ChannelData) return false
 
         if (name != other.name) return false
-        if (!data.contentEquals(other.data)) return false
+        if (!frameData.contentEquals(other.frameData)) return false
         if (!code.contentEquals(other.code)) return false
         if (id != other.id) return false
 
@@ -45,7 +45,7 @@ data class ChannelData(
 
     override fun hashCode(): Int {
         var result = name.hashCode()
-        result = 31 * result + data.contentHashCode()
+        result = 31 * result + frameData.contentHashCode()
         result = 31 * result + code.contentHashCode()
         result = 31 * result + id
         return result

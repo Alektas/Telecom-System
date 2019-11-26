@@ -57,6 +57,6 @@ interface Repository {
     fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
-    fun observeBer(): Observable<Pair<Double, Double>>
+    fun observeBerByNoise(): Observable<Pair<Double, Double>>
 
 }

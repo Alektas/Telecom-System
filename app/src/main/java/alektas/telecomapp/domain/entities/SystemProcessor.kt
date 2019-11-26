@@ -78,9 +78,7 @@ class SystemProcessor {
             storage.observeDecodedChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    decodedChannels = it
-                },
+                .subscribe { decodedChannels = it },
 
             storage.observeNoise()
                 .subscribeOn(Schedulers.io())
@@ -173,7 +171,7 @@ class SystemProcessor {
             .map { channel ->
                 // Преобразование однополярных двоичных данных в биполярные
                 val code = channel.code.toBipolar()
-                val data = channel.data.toBipolar()
+                val data = channel.frameData.toBipolar()
                 CdmaDecimalCoder().encode(code, data)
             }
             .reduce { acc, data ->
@@ -223,7 +221,7 @@ class SystemProcessor {
             }
     }
 
-    fun updateDecodedChannels(channels: List<ChannelData>, groupData: DoubleArray) {
+    private fun updateDecodedChannels(channels: List<ChannelData>, groupData: DoubleArray) {
         val newChannels = mutableListOf<ChannelData>()
 
         for (c in channels) {
@@ -232,7 +230,7 @@ class SystemProcessor {
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
             c.errors = errors
-            c.data = frameData.toUnipolar()
+            c.frameData = frameData.toUnipolar()
             newChannels.add(c)
         }
 
@@ -246,7 +244,7 @@ class SystemProcessor {
             val frameData = CdmaDecimalCoder(decodingThreshold).decode(code.toBipolar(), it)
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
-            val channel = ChannelData(data = frameData.toUnipolar(), code = code)
+            val channel = ChannelData(frameData = frameData.toUnipolar(), code = code)
             channel.errors = errors
             storage.addDecodedChannel(channel)
         }
@@ -270,7 +268,7 @@ class SystemProcessor {
                         CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
                     val errors = mutableListOf<Int>()
                     frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
-                    val channel = ChannelData(data = frameData.toUnipolar(), code = codes[i])
+                    val channel = ChannelData(frameData = frameData.toUnipolar(), code = codes[i])
                     channel.errors = errors
                     channels.add(channel)
                 }
@@ -301,16 +299,16 @@ class SystemProcessor {
             return channelsErrorBits
         }
         if (received.isEmpty()) {
-            transmitted.forEach { channelsErrorBits[it.code] = it.data.indices.toList() }
+            transmitted.forEach { channelsErrorBits[it.code] = it.frameData.indices.toList() }
             return channelsErrorBits
         }
 
         for (transCh in transmitted) {
             val recCh = received.find { it.code.contentEquals(transCh.code) }
             if (recCh == null) {
-                channelsErrorBits[transCh.code] = transCh.data.indices.toList()
+                channelsErrorBits[transCh.code] = transCh.frameData.indices.toList()
             } else {
-                diff(transCh.data, recCh.data).let {
+                diff(transCh.frameData, recCh.frameData).let {
                     if (it.isNotEmpty()) channelsErrorBits[transCh.code] = it
                 }
             }
@@ -350,7 +348,7 @@ class SystemProcessor {
 
         disposable.add(snrs.toObservable()
             .skip(1) // Первое SNR вручную запускается в doOnSubscribe, поэтому пропускаем
-            .zipWith(storage.observeBer()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
+            .zipWith(storage.observeBerByNoise()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
             .doOnSubscribe {
                 berProcess.onNext(0)
                 if (!isNoiseWasEnabled) storage.enableNoise(false)

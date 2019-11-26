@@ -40,15 +40,19 @@ class SystemStorage : Repository {
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Noise>()
-    private val demodulatedSignalSource = BehaviorSubject.create<DigitalSignal>()
+    private val demodulatedSignalSource =
+        BehaviorSubject.create<DigitalSignal>()
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
-    private val decodedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
-    private val channelsErrorsSource = BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
+    private val decodedChannelsSource =
+        BehaviorSubject.create<List<ChannelData>>()
+    private val channelsErrorsSource =
+        BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
     private val etherSource: Observable<Signal>
     private val filterConfigSource: BehaviorSubject<FilterConfig>
-    private val demodulatorConfigSource = BehaviorSubject.create<DemodulatorConfig>()
-    private val berSource: Observable<Pair<Double, Double>>
+    private val demodulatorConfigSource =
+        BehaviorSubject.create<DemodulatorConfig>()
+    private val berByNoiseSource: Observable<Pair<Double, Double>>
 
     init {
         App.component.inject(this)
@@ -71,11 +75,11 @@ class SystemStorage : Repository {
             }
         }
 
-        berSource = Observable.zip(
+        berByNoiseSource = Observable.zip(
             decodedChannelsSource, noiseSource,
             BiFunction { channels: List<ChannelData>, noise: Noise ->
                 val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
-                val bitsReceived = channels.sumBy { it.data.size }.toDouble()
+                val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
                 Pair(noise.snr(), errorsCount / bitsReceived * 100)
             })
     }
@@ -240,7 +244,7 @@ class SystemStorage : Repository {
         return channelsErrorsSource
     }
 
-    override fun observeBer(): Observable<Pair<Double, Double>> {
-        return berSource
+    override fun observeBerByNoise(): Observable<Pair<Double, Double>> {
+        return berByNoiseSource
     }
 }

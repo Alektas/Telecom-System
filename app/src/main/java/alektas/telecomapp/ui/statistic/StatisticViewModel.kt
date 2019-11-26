@@ -30,7 +30,7 @@ class StatisticViewModel : ViewModel() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
                     override fun onNext(t: List<ChannelData>) {
-                        val bitCount = t.sumBy { it.data.size }
+                        val bitCount = t.sumBy { it.frameData.size }
                         channelCountData.value = t.size
                         bitTransmittedData.value = bitCount
                     }
@@ -45,7 +45,7 @@ class StatisticViewModel : ViewModel() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
                     override fun onNext(t: List<ChannelData>) {
-                        val bitCount = t.sumBy { it.data.size }
+                        val bitCount = t.sumBy { it.frameData.size }
                         val errorCount = t.sumBy { it.errors?.size ?: 0 }
                         bitReceivedData.value = bitCount
                         errorBitCountData.value = errorCount
