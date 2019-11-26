@@ -20,7 +20,8 @@ import javax.inject.Named
 class SystemStorage : Repository {
     @Inject
     lateinit var demodulatorConfig: DemodulatorConfig
-    var filterConfig: FilterConfig = FilterConfig()
+    @Inject
+    lateinit var filterConfig: FilterConfig
     /**
      * Шум источника.
      * Если шум отключен с помощью метода {@see #disableNoise}, то этот объект сохраняется,
@@ -44,35 +45,39 @@ class SystemStorage : Repository {
         BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
     private val channelsErrorsSource = BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
-    private val etherSource = Observable.combineLatest(
-        channelsSignalSource.startWith(BaseSignal()),
-        noiseSource.startWith(BaseNoise()),
-        BiFunction<Signal, Signal, Signal> { signal, noise -> signal + noise })
-        .debounce(500L, TimeUnit.MILLISECONDS)
-        .switchMap { signal: Signal -> Observable.create<Signal> { it.onNext(signal) } }
-        .apply {
-            subscribe { ether ->
-                demodulatorConfig.inputSignal = ether
-                demodulatorConfigSource.onNext(demodulatorConfig)
-            }
-        }
-    private val filterConfigSource = BehaviorSubject.create<FilterConfig>().apply {
-        subscribe { fConf ->
-            demodulatorConfig.filterConfig = fConf
-            demodulatorConfigSource.onNext(demodulatorConfig)
-        }
-    }
+    private val etherSource: Observable<Signal>
+    private val filterConfigSource: BehaviorSubject<FilterConfig>
     private val demodulatorConfigSource = BehaviorSubject.create<DemodulatorConfig>()
-    private val berSource = Observable.zip(
-        decodedChannelsSource, noiseSource,
-        BiFunction { channels: List<ChannelData>, noise: Noise ->
-            val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
-            val bitsReceived = channels.sumBy { it.data.size }.toDouble()
-            Pair(noise.snr(), errorsCount / bitsReceived * 100)
-        })
+    private val berSource: Observable<Pair<Double, Double>>
 
     init {
         App.component.inject(this)
+
+        etherSource = Observable.combineLatest(
+            channelsSignalSource.startWith(BaseSignal()),
+            noiseSource.startWith(BaseNoise()),
+            BiFunction<Signal, Signal, Signal> { signal, noise -> signal + noise })
+            .apply {
+                subscribe { ether ->
+                    demodulatorConfig.inputSignal = ether
+                    demodulatorConfigSource.onNext(demodulatorConfig)
+                }
+            }
+
+        filterConfigSource = BehaviorSubject.create<FilterConfig>().apply {
+            subscribe { fConf ->
+                demodulatorConfig.filterConfig = fConf
+                demodulatorConfigSource.onNext(demodulatorConfig)
+            }
+        }
+
+        berSource = Observable.zip(
+            decodedChannelsSource, noiseSource,
+            BiFunction { channels: List<ChannelData>, noise: Noise ->
+                val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
+                val bitsReceived = channels.sumBy { it.data.size }.toDouble()
+                Pair(noise.snr(), errorsCount / bitsReceived * 100)
+            })
     }
 
     override fun observeDemodulatorConfig(): Observable<DemodulatorConfig> {
