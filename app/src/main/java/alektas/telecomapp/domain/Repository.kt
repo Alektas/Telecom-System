@@ -20,7 +20,9 @@ interface Repository {
         codeLength: Int
     )
 
-    fun setChannels(channels: List<ChannelData>)
+    fun startCountingStatistics()
+    fun endCountingStatistics()
+    fun setChannelsData(channels: List<ChannelData>)
     fun removeChannel(channel: ChannelData)
     fun observeChannels(): Observable<List<ChannelData>>
 
@@ -52,11 +54,17 @@ interface Repository {
     fun addDecodedChannel(channel: ChannelData)
     fun removeDecodedChannel(channel: ChannelData)
     fun setDecodedChannels(channels: List<ChannelData>)
-    fun observeDecodedChannels(): Observable<List<ChannelData>>
+    fun observeDecodedChannels(withLast: Boolean = true): Observable<List<ChannelData>>
 
     fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
-    fun observeBer(): Observable<Pair<Double, Double>>
+    fun observeTransmittingChannelsCount(): Observable<Int>
+    fun observeTransmittedBitsCount(): Observable<Int>
+    fun observeReceivedBitsCount(): Observable<Int>
+    fun observeReceivedErrorsCount(): Observable<Int>
+    fun observeBer(): Observable<Double>
+
+    fun observeBerByNoise(): Observable<Pair<Double, Double>>
 
 }

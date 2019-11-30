@@ -32,7 +32,7 @@ class BerViewModel : ViewModel() {
         App.component.inject(this)
 
         disposable.addAll(
-            storage.observeBer()
+            storage.observeBerByNoise()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .skip(1)

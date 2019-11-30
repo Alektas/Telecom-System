@@ -20,8 +20,8 @@ import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import android.annotation.SuppressLint
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.rxkotlin.toObservable
 import io.reactivex.rxkotlin.zipWith
@@ -44,7 +44,9 @@ class SystemProcessor {
     var noiseSnr: Double? = null
     private var decodingThreshold = QpskContract.DEFAULT_SIGNAL_THRESHOLD
     private var disposable = CompositeDisposable()
+    private var transmitSubscription: Disposable? = null
     val berProcess = BehaviorSubject.create<Int>()
+    val transmitProcess = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
@@ -56,7 +58,6 @@ class SystemProcessor {
         disposable.addAll(
             storage.observeChannels()
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     transmittedChannels = it
                     generateChannelsSignal(it)
@@ -64,12 +65,10 @@ class SystemProcessor {
 
             storage.observeDemodulatorConfig()
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { demodulate(it) },
 
             storage.observeDemodulatedSignal()
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { s ->
                     codedGroupData = s.dataValues
                     decodedChannels?.let { updateDecodedChannels(it, s.dataValues) }
@@ -77,14 +76,10 @@ class SystemProcessor {
 
             storage.observeDecodedChannels()
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    decodedChannels = it
-                },
+                .subscribe { decodedChannels = it },
 
             storage.observeNoise()
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { noiseSnr = it.snr() },
 
             Observable.combineLatest(
@@ -94,6 +89,7 @@ class SystemProcessor {
                     diffChannels(origin, decoded)
                 })
                 .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.io())
                 .subscribe { storage.setSimulatedChannelsErrors(it) }
         )
     }
@@ -114,7 +110,8 @@ class SystemProcessor {
         dataSpeed: Double, // кБит/с
         codeLength: Int,
         frameLength: Int,
-        codesType: Int = CodeGenerator.WALSH
+        codesType: Int = CodeGenerator.WALSH,
+        frameCount: Int
     ) {
         Single.create<List<ChannelData>> {
             val channels = mutableListOf<ChannelData>()
@@ -127,26 +124,69 @@ class SystemProcessor {
             val bitTime = 1.0e-3 / dataSpeed // скорость в период бита (в секундах)
 
             for (i in 0 until count) {
-                val frameData = UserDataProvider.generateData(frameLength)
                 val channel = ChannelData(
-                    "${i + 1}",
-                    carrierFrequency * 1.0e6, // МГц -> Гц
-                    frameData,
-                    bitTime,
-                    codes[i],
-                    codesType
+                    name = "${i + 1}",
+                    carrierFrequency = carrierFrequency * 1.0e6, // МГц -> Гц
+                    bitTime = bitTime,
+                    code = codes[i],
+                    codeType = codesType
                 )
                 channels.add(channel)
             }
 
+            // Так как продолжительность данных изменилась, обновляем время симуляции
             val dataTime = frameLength * codes[0].size * bitTime
             Simulator.simulationTime = dataTime
-            noiseSnr?.let { n -> setNoise(n) }
+            noiseSnr?.let { n -> setNoise(n) } // генерируем новый шум с обновленной продолжительностью
 
             it.onSuccess(channels)
         }
             .subscribeOn(Schedulers.computation())
-            .subscribe { channels: List<ChannelData> -> storage.setChannels(channels) }
+            .observeOn(Schedulers.io())
+            .subscribe { channels: List<ChannelData> ->
+                startTransmitting(channels, frameLength, frameCount)
+            }
+    }
+
+    private fun startTransmitting(channels: List<ChannelData>, frameSize: Int, frameCount: Int) {
+        var framesTransmitted = -1 // -1 потому что инкрементируется лишний раз из-за startWith
+
+        transmitSubscription?.dispose()
+        transmitSubscription = Observable
+            .create<List<ChannelData>> {
+                // генерировать на 1 фрейм меньше, так как первый фрейм отправляется в startWith
+                for (i in 1 until frameCount) {
+                    val chls = channels.map { c ->
+                        c.copy().apply { frameData = UserDataProvider.generateData(frameSize) }
+                    }
+                    it.onNext(chls)
+                }
+                // Сгенерировать дополнительный пустой фрейм, означающий конец передачи
+                val chls = channels.map { c ->
+                    c.copy().apply { frameData = booleanArrayOf() }
+                }
+                it.onNext(chls)
+            }
+            .zipWith(storage.observeDecodedChannels(false)) { trans, rec -> trans } // дожидаться декодирования
+            .startWith(channels.map { c ->
+                c.apply { frameData = UserDataProvider.generateData(frameSize) }
+            })
+            .subscribeOn(Schedulers.io())
+            .doOnSubscribe { storage.startCountingStatistics() }
+            .doFinally { transmitProcess.onNext(100) }
+            .subscribe {
+                framesTransmitted++
+                val progress = (framesTransmitted / frameCount.toDouble() * 100).toInt()
+                transmitProcess.onNext(progress)
+
+                if (framesTransmitted >= frameCount) {
+                    storage.endCountingStatistics()
+                    transmitSubscription?.dispose()
+                    return@subscribe
+                }
+
+                storage.setChannelsData(it) // передача очередного фрейма всеми каналами
+            }
     }
 
     @SuppressLint("CheckResult")
@@ -165,6 +205,7 @@ class SystemProcessor {
             it.onSuccess(signal)
         }
             .subscribeOn(Schedulers.computation())
+            .observeOn(Schedulers.io())
             .subscribe { signal: Signal -> storage.setChannelsSignal(signal) }
     }
 
@@ -173,7 +214,7 @@ class SystemProcessor {
             .map { channel ->
                 // Преобразование однополярных двоичных данных в биполярные
                 val code = channel.code.toBipolar()
-                val data = channel.data.toBipolar()
+                val data = channel.frameData.toBipolar()
                 CdmaDecimalCoder().encode(code, data)
             }
             .reduce { acc, data ->
@@ -192,6 +233,7 @@ class SystemProcessor {
             it.onSuccess(noise)
         }
             .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
+            .observeOn(Schedulers.io())
             .subscribe { noise: Noise -> storage.setNoise(noise) }
     }
 
@@ -213,6 +255,7 @@ class SystemProcessor {
             it.onSuccess(demodSignal)
         }
             .subscribeOn(Schedulers.computation())
+            .observeOn(Schedulers.io())
             .subscribe { signal: DigitalSignal ->
                 storage.setDemodulatedSignal(signal)
                 storage.setChannelI(demodulator.sigI)
@@ -223,17 +266,14 @@ class SystemProcessor {
             }
     }
 
-    fun updateDecodedChannels(channels: List<ChannelData>, groupData: DoubleArray) {
-        val newChannels = mutableListOf<ChannelData>()
-
+    private fun updateDecodedChannels(channels: List<ChannelData>, groupData: DoubleArray) {
         for (c in channels) {
             val frameData =
                 CdmaDecimalCoder(decodingThreshold).decode(c.code.toBipolar(), groupData)
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
             c.errors = errors
-            c.data = frameData.toUnipolar()
-            newChannels.add(c)
+            c.frameData = frameData.toUnipolar()
         }
 
         storage.setDecodedChannels(channels)
@@ -246,7 +286,7 @@ class SystemProcessor {
             val frameData = CdmaDecimalCoder(decodingThreshold).decode(code.toBipolar(), it)
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
-            val channel = ChannelData(data = frameData.toUnipolar(), code = code)
+            val channel = ChannelData(frameData = frameData.toUnipolar(), code = code)
             channel.errors = errors
             storage.addDecodedChannel(channel)
         }
@@ -270,7 +310,7 @@ class SystemProcessor {
                         CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
                     val errors = mutableListOf<Int>()
                     frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
-                    val channel = ChannelData(data = frameData.toUnipolar(), code = codes[i])
+                    val channel = ChannelData(frameData = frameData.toUnipolar(), code = codes[i])
                     channel.errors = errors
                     channels.add(channel)
                 }
@@ -279,6 +319,7 @@ class SystemProcessor {
             }
         }
             .subscribeOn(Schedulers.computation())
+            .observeOn(Schedulers.io())
             .subscribe { channels: List<ChannelData> -> storage.setDecodedChannels(channels) }
     }
 
@@ -301,16 +342,16 @@ class SystemProcessor {
             return channelsErrorBits
         }
         if (received.isEmpty()) {
-            transmitted.forEach { channelsErrorBits[it.code] = it.data.indices.toList() }
+            transmitted.forEach { channelsErrorBits[it.code] = it.frameData.indices.toList() }
             return channelsErrorBits
         }
 
         for (transCh in transmitted) {
             val recCh = received.find { it.code.contentEquals(transCh.code) }
             if (recCh == null) {
-                channelsErrorBits[transCh.code] = transCh.data.indices.toList()
+                channelsErrorBits[transCh.code] = transCh.frameData.indices.toList()
             } else {
-                diff(transCh.data, recCh.data).let {
+                diff(transCh.frameData, recCh.frameData).let {
                     if (it.isNotEmpty()) channelsErrorBits[transCh.code] = it
                 }
             }
@@ -350,12 +391,14 @@ class SystemProcessor {
 
         disposable.add(snrs.toObservable()
             .skip(1) // Первое SNR вручную запускается в doOnSubscribe, поэтому пропускаем
-            .zipWith(storage.observeBer()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
+            .zipWith(storage.observeBerByNoise()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
             .doOnSubscribe {
                 berProcess.onNext(0)
                 if (!isNoiseWasEnabled) storage.enableNoise(false)
                 setNoise(fromSnr, true)
             }
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
             .subscribe({
                 val index = snrs.indexOf(it)
                 if (index > 0) {

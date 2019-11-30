@@ -11,9 +11,10 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
-import java.util.concurrent.TimeUnit
+import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -30,9 +31,12 @@ class SystemStorage : Repository {
      */
     private var noise: Noise? = null
     @JvmField
-    @field:[Inject Named("sourceSnrEnabled")] var isNoiseEnabled: Boolean = false
+    @field:[Inject Named("sourceSnrEnabled")]
+    var isNoiseEnabled: Boolean = false
+    private var isStatisticsCounted: Boolean = false
     private var channelList = mutableListOf<ChannelData>()
     private var decodedChannelList = mutableListOf<ChannelData>()
+    private val disposable = CompositeDisposable()
     private val channelsSource = BehaviorSubject.create<List<ChannelData>>()
     private val channelsSignalSource = BehaviorSubject.create<Signal>()
     private val channelISource = BehaviorSubject.create<Signal>()
@@ -40,18 +44,64 @@ class SystemStorage : Repository {
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Noise>()
-    private val demodulatedSignalSource = BehaviorSubject.create<DigitalSignal>()
+    private val demodulatedSignalSource =
+        BehaviorSubject.create<DigitalSignal>()
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
-    private val decodedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
-    private val channelsErrorsSource = BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
+    private val decodedChannelsSource =
+        BehaviorSubject.create<List<ChannelData>>()
+    private val channelsErrorsSource =
+        BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
     private val etherSource: Observable<Signal>
-    private val filterConfigSource: BehaviorSubject<FilterConfig>
-    private val demodulatorConfigSource = BehaviorSubject.create<DemodulatorConfig>()
-    private val berSource: Observable<Pair<Double, Double>>
+    private val filterConfigSource = BehaviorSubject.create<FilterConfig>()
+    private val demodulatorConfigSource =
+        BehaviorSubject.create<DemodulatorConfig>()
+    private val simulatedChannelsCountSource = BehaviorSubject.create<Int>()
+    private var transmittedBitsCount = 0
+    private val transmittedBitsCountSource = BehaviorSubject.create<Int>()
+    private var receivedBitsCount = 0
+    private val receivedBitsCountSource = BehaviorSubject.create<Int>()
+    private var receivedErrorsCount = 0
+    private val receivedErrorsCountSource = BehaviorSubject.create<Int>()
+    private var ber = 0.0
+    private val berSource = BehaviorSubject.create<Double>()
+    private val berByNoiseSource: Observable<Pair<Double, Double>>
 
     init {
         App.component.inject(this)
+
+        disposable.addAll(
+            channelsSource
+                .subscribe {
+                    if (isStatisticsCounted) {
+                        transmittedBitsCount += it.sumBy { c -> c.frameData.size }
+                        transmittedBitsCountSource.onNext(transmittedBitsCount)
+
+                        simulatedChannelsCountSource.onNext(it.size)
+                    }
+                },
+
+            decodedChannelsSource
+                .subscribe {
+                    if (isStatisticsCounted) {
+                        receivedBitsCount += it.sumBy { c -> c.frameData.size }
+                        receivedBitsCountSource.onNext(receivedBitsCount)
+
+                        receivedErrorsCount += it.sumBy { c -> c.errors?.size ?: 0 }
+                        receivedErrorsCountSource.onNext(receivedErrorsCount)
+
+                        ber = receivedErrorsCount / receivedBitsCount.toDouble() * 100
+                        berSource.onNext(ber)
+                    }
+                },
+
+            filterConfigSource
+                .subscribe { fConf ->
+                    demodulatorConfig.filterConfig = fConf
+                    demodulatorConfigSource.onNext(demodulatorConfig)
+                }
+        )
+
 
         etherSource = Observable.combineLatest(
             channelsSignalSource.startWith(BaseSignal()),
@@ -64,18 +114,11 @@ class SystemStorage : Repository {
                 }
             }
 
-        filterConfigSource = BehaviorSubject.create<FilterConfig>().apply {
-            subscribe { fConf ->
-                demodulatorConfig.filterConfig = fConf
-                demodulatorConfigSource.onNext(demodulatorConfig)
-            }
-        }
-
-        berSource = Observable.zip(
+        berByNoiseSource = Observable.zip(
             decodedChannelsSource, noiseSource,
             BiFunction { channels: List<ChannelData>, noise: Noise ->
                 val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
-                val bitsReceived = channels.sumBy { it.data.size }.toDouble()
+                val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
                 Pair(noise.snr(), errorsCount / bitsReceived * 100)
             })
     }
@@ -113,7 +156,19 @@ class SystemStorage : Repository {
         filterConfigSource.onNext(filterConfig)
     }
 
-    override fun setChannels(channels: List<ChannelData>) {
+    override fun startCountingStatistics() {
+        transmittedBitsCount = 0
+        receivedBitsCount = 0
+        receivedErrorsCount = 0
+        ber = 0.0
+        isStatisticsCounted = true
+    }
+
+    override fun endCountingStatistics() {
+        isStatisticsCounted = false
+    }
+
+    override fun setChannelsData(channels: List<ChannelData>) {
         channelList = channels.toMutableList()
         channelsSource.onNext(channelList)
     }
@@ -228,8 +283,14 @@ class SystemStorage : Repository {
         decodedChannelsSource.onNext(decodedChannelList)
     }
 
-    override fun observeDecodedChannels(): Observable<List<ChannelData>> {
-        return decodedChannelsSource
+    /**
+     * @param withLast true - источник при подписке выдает последний список декодированных каналов
+     */
+    override fun observeDecodedChannels(withLast: Boolean): Observable<List<ChannelData>> {
+        return if (withLast) decodedChannelsSource else {
+            PublishSubject.create<List<ChannelData>>()
+                .also { p -> decodedChannelsSource.subscribe { p.onNext(it) } }
+        }
     }
 
     override fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>) {
@@ -240,7 +301,27 @@ class SystemStorage : Repository {
         return channelsErrorsSource
     }
 
-    override fun observeBer(): Observable<Pair<Double, Double>> {
+    override fun observeTransmittingChannelsCount(): Observable<Int> {
+        return simulatedChannelsCountSource
+    }
+
+    override fun observeTransmittedBitsCount(): Observable<Int> {
+        return transmittedBitsCountSource
+    }
+
+    override fun observeReceivedBitsCount(): Observable<Int> {
+        return receivedBitsCountSource
+    }
+
+    override fun observeReceivedErrorsCount(): Observable<Int> {
+        return receivedErrorsCountSource
+    }
+
+    override fun observeBer(): Observable<Double> {
         return berSource
+    }
+
+    override fun observeBerByNoise(): Observable<Pair<Double, Double>> {
+        return berByNoiseSource
     }
 }

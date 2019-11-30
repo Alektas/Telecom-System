@@ -11,18 +11,29 @@ import javax.inject.Inject
 class MainViewModel : ViewModel() {
     @Inject
     lateinit var processor: SystemProcessor
-    val berProgress = MutableLiveData<Int>()
+    val processProgress = MutableLiveData<Int>()
     val disposable = CompositeDisposable()
 
     init {
         App.component.inject(this)
 
-        disposable.add(
+        disposable.addAll(
             processor.berProcess
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                berProgress.value = it
-            }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    processProgress.value = it
+                },
+
+            processor.transmitProcess
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    processProgress.value = it
+                }
         )
+    }
+
+    override fun onCleared() {
+        disposable.dispose()
+        super.onCleared()
     }
 }

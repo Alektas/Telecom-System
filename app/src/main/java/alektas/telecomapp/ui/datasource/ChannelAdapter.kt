@@ -59,7 +59,7 @@ class ChannelAdapter(private val controller: ChannelController) :
         private fun withHighlightedErrors(channel: ChannelData): Spannable {
             val spanBuilder = SpannableStringBuilder()
 
-            channel.data.forEachIndexed { i, b ->
+            channel.frameData.forEachIndexed { i, b ->
                 if (i != 0) spanBuilder.append(" ")
                 val isError = channel.errors?.contains(i) ?: false
                 if (isError) {

@@ -235,6 +235,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/source_frame_count_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/frame_count"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/source_frame_length_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/source_frame_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
                 android:imeOptions="actionDone"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -243,11 +262,11 @@
             android:id="@+id/generate_channels_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/generate_channels"
+            android:text="@string/start_transmitting"
             app:errorEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/source_frame_length_layout" />
+            app:layout_constraintTop_toBottomOf="@id/source_frame_count_layout" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/channel_list"

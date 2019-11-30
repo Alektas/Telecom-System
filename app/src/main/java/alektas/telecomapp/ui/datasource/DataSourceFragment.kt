@@ -97,7 +97,7 @@ class DataSourceFragment : Fragment(), ChannelController {
             false
         }
 
-        source_frame_length.setOnEditorActionListener { _, _, _ ->
+        source_frame_count.setOnEditorActionListener { _, _, _ ->
             generate_channels_btn.performClick()
             false
         }
@@ -176,6 +176,13 @@ class DataSourceFragment : Fragment(), ChannelController {
         ).let {
             source_frame_length.setText(it.toString())
         }
+
+        prefs.getInt(
+            getString(R.string.source_channels_frame_count_key),
+            CdmaContract.DEFAULT_FRAME_COUNT
+        ).let {
+            source_frame_count.setText(it.toString())
+        }
     }
 
     private fun observeSettings(viewModel: DataSourceViewModel, prefs: SharedPreferences) {
@@ -192,13 +199,11 @@ class DataSourceFragment : Fragment(), ChannelController {
         })
 
         viewModel.carrierFrequency.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_channels_freq_key), it.toFloat())
-                .apply()
+            prefs.edit().putFloat(getString(R.string.source_channels_freq_key), it.toFloat()).apply()
         })
 
         viewModel.dataSpeed.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_channels_dataspeed_key), it.toFloat())
-                .apply()
+            prefs.edit().putFloat(getString(R.string.source_channels_dataspeed_key), it.toFloat()).apply()
         })
 
         viewModel.channelCount.observe(viewLifecycleOwner, Observer {
@@ -211,6 +216,10 @@ class DataSourceFragment : Fragment(), ChannelController {
 
         viewModel.frameSize.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.source_channels_framesize_key), it).apply()
+        })
+
+        viewModel.frameCount.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_channels_frame_count_key), it).apply()
         })
     }
 
@@ -253,6 +262,14 @@ class DataSourceFragment : Fragment(), ChannelController {
                 source_channel_count_layout.error = null
             } else {
                 source_channel_count_layout.error = getString(R.string.error_positive_num)
+            }
+        }
+
+        source_frame_count.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseChannelCount(text.toString()) > 0) {
+                source_frame_count_layout.error = null
+            } else {
+                source_frame_count_layout.error = getString(R.string.error_positive_num)
             }
         }
 
@@ -305,24 +322,27 @@ class DataSourceFragment : Fragment(), ChannelController {
         val frameLength = source_frame_length.text.toString()
         val codeLength = source_code_length.text.toString()
         val codeType = source_channel_code_type.text.toString()
+        val frameCount = source_frame_count.text.toString()
 
         if (source_channel_count_layout.error != null ||
             source_carrier_frequency_layout.error != null ||
             source_data_speed_layout.error != null ||
             source_code_length_layout.error != null ||
             source_frame_length_layout.error != null ||
+            source_frame_count_layout.error != null ||
             channelCount.isEmpty() ||
             freq.isEmpty() ||
             dataSpeed.isEmpty() ||
             codeLength.isEmpty() ||
             frameLength.isEmpty() ||
-            codeType.isEmpty()
+            codeType.isEmpty() ||
+            frameCount.isEmpty()
         ) {
             Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
             return
         }
 
-        viewModel.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
+        viewModel.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
     }
 
     private fun changeNoisePower(snr: String) {
