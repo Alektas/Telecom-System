@@ -87,4 +87,7 @@
     <string name="decoder_code_length_key">decoder_code_length_key</string>
     <string name="decoder_threshold_key">decoder_threshold_key</string>
     <string name="error_ber_graph_invalid_data">Для построения графика необходимо декодировать каналы и ввести корректные значения в поля</string>
+    <string name="frame_count">Количество фреймов</string>
+    <string name="start_transmitting">Начать передачу</string>
+    <string name="source_channels_frame_count_key">source_channels_frame_count_key</string>
 </resources>

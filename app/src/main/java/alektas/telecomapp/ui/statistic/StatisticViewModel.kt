@@ -2,7 +2,6 @@ package alektas.telecomapp.ui.statistic
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.ChannelData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -25,14 +24,12 @@ class StatisticViewModel : ViewModel() {
         App.component.inject(this)
 
         disposable.addAll(
-            storage.observeChannels()
+            storage.observeTransmittedBitsCount()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
-                    override fun onNext(t: List<ChannelData>) {
-                        val bitCount = t.sumBy { it.frameData.size }
-                        channelCountData.value = t.size
-                        bitTransmittedData.value = bitCount
+                .subscribeWith(object : DisposableObserver<Int>() {
+                    override fun onNext(t: Int) {
+                        bitTransmittedData.value = t
                     }
 
                     override fun onComplete() {}
@@ -40,16 +37,51 @@ class StatisticViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            storage.observeDecodedChannels()
+            storage.observeReceivedBitsCount()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
-                    override fun onNext(t: List<ChannelData>) {
-                        val bitCount = t.sumBy { it.frameData.size }
-                        val errorCount = t.sumBy { it.errors?.size ?: 0 }
-                        bitReceivedData.value = bitCount
-                        errorBitCountData.value = errorCount
-                        berData.value = errorCount / bitCount.toDouble() * 100
+                .subscribeWith(object : DisposableObserver<Int>() {
+                    override fun onNext(t: Int) {
+                        bitReceivedData.value = t
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeReceivedErrorsCount()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Int>() {
+                    override fun onNext(t: Int) {
+                        errorBitCountData.value = t
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeBer()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Double>() {
+                    override fun onNext(t: Double) {
+                        berData.value = t
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeTransmittingChannelsCount()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Int>() {
+                    override fun onNext(t: Int) {
+                        channelCountData.value = t
                     }
 
                     override fun onComplete() {}

@@ -31,6 +31,7 @@ class DataSourceViewModel : ViewModel() {
     val codeType = MutableLiveData<Int>()
     val frameSize = MutableLiveData<Int>()
     val codeSize = MutableLiveData<Int>()
+    val frameCount = MutableLiveData<Int>()
 
     init {
         App.component.inject(this)
@@ -106,20 +107,23 @@ class DataSourceViewModel : ViewModel() {
         dataSpeedString: String,
         codeLengthString: String,
         frameLengthString: String,
-        codeTypeString: String
+        codeTypeString: String,
+        frameCountString: String
     ) {
         val channelCount = parseChannelCount(countString)
+        val frameCount = parseChannelCount(frameCountString)
         val freq = parseFrequency(carrierFrequencyString)
         val dataSpeed = parseDataspeed(dataSpeedString)
         val codeLength = parseFrameLength(codeLengthString)
         val frameLength = parseFrameLength(frameLengthString)
         val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
 
-        if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || codeLength <= 0 || frameLength <= 0 || codeType < 0) return
+        if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || codeLength <= 0 ||
+            frameLength <= 0 || codeType < 0 || frameCount <= 0) return
 
-        saveChannelsSettings(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
+        saveChannelsSettings(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
 
-        processor.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
+        processor.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
     }
 
     private fun saveChannelsSettings(
@@ -128,7 +132,8 @@ class DataSourceViewModel : ViewModel() {
         dataSpeed: Double,
         codeLength: Int,
         frameLength: Int,
-        codeType: Int
+        codeType: Int,
+        frameCount: Int
     ) {
         this.channelCount.value = channelCount
         carrierFrequency.value = freq
@@ -136,6 +141,7 @@ class DataSourceViewModel : ViewModel() {
         frameSize.value = frameLength
         codeSize.value = codeLength
         this.codeType.value = codeType
+        this.frameCount.value = frameCount
     }
 
     fun parseChannelCount(count: String): Int {

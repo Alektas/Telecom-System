@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
-        viewModel.berProgress.observe(this, Observer {
+        viewModel.processProgress.observe(this, Observer {
             progress_bar.progress = it
             progress_bar.visibility = if (it in 1..99) View.VISIBLE else View.INVISIBLE
         })
