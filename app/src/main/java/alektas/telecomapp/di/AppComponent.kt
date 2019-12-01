@@ -17,6 +17,7 @@ import alektas.telecomapp.ui.statistic.StatisticViewModel
 import android.app.Application
 import dagger.BindsInstance
 import alektas.telecomapp.ui.statistic.ber.BerViewModel
+import android.content.Context
 import dagger.Component
 import javax.inject.Singleton
 
@@ -38,6 +39,8 @@ interface AppComponent {
     fun inject(vm: BerViewModel)
     fun inject(vm: MainViewModel)
     fun inject(storage: SystemStorage)
+
+    fun context(): Context
 
     @Component.Builder
     interface Builder {

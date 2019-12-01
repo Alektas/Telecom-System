@@ -4,6 +4,7 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.ChannelData
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
+import alektas.telecomapp.domain.entities.converters.ValueConverter
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
@@ -13,8 +14,10 @@ import alektas.telecomapp.domain.entities.signals.noises.Noise
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -34,6 +37,11 @@ class SystemStorage : Repository {
     @field:[Inject Named("sourceSnrEnabled")]
     var isNoiseEnabled: Boolean = false
     private var isStatisticsCounted: Boolean = false
+    /**
+     * Сохряняется ли эфир в файл в виде битов с разрядностью {@code adcBitDepth}.
+     */
+    private var isSavedToFile = false
+    private var adcBitDepth = 8
     private var channelList = mutableListOf<ChannelData>()
     private var decodedChannelList = mutableListOf<ChannelData>()
     private val disposable = CompositeDisposable()
@@ -92,6 +100,17 @@ class SystemStorage : Repository {
 
                         ber = receivedErrorsCount / receivedBitsCount.toDouble() * 100
                         berSource.onNext(ber)
+                    }
+                },
+
+            channelsSignalSource
+                .observeOn(Schedulers.io())
+                .subscribe {
+                    if (isStatisticsCounted && isSavedToFile) {
+                        val context = App.component.context()
+                        val path = context.filesDir
+                        val bitString = ValueConverter(adcBitDepth).convertToBitString(it.getValues())
+                        File(path, "ether_data.txt").writeText(bitString)
                     }
                 },
 
