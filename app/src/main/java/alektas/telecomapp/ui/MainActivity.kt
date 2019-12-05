@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.processProgress.observe(this, Observer {
             progress_bar.progress = it
-            progress_bar.visibility = if (it in 1..99) View.VISIBLE else View.INVISIBLE
+            progress_bar.visibility = if (it in 0..99) View.VISIBLE else View.INVISIBLE
         })
     }
 
