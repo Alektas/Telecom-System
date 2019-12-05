@@ -58,6 +58,8 @@ class SystemStorage : Repository {
         BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource =
         BehaviorSubject.create<List<ChannelData>>()
+    private val decodedChannelsLiveSource =
+        PublishSubject.create<List<ChannelData>>()
     private val channelsErrorsSource =
         BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
     private val etherSource: Observable<Signal>
@@ -109,7 +111,8 @@ class SystemStorage : Repository {
                     if (isStatisticsCounted && isSavedToFile) {
                         val context = App.component.context()
                         val path = context.filesDir
-                        val bitString = ValueConverter(adcBitDepth).convertToBitString(it.getValues())
+                        val bitString =
+                            ValueConverter(adcBitDepth).convertToBitString(it.getValues())
                         File(path, "ether_data.txt").writeText(bitString)
                     }
                 },
@@ -291,25 +294,27 @@ class SystemStorage : Repository {
     override fun addDecodedChannel(channel: ChannelData) {
         decodedChannelList.add(channel)
         decodedChannelsSource.onNext(decodedChannelList)
+        decodedChannelsLiveSource.onNext(decodedChannelList)
     }
 
     override fun removeDecodedChannel(channel: ChannelData) {
-        if (decodedChannelList.remove(channel)) decodedChannelsSource.onNext(decodedChannelList)
+        if (decodedChannelList.remove(channel)) {
+            decodedChannelsSource.onNext(decodedChannelList)
+            decodedChannelsLiveSource.onNext(decodedChannelList)
+        }
     }
 
     override fun setDecodedChannels(channels: List<ChannelData>) {
         decodedChannelList = channels.toMutableList()
         decodedChannelsSource.onNext(decodedChannelList)
+        decodedChannelsLiveSource.onNext(decodedChannelList)
     }
 
     /**
      * @param withLast true - источник при подписке выдает последний список декодированных каналов
      */
     override fun observeDecodedChannels(withLast: Boolean): Observable<List<ChannelData>> {
-        return if (withLast) decodedChannelsSource else {
-            PublishSubject.create<List<ChannelData>>()
-                .also { p -> decodedChannelsSource.subscribe { p.onNext(it) } }
-        }
+        return if (withLast) decodedChannelsSource else decodedChannelsLiveSource
     }
 
     override fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>) {

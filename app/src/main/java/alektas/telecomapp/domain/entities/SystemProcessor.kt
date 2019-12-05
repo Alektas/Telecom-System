@@ -149,7 +149,7 @@ class SystemProcessor {
     }
 
     private fun startTransmitting(channels: List<ChannelData>, frameSize: Int, frameCount: Int) {
-        var framesTransmitted = -1 // -1 потому что инкрементируется лишний раз из-за startWith
+        var framesTransmitted = 0
 
         transmitSubscription?.dispose()
         transmitSubscription = Observable
@@ -161,21 +161,27 @@ class SystemProcessor {
                     }
                     it.onNext(chls)
                 }
-                // Сгенерировать дополнительный пустой фрейм, означающий конец передачи
+
+                // Сгенерировать дополнительный пустой фрейм, означающий конец передачи.
+                // Нужен для того, чтобы дождаться декодирования последнего фрейма для отображения
+                // индикации прогресса передачи.
                 val chls = channels.map { c ->
                     c.copy().apply { frameData = booleanArrayOf() }
                 }
                 it.onNext(chls)
+                it.onComplete()
             }
-            .zipWith(storage.observeDecodedChannels(false)) { trans, rec -> trans } // дожидаться декодирования
+            .zipWith(storage.observeDecodedChannels(false)) { next, prev ->
+                framesTransmitted++
+                next
+            } // дожидаться декодирования
             .startWith(channels.map { c ->
                 c.apply { frameData = UserDataProvider.generateData(frameSize) }
-            })
+            }) // первый фрейм запускает цикл передачи (нужно для срабатывания zipWith)
             .subscribeOn(Schedulers.io())
             .doOnSubscribe { storage.startCountingStatistics() }
             .doFinally { transmitProcess.onNext(100) }
             .subscribe {
-                framesTransmitted++
                 val progress = (framesTransmitted / frameCount.toDouble() * 100).toInt()
                 transmitProcess.onNext(progress)
 
