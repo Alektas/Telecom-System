@@ -11,7 +11,7 @@
         android:paddingTop="@dimen/padding_top_page"
         android:paddingEnd="@dimen/padding_horiz_page"
         android:paddingBottom="@dimen/padding_top_page"
-        tools:context=".ui.datasource.DataSourceFragment">
+        tools:context=".ui.decoder.DecoderFragment">
 
         <TextView
             android:id="@+id/input_label"

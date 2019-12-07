@@ -49,6 +49,11 @@ open class BaseSignal() : Signal {
         return data[time] ?: 0.toDouble()
     }
 
+    override fun getPart(from: Double, to: Double): Signal {
+        val d = data.filterKeys { it >= from && it < to }
+        return BaseSignal(d)
+    }
+
     override fun isEmpty(): Boolean {
         return data.isEmpty()
     }

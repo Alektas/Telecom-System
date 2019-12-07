@@ -9,10 +9,8 @@ import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
-import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.BiFunction
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
@@ -87,7 +85,7 @@ class DecoderViewModel : ViewModel() {
         this.codeLength.value = codeLength
         this.threshold.value = threshold
 
-        processor.setDecodedChannels(channelCount, codeLength, codeType, threshold)
+        processor.createDecodedChannels(channelCount, codeLength, codeType, threshold)
     }
 
     fun parseChannelCount(count: String): Int {

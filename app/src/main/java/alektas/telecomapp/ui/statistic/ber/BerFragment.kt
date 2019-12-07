@@ -16,7 +16,6 @@ import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.ber_fragment.*
-import kotlinx.android.synthetic.main.data_source_fragment.*
 
 class BerFragment : Fragment() {
     private lateinit var viewModel: BerViewModel

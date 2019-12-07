@@ -1,6 +1,7 @@
 package alektas.telecomapp.ui
 
 import alektas.telecomapp.App
+import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.SystemProcessor
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,6 +10,8 @@ import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
 class MainViewModel : ViewModel() {
+    @Inject
+    lateinit var storage: Repository
     @Inject
     lateinit var processor: SystemProcessor
     val processProgress = MutableLiveData<Int>()
@@ -24,12 +27,12 @@ class MainViewModel : ViewModel() {
                     processProgress.value = it
                 },
 
-            processor.transmitProcess
+            storage.observeTransmitProcess()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     processProgress.value = it
                 }
-        )
+            )
     }
 
     override fun onCleared() {

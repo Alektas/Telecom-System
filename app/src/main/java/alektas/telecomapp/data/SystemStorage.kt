@@ -11,17 +11,21 @@ import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.utils.FileWorker
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Named
 
+private const val USB_ETHER_DATA_FILE_NAME = "ether_data.txt"
+
 class SystemStorage : Repository {
+    @Inject
+    lateinit var fileWorker: FileWorker
     @Inject
     lateinit var demodulatorConfig: DemodulatorConfig
     @Inject
@@ -45,8 +49,8 @@ class SystemStorage : Repository {
     private var channelList = mutableListOf<ChannelData>()
     private var decodedChannelList = mutableListOf<ChannelData>()
     private val disposable = CompositeDisposable()
-    private val channelsSource = BehaviorSubject.create<List<ChannelData>>()
-    private val channelsSignalSource = BehaviorSubject.create<Signal>()
+    private val simulatedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
+    private val channelsFrameSignalSource = BehaviorSubject.create<Signal>()
     private val channelISource = BehaviorSubject.create<Signal>()
     private val channelQSource = BehaviorSubject.create<Signal>()
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
@@ -68,25 +72,53 @@ class SystemStorage : Repository {
         BehaviorSubject.create<DemodulatorConfig>()
     private val simulatedChannelsCountSource = BehaviorSubject.create<Int>()
     private var transmittedBitsCount = 0
+        set(value) {
+            field = value
+            transmittedBitsCountSource.onNext(value)
+        }
     private val transmittedBitsCountSource = BehaviorSubject.create<Int>()
+    private var expectedFramesCount = 0
+        set(value) {
+            field = value
+            expectedFramesCountSource.onNext(value)
+        }
+    private val expectedFramesCountSource = BehaviorSubject.create<Int>()
+    private var receivedFramesCount = 0
+        set(value) {
+            field = value
+            receivedFramesCountSource.onNext(value)
+        }
+    private val receivedFramesCountSource = BehaviorSubject.create<Int>()
     private var receivedBitsCount = 0
+        set(value) {
+            field = value
+            receivedBitsCountSource.onNext(value)
+        }
     private val receivedBitsCountSource = BehaviorSubject.create<Int>()
     private var receivedErrorsCount = 0
+        set(value) {
+            field = value
+            receivedErrorsCountSource.onNext(value)
+        }
     private val receivedErrorsCountSource = BehaviorSubject.create<Int>()
     private var ber = 0.0
+        set(value) {
+            field = value
+            berSource.onNext(value)
+        }
     private val berSource = BehaviorSubject.create<Double>()
     private val berByNoiseSource: Observable<Pair<Double, Double>>
+    private val berProcess = BehaviorSubject.create<Int>()
+    private val transmitProcess = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
 
         disposable.addAll(
-            channelsSource
+            simulatedChannelsSource
                 .subscribe {
                     if (isStatisticsCounted) {
                         transmittedBitsCount += it.sumBy { c -> c.frameData.size }
-                        transmittedBitsCountSource.onNext(transmittedBitsCount)
-
                         simulatedChannelsCountSource.onNext(it.size)
                     }
                 },
@@ -94,26 +126,34 @@ class SystemStorage : Repository {
             decodedChannelsSource
                 .subscribe {
                     if (isStatisticsCounted) {
+                        if (receivedFramesCount >= expectedFramesCount) {
+                            endCountingStatistics()
+                            return@subscribe
+                        }
+
                         receivedBitsCount += it.sumBy { c -> c.frameData.size }
-                        receivedBitsCountSource.onNext(receivedBitsCount)
-
                         receivedErrorsCount += it.sumBy { c -> c.errors?.size ?: 0 }
-                        receivedErrorsCountSource.onNext(receivedErrorsCount)
-
                         ber = receivedErrorsCount / receivedBitsCount.toDouble() * 100
-                        berSource.onNext(ber)
+
+                        receivedFramesCount++
+                        val progress =
+                            (receivedFramesCount / expectedFramesCount.toDouble() * 100).toInt()
+                        transmitProcess.onNext(progress)
                     }
                 },
 
-            channelsSignalSource
+            channelsFrameSignalSource
                 .observeOn(Schedulers.io())
+                .doOnSubscribe {
+                    if (isSavedToFile) {
+                        fileWorker.cleanFile(USB_ETHER_DATA_FILE_NAME)
+                    }
+                }
                 .subscribe {
                     if (isStatisticsCounted && isSavedToFile) {
-                        val context = App.component.context()
-                        val path = context.filesDir
                         val bitString =
                             ValueConverter(adcBitDepth).convertToBitString(it.getValues())
-                        File(path, "ether_data.txt").writeText(bitString)
+                        fileWorker.appendToFile(USB_ETHER_DATA_FILE_NAME, bitString)
                     }
                 },
 
@@ -124,9 +164,8 @@ class SystemStorage : Repository {
                 }
         )
 
-
         etherSource = Observable.combineLatest(
-            channelsSignalSource.startWith(BaseSignal()),
+            channelsFrameSignalSource.startWith(BaseSignal()),
             noiseSource.startWith(BaseNoise()),
             BiFunction<Signal, Signal, Signal> { signal, noise -> signal + noise })
             .apply {
@@ -143,6 +182,14 @@ class SystemStorage : Repository {
                 val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
                 Pair(noise.snr(), errorsCount / bitsReceived * 100)
             })
+    }
+
+    override fun receiveDataFromUsb(): String {
+        return fileWorker.readFile(USB_ETHER_DATA_FILE_NAME)
+    }
+
+    override fun getCurrentDemodulatorConfig(): DemodulatorConfig {
+        return demodulatorConfig
     }
 
     override fun observeDemodulatorConfig(): Observable<DemodulatorConfig> {
@@ -179,28 +226,38 @@ class SystemStorage : Repository {
     }
 
     override fun startCountingStatistics() {
+        clearStatistics()
+        isStatisticsCounted = true
+    }
+
+    private fun clearStatistics() {
+        expectedFramesCount = 0
         transmittedBitsCount = 0
+        receivedFramesCount = 0
         receivedBitsCount = 0
         receivedErrorsCount = 0
         ber = 0.0
-        isStatisticsCounted = true
     }
 
     override fun endCountingStatistics() {
         isStatisticsCounted = false
     }
 
+    override fun setExpectedFrameCount(count: Int) {
+        expectedFramesCount = count
+    }
+
     override fun setChannelsData(channels: List<ChannelData>) {
         channelList = channels.toMutableList()
-        channelsSource.onNext(channelList)
+        simulatedChannelsSource.onNext(channelList)
     }
 
     override fun removeChannel(channel: ChannelData) {
-        if (channelList.remove(channel)) channelsSource.onNext(channelList)
+        if (channelList.remove(channel)) simulatedChannelsSource.onNext(channelList)
     }
 
-    override fun observeChannels(): Observable<List<ChannelData>> {
-        return channelsSource
+    override fun observeSimulatedChannels(): Observable<List<ChannelData>> {
+        return simulatedChannelsSource
     }
 
     override fun setNoise(signal: Noise) {
@@ -230,12 +287,16 @@ class SystemStorage : Repository {
         return noiseSource
     }
 
-    override fun setChannelsSignal(signal: Signal) {
-        channelsSignalSource.onNext(signal)
+    override fun setChannelsFrameSignal(signal: Signal) {
+        channelsFrameSignalSource.onNext(signal)
     }
 
     override fun observeChannelsSignal(): Observable<Signal> {
-        return channelsSignalSource
+        return channelsFrameSignalSource
+    }
+
+    override fun setEther(ether: Signal) {
+        channelsFrameSignalSource.onNext(ether)
     }
 
     override fun observeEther(): Observable<Signal> {
@@ -325,6 +386,10 @@ class SystemStorage : Repository {
         return channelsErrorsSource
     }
 
+    override fun observeTransmitProcess(): Observable<Int> {
+        return transmitProcess
+    }
+
     override fun observeTransmittingChannelsCount(): Observable<Int> {
         return simulatedChannelsCountSource
     }
@@ -343,6 +408,10 @@ class SystemStorage : Repository {
 
     override fun observeBer(): Observable<Double> {
         return berSource
+    }
+
+    override fun observeBerProcess(): Observable<Int> {
+        return berProcess
     }
 
     override fun observeBerByNoise(): Observable<Pair<Double, Double>> {
