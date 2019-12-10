@@ -3,7 +3,7 @@ package alektas.telecomapp.ui
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.datasource.DataSourceFragment
-import alektas.telecomapp.ui.datasource.external.UsbDataSourceFragment
+import alektas.telecomapp.ui.datasource.external.FileDataSourceFragment
 import alektas.telecomapp.ui.datasource.simulation.SimulationDataSourceFragment
 import alektas.telecomapp.ui.decoder.DecoderFragment
 import alektas.telecomapp.ui.demodulator.QpskDemodulatorFragment
@@ -14,20 +14,30 @@ import alektas.telecomapp.ui.demodulator.generator.DemodulatorGeneratorFragment
 import alektas.telecomapp.ui.demodulator.input.DemodulatorInputFragment
 import alektas.telecomapp.ui.demodulator.output.DemodulatorOutputFragment
 import alektas.telecomapp.ui.demodulator.processing.DemodulatorProcessFragment
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import alektas.telecomapp.ui.main.MainFragment
 import alektas.telecomapp.ui.statistic.StatisticFragment
 import alektas.telecomapp.ui.statistic.ber.BerFragment
+import alektas.telecomapp.utils.FileWorker
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
+import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.main_activity.*
 
+private const val OPEN_DOCUMENT_REQUEST_CODE = 1
+private const val EXTERNAL_FILE_URI_KEY = "EXTERNAL_FILE_URI_KEY"
+
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
+    private var externalData: String? = null
+    private var externalFileUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,13 +58,37 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable(EXTERNAL_FILE_URI_KEY, externalFileUri)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        externalFileUri = savedInstanceState.getParcelable(EXTERNAL_FILE_URI_KEY)
+        externalData = externalFileUri?.let { FileWorker(this).readFile(it) }
+    }
+
     fun onNavigateBtnClick(view: View) {
+        if (view.id == R.id.to_file_explorer_btn) {
+            selectFileForProcessing()
+            return
+        }
+
+        if (view.id == R.id.to_file_data_source_btn) {
+            if (externalData.isNullOrBlank()) {
+                selectFileForProcessing()
+            } else {
+                processData(externalData!!)
+            }
+            return
+        }
+
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.container,
                 when (view.id) {
                     R.id.to_data_source_btn -> DataSourceFragment.newInstance()
-                    R.id.to_usb_data_source_btn -> UsbDataSourceFragment.newInstance()
                     R.id.to_simulation_data_source_btn -> SimulationDataSourceFragment.newInstance()
                     R.id.to_demodulation_btn -> QpskDemodulatorFragment.newInstance()
                     R.id.to_demodulator_input_btn -> DemodulatorInputFragment.newInstance()
@@ -70,6 +104,42 @@ class MainActivity : AppCompatActivity() {
                     else -> MainFragment.newInstance()
                 }
             )
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun selectFileForProcessing() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            type = "text/plain"
+            addCategory(Intent.CATEGORY_OPENABLE)
+//        putExtra("android.content.extra.SHOW_ADVANCED", true)
+//        putExtra("android.content.extra.FANCY", true)
+//        putExtra("android.content.extra.SHOW_FILESIZE", true)
+        }
+        startActivityForResult(intent, OPEN_DOCUMENT_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == OPEN_DOCUMENT_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                data?.data?.let {
+                    externalFileUri = it
+                    val s = FileWorker(this).readFile(it)
+                    externalData = s
+                    processData(s)
+                }
+            } else {
+                Toast.makeText(this, "Для обработки выберите подходящий файл", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    }
+
+    private fun processData(data: String) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.container, FileDataSourceFragment.newInstance(data))
             .addToBackStack(null)
             .commit()
     }

@@ -13,7 +13,7 @@ import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
-class UsbDataSourceViewModel : ViewModel() {
+class FileDataSourceViewModel : ViewModel() {
     @Inject
     lateinit var storage: Repository
     @Inject
@@ -51,18 +51,19 @@ class UsbDataSourceViewModel : ViewModel() {
         processor.setAdcFrequency(freq)
     }
 
-    fun receiveChannels(
+    fun processData(
+        dataString: String,
         adcResolutionString: String,
         adcFrequencyString: String
     ) {
         val freq = parseFrequency(adcFrequencyString)
         val res = parseResolution(adcResolutionString)
 
-        if (freq <= 0 || res <= 0) return
+        if (dataString.isEmpty() || freq <= 0 || res <= 0) return
 
         adcFrequency.value = freq
         adcResolution.value = res
-        processor.processDataFromUsb(res, freq)
+        processor.processData(dataString, res, freq)
     }
 
     fun parseFrequency(freqString: String): Double {

@@ -3,7 +3,7 @@ package alektas.telecomapp.di
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.ui.MainViewModel
-import alektas.telecomapp.ui.datasource.external.UsbDataSourceViewModel
+import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.ui.datasource.simulation.SimulationDataSourceViewModel
 import alektas.telecomapp.ui.decoder.DecoderViewModel
 import alektas.telecomapp.ui.demodulator.QpskDemodulatorViewModel
@@ -27,7 +27,7 @@ import javax.inject.Singleton
 interface AppComponent {
     fun inject(proc: SystemProcessor)
     fun inject(vm: SimulationDataSourceViewModel)
-    fun inject(vm: UsbDataSourceViewModel)
+    fun inject(vm: FileDataSourceViewModel)
     fun inject(vm: QpskDemodulatorViewModel)
     fun inject(vm: DemodulatorInputViewModel)
     fun inject(vm: DemodulatorGeneratorViewModel)

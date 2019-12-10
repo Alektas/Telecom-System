@@ -21,7 +21,7 @@ import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 import javax.inject.Named
 
-private const val USB_ETHER_DATA_FILE_NAME = "ether_data.txt"
+private const val INTERNAL_ETHER_DATA_FILE_NAME = "ether_data.txt"
 
 class SystemStorage : Repository {
     @Inject
@@ -146,14 +146,14 @@ class SystemStorage : Repository {
                 .observeOn(Schedulers.io())
                 .doOnSubscribe {
                     if (isSavedToFile) {
-                        fileWorker.cleanFile(USB_ETHER_DATA_FILE_NAME)
+                        fileWorker.cleanFile(INTERNAL_ETHER_DATA_FILE_NAME)
                     }
                 }
                 .subscribe {
                     if (isStatisticsCounted && isSavedToFile) {
                         val bitString =
                             ValueConverter(adcBitDepth).convertToBitString(it.getValues())
-                        fileWorker.appendToFile(USB_ETHER_DATA_FILE_NAME, bitString)
+                        fileWorker.appendToFile(INTERNAL_ETHER_DATA_FILE_NAME, bitString)
                     }
                 },
 
@@ -182,10 +182,6 @@ class SystemStorage : Repository {
                 val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
                 Pair(noise.snr(), errorsCount / bitsReceived * 100)
             })
-    }
-
-    override fun receiveDataFromUsb(): String {
-        return fileWorker.readFile(USB_ETHER_DATA_FILE_NAME)
     }
 
     override fun getCurrentDemodulatorConfig(): DemodulatorConfig {

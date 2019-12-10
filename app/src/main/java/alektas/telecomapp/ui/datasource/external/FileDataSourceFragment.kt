@@ -19,24 +19,24 @@ import androidx.lifecycle.Observer
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.usb_data_source_fragment.*
+import kotlinx.android.synthetic.main.file_data_source_fragment.*
 
 private const val DEFAULT_ADC_RESOLUTION = 8
 
-class UsbDataSourceFragment : Fragment() {
-    private lateinit var viewModel: UsbDataSourceViewModel
+class FileDataSourceFragment(private val data: String) : Fragment() {
+    private lateinit var viewModel: FileDataSourceViewModel
     private lateinit var prefs: SharedPreferences
     private val graphPoints = LineGraphSeries<DataPoint>()
 
     companion object {
-        fun newInstance() = UsbDataSourceFragment()
+        fun newInstance(data: String) = FileDataSourceFragment(data)
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.usb_data_source_fragment, container, false)
+        return inflater.inflate(R.layout.file_data_source_fragment, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -53,7 +53,7 @@ class UsbDataSourceFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(UsbDataSourceViewModel::class.java)
+        viewModel = ViewModelProviders.of(this).get(FileDataSourceViewModel::class.java)
         prefs = requireContext().getSharedPreferences(
             getString(R.string.settings_source_key),
             MODE_PRIVATE
@@ -94,7 +94,7 @@ class UsbDataSourceFragment : Fragment() {
         }
     }
 
-    private fun observeSettings(viewModel: UsbDataSourceViewModel, prefs: SharedPreferences) {
+    private fun observeSettings(viewModel: FileDataSourceViewModel, prefs: SharedPreferences) {
         viewModel.adcFrequency.observe(viewLifecycleOwner, Observer {
             prefs.edit().putFloat(getString(R.string.usb_source_adc_freq_key), it.toFloat()).apply()
         })
@@ -133,7 +133,7 @@ class UsbDataSourceFragment : Fragment() {
             return
         }
 
-        viewModel.receiveChannels(adcResolution, adcFrequency)
+        viewModel.processData(data, adcResolution, adcFrequency)
     }
 
 }

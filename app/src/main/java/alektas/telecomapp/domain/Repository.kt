@@ -9,8 +9,6 @@ import alektas.telecomapp.domain.entities.signals.noises.Noise
 import io.reactivex.Observable
 
 interface Repository {
-    fun receiveDataFromUsb(): String
-
     fun getCurrentDemodulatorConfig(): DemodulatorConfig
     fun observeDemodulatorConfig(): Observable<DemodulatorConfig>
     fun getDemodulatorFilterConfig(): FilterConfig

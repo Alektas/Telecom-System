@@ -103,16 +103,16 @@ class SystemProcessor {
         storage.setDemodulatorFilterConfig(filterConfig)
     }
 
-    fun processDataFromUsb(
+    fun processData(
+        dataString: String,
         adcResolution: Int,
         adcSamplingRate: Double // МГц
     ) {
         transmitSubscription?.dispose()
         transmitSubscription = Single
             .create<DoubleArray> {
-                val rowDataString = storage.receiveDataFromUsb()
                 val data =
-                    ValueConverter(adcResolution).convertToBipolarNormalizedValues(rowDataString)
+                    ValueConverter(adcResolution).convertToBipolarNormalizedValues(dataString)
                 it.onSuccess(data)
             }
             .flatMapObservable { generateFrames(adcSamplingRate * 1.0e6, it) }
