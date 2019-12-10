@@ -3,6 +3,7 @@ package alektas.telecomapp.di
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.utils.FileWorker
 import android.app.Application
 import android.content.Context
 import dagger.Module
@@ -20,6 +21,12 @@ class AppModule {
     @Singleton
     fun providesSystemStorage(): Repository {
         return SystemStorage()
+    }
+
+    @Provides
+    @Singleton
+    fun providesUsbDriver(context: Context): FileWorker {
+        return FileWorker(context)
     }
 
     @Provides

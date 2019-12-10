@@ -12,7 +12,11 @@ open class BaseSignal() : Signal {
     constructor(times: DoubleArray, values: DoubleArray) : this() {
         val d = TreeMap<Double, Double>()
         for (i in times.indices) {
-            d[times[i]] = values[i]
+            d[times[i]] = try {
+                values[i]
+            } catch (e: IndexOutOfBoundsException) {
+                0.0
+            }
         }
         this.data = d
     }
@@ -43,6 +47,11 @@ open class BaseSignal() : Signal {
 
     override fun getValueAt(time: Double): Double {
         return data[time] ?: 0.toDouble()
+    }
+
+    override fun getPart(from: Double, to: Double): Signal {
+        val d = data.filterKeys { it >= from && it < to }
+        return BaseSignal(d)
     }
 
     override fun isEmpty(): Boolean {

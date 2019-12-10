@@ -53,6 +53,14 @@ interface Signal {
     fun getValueAt(time: Double): Double
 
     /**
+     * Возвращает отрезок сигнала.
+     *
+     * @param from от какого момента времени брать сигнал (включительно), в секундах
+     * @param to до какого момента времени брать сигнал (не включительно), в секундах
+     */
+    fun getPart(from: Double, to: Double): Signal
+
+    /**
      * Проверяет, есть ли сигнал
      */
     fun isEmpty(): Boolean

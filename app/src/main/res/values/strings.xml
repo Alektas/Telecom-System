@@ -90,4 +90,17 @@
     <string name="frame_count">Количество фреймов</string>
     <string name="start_transmitting">Начать передачу</string>
     <string name="source_channels_frame_count_key">source_channels_frame_count_key</string>
+    <string name="resolution">Разрядность</string>
+    <string name="start_processing">Начать обработку</string>
+    <string name="simulation_data_source">Симуляция</string>
+    <string name="usb_data_source">USB</string>
+    <string name="usb_source_adc_freq_key">usb_source_adc_freq_key</string>
+    <string name="usb_source_adc_resolution_key">usb_source_adc_resolution_key</string>
+    <string name="usb_source_channels_codetype_key">usb_source_channels_codetype_key</string>
+    <string name="usb_source_channels_freq_key">usb_source_channels_freq_key</string>
+    <string name="usb_source_channels_dataspeed_key">usb_source_channels_dataspeed_key</string>
+    <string name="usb_source_channels_count_key">usb_source_channels_count_key</string>
+    <string name="usb_source_channels_codesize_key">usb_source_channels_codesize_key</string>
+    <string name="usb_source_channels_framesize_key">usb_source_channels_framesize_key</string>
+    <string name="file_data_source">Файл</string>
 </resources>

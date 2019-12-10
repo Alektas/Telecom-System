@@ -12,6 +12,7 @@ class Simulator {
         const val DEFAULT_SAMPLING_RATE = 1.0e7
         var samplingRate = DEFAULT_SAMPLING_RATE
         set(value) {
+            if (field == value) return
             field = value
             sampleTime = 1 / value
             sampleCount = ceil(simulationTime * value).toInt()
@@ -70,6 +71,21 @@ class Simulator {
                 data[time] = timeFunction(time)
             }
             return data
+        }
+
+        /**
+         * Вычисляет {@code counts} временных отсчетов в соответствии с {@code samplingRate}.
+         * Отсчеты начинаются с нуля.
+         *
+         * @param samplingRate частота дискретизации - с такой частотой берутся отсчеты на временной шкале
+         * @param counts количество отсчетов
+         * @return временные отсчеты в секундах
+         */
+        fun getTimeline(samplingRate: Double, counts: Int): DoubleArray {
+            val period = 1 / samplingRate
+            return DoubleArray(counts) {
+                it * period
+            }
         }
     }
 }

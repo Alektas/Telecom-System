@@ -30,13 +30,13 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
     var constellation: List<Pair<Double, Double>> = listOf()
 
     /**
-     * Демодуляция QPSK сигнала.
+     * Демодуляция одного фрейма QPSK сигнала.
      * В процессе демодуляции в объекте демодулятора сохраняются промежуточные сигналы.
      *
-     * @param signal ФМн-4 (QPSK) сигнал
-     * @return двоичный биполярный сигнал из -1 и 1
+     * @param signal ФМн-4 (QPSK) сигнал фрейма
+     * @return цифровой сигнал
      */
-    override fun demodulate(signal: Signal): DigitalSignal {
+    override fun demodulateFrame(signal: Signal): DigitalSignal {
         if (signal.isEmpty()) return DigitalSignal(doubleArrayOf(), bitTime)
 
         val gen = SignalGenerator()

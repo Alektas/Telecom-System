@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.datasource
+package alektas.telecomapp.ui.datasource.simulation
 
 import alektas.telecomapp.App
 import alektas.telecomapp.data.CodeGenerator
@@ -15,7 +15,7 @@ import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
-class DataSourceViewModel : ViewModel() {
+class SimulationDataSourceViewModel : ViewModel() {
     @Inject
     lateinit var storage: Repository
     @Inject
@@ -37,7 +37,7 @@ class DataSourceViewModel : ViewModel() {
         App.component.inject(this)
 
         disposable.addAll(
-            storage.observeChannels()
+            storage.observeSimulatedChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
@@ -123,7 +123,7 @@ class DataSourceViewModel : ViewModel() {
 
         saveChannelsSettings(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
 
-        processor.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
+        processor.simulateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
     }
 
     private fun saveChannelsSettings(
