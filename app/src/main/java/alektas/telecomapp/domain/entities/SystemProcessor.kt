@@ -17,6 +17,7 @@ import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.domain.entities.signals.noises.PulseNoise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import alektas.telecomapp.utils.L
 import android.annotation.SuppressLint
@@ -44,6 +45,9 @@ class SystemProcessor {
     @JvmField
     @field:[Inject Named("sourceSnr")]
     var noiseSnr: Double? = null
+    @JvmField
+    @field:[Inject Named("interferenceSnr")]
+    var interferenceSnr: Double? = null
     private var decodingThreshold = QpskContract.DEFAULT_SIGNAL_THRESHOLD
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
@@ -83,6 +87,10 @@ class SystemProcessor {
             storage.observeNoise()
                 .subscribeOn(Schedulers.io())
                 .subscribe { noiseSnr = it.snr() },
+
+            storage.observeInterference()
+                .subscribeOn(Schedulers.io())
+                .subscribe { interferenceSnr = it.snr() },
 
             Observable.combineLatest(
                 storage.observeSimulatedChannels(),
@@ -306,6 +314,25 @@ class SystemProcessor {
 
     fun enableNoise() {
         storage.enableNoise(true)
+    }
+
+    @SuppressLint("CheckResult")
+    fun setInterference(sparseness: Double, snr: Double, singleThread: Boolean = false) {
+        Single.create<Noise> {
+            val noise = PulseNoise(sparseness, snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
+            it.onSuccess(noise)
+        }
+            .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
+            .observeOn(Schedulers.io())
+            .subscribe { noise: Noise -> storage.setInterference(noise) }
+    }
+
+    fun disableInterference() {
+        storage.disableInterference()
+    }
+
+    fun enableInterference() {
+        storage.enableInterference(true)
     }
 
     @SuppressLint("CheckResult")

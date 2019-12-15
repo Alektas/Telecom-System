@@ -33,13 +33,20 @@ class SystemStorage : Repository {
     /**
      * Шум источника.
      * Если шум отключен с помощью метода {@see #disableNoise}, то этот объект сохраняется,
-     * а потребителям выдается пустой сигнал. При включении шума методом {@see #enableNoise}
+     * а потребителям взамен выдается пустой сигнал. При включении шума методом {@see #enableNoise}
      * потребителям снова выдается данный объект (если он не был нулевым)
      */
     private var noise: Noise? = null
     @JvmField
     @field:[Inject Named("sourceSnrEnabled")]
     var isNoiseEnabled: Boolean = false
+    /**
+     * Помехи источника.
+     * Если помехи отключены с помощью метода [@see #disableInterference()], то этот объект сохраняется,
+     * а потребителям взамен выдается пустой сигнал. При включении шума методом [@see #enableInterference()]
+     * потребителям снова выдается данный объект (если он не был нулевым)
+     */
+    private var interference: Noise? = null
     private var isStatisticsCounted: Boolean = false
     /**
      * Сохряняется ли эфир в файл в виде битов с разрядностью {@code adcBitDepth}.
@@ -56,6 +63,7 @@ class SystemStorage : Repository {
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Noise>()
+    private val interferenceSource = BehaviorSubject.create<Noise>()
     private val demodulatedSignalSource =
         BehaviorSubject.create<DigitalSignal>()
     private val demodulatedSignalConstellationSource =
@@ -167,7 +175,19 @@ class SystemStorage : Repository {
         etherSource = Observable.combineLatest(
             channelsFrameSignalSource.startWith(BaseSignal()),
             noiseSource.startWith(BaseNoise()),
+//            interferenceSource.startWith(BaseNoise()),
             BiFunction<Signal, Signal, Signal> { signal, noise -> signal + noise })
+//            object : Function3<Signal, Signal, Signal, Signal> { signal, noise, interference ->
+//                signal + noise + interference
+//            }
+//            object : Function3<Signal, Signal, Signal, Signal> { signal, noise, interference ->
+//                signal + noise + interference
+//            }
+//            {
+//                override fun invoke(signal: Signal, noise: Signal, interference: Signal): Signal {
+//                    return signal + noise + interference
+//                }
+//            })
             .apply {
                 subscribe { ether ->
                     demodulatorConfig.inputSignal = ether
@@ -281,6 +301,19 @@ class SystemStorage : Repository {
 
     override fun observeNoise(): Observable<Noise> {
         return noiseSource
+    }
+
+    override fun setInterference(signal: Noise) {
+    }
+
+    override fun enableInterference(fromCache: Boolean) {
+    }
+
+    override fun disableInterference() {
+    }
+
+    override fun observeInterference(): Observable<Noise> {
+        return interferenceSource
     }
 
     override fun setChannelsFrameSignal(signal: Signal) {

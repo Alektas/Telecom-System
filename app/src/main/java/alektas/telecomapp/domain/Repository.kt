@@ -38,6 +38,11 @@ interface Repository {
     fun isNoiseEnabled(): Boolean
     fun observeNoise(): Observable<Noise>
 
+    fun setInterference(signal: Noise)
+    fun enableInterference(fromCache: Boolean)
+    fun disableInterference()
+    fun observeInterference(): Observable<Noise>
+
     fun setEther(ether: Signal)
     fun observeEther(): Observable<Signal>
 
