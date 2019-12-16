@@ -119,7 +119,7 @@ class SimulationDataSourceFragment : Fragment(),
     }
 
     private fun setInitValues(prefs: SharedPreferences) {
-        val isNoiseEnabled = prefs.getBoolean(getString(R.string.source_noise_enable_key), true)
+        val isNoiseEnabled = prefs.getBoolean(getString(R.string.source_noise_enable_key), false)
         ether_noise_checkbox.isChecked = isNoiseEnabled
         ether_snr_layout.isEnabled = isNoiseEnabled
 
@@ -130,7 +130,7 @@ class SimulationDataSourceFragment : Fragment(),
             ether_snr.setText(it.toString())
         }
 
-        val defaultAdcFreq = (1.0e-6 / Simulator.DEFAULT_SAMPLING_RATE).toFloat()
+        val defaultAdcFreq = (1.0e-6 * Simulator.DEFAULT_SAMPLING_RATE).toFloat()
         prefs.getFloat(
             getString(R.string.source_adc_freq_key),
             defaultAdcFreq

@@ -78,7 +78,7 @@ class FileDataSourceFragment(private val data: String) : Fragment() {
     }
 
     private fun setInitValues(prefs: SharedPreferences) {
-        val defaultAdcFreq = (1.0e-6 / Simulator.DEFAULT_SAMPLING_RATE).toFloat()
+        val defaultAdcFreq = (1.0e-6 * Simulator.DEFAULT_SAMPLING_RATE).toFloat()
         prefs.getFloat(
             getString(R.string.usb_source_adc_freq_key),
             defaultAdcFreq
