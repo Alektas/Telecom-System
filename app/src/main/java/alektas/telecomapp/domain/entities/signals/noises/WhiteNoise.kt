@@ -12,7 +12,7 @@ import kotlin.math.pow
  */
 class WhiteNoise(private val snr: Double, signalMagnitude: Double): BaseNoise(snr) {
     init {
-        val deviation = signalMagnitude / 10.0.pow(snr / 20)
+        val deviation = if (signalMagnitude <= 0) 0.0 else signalMagnitude / 10.0.pow(snr / 20)
         data = Simulator.simulate { deviation * Random().nextGaussian() }
     }
 }

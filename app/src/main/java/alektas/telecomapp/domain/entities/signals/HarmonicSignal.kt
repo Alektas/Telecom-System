@@ -31,7 +31,8 @@ class HarmonicSignal(
     }
 
     private fun calculateData() {
-        data = Simulator.simulate { magnitude * sin(2 * Math.PI * frequency * it + phase) }
+        if (frequency > 0) data =
+            Simulator.simulate { magnitude * sin(2 * Math.PI * frequency * it + phase) }
     }
 
 }

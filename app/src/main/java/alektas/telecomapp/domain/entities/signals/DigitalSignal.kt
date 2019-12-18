@@ -8,9 +8,11 @@ class DigitalSignal(
 ) : BaseSignal() {
 
     init {
-        data = Simulator.simulate { time ->
-            val i = (time / bitTime).toInt()
-            if (i >= dataValues.size) 0.0 else dataValues[i]
+        if (dataValues.isNotEmpty() && bitTime > 0) {
+            data = Simulator.simulate { time ->
+                val i = (time / bitTime).toInt()
+                if (i >= dataValues.size) 0.0 else dataValues[i]
+            }
         }
     }
 }
