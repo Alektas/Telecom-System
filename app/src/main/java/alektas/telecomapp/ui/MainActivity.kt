@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadSourceSettings(prefs: SharedPreferences) {
         val samplingRate = prefs.getFloat(
             getString(R.string.source_adc_freq_key),
-            Simulator.DEFAULT_SAMPLING_RATE.toFloat()
+            (Simulator.DEFAULT_SAMPLING_RATE * 1.0e-6).toFloat()
         ).let { it * 1.0e6 } // МГц -> Гц
         Simulator.samplingRate = samplingRate
     }

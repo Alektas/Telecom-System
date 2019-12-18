@@ -10,10 +10,12 @@ class BinarySignal(
 ) : BaseSignal() {
 
     init {
-        data = Simulator.simulate { time ->
-            val i = (time / bitTime).toInt()
-            if (i >= bits.size || (!bits[i] && !bipolar)) 0.0
-            else if (bits[i]) magnitude else -magnitude
+        if (bits.isNotEmpty() && bitTime > 0) {
+            data = Simulator.simulate { time ->
+                val i = (time / bitTime).toInt()
+                if (i >= bits.size || (!bits[i] && !bipolar)) 0.0
+                else if (bits[i]) magnitude else -magnitude
+            }
         }
     }
 }
