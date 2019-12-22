@@ -1,6 +1,6 @@
 package alektas.telecomapp.domain
 
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
@@ -25,9 +25,9 @@ interface Repository {
     fun endCountingStatistics()
     fun setExpectedFrameCount(count: Int)
 
-    fun setChannelsData(channels: List<ChannelData>)
-    fun removeChannel(channel: ChannelData)
-    fun observeSimulatedChannels(): Observable<List<ChannelData>>
+    fun setChannelsData(channels: List<Channel>)
+    fun removeChannel(channel: Channel)
+    fun observeSimulatedChannels(): Observable<List<Channel>>
 
     fun setChannelsFrameSignal(signal: Signal)
     fun observeChannelsSignal(): Observable<Signal>
@@ -61,10 +61,10 @@ interface Repository {
     fun setFilteredChannelQ(filteredSigQ: Signal)
     fun observeFilteredChannelQ(): Observable<Signal>
 
-    fun addDecodedChannel(channel: ChannelData)
-    fun removeDecodedChannel(channel: ChannelData)
-    fun setDecodedChannels(channels: List<ChannelData>)
-    fun observeDecodedChannels(withLast: Boolean = true): Observable<List<ChannelData>>
+    fun addDecodedChannel(channel: Channel)
+    fun removeDecodedChannel(channel: Channel)
+    fun setDecodedChannels(channels: List<Channel>)
+    fun observeDecodedChannels(withLast: Boolean = true): Observable<List<Channel>>
 
     fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>

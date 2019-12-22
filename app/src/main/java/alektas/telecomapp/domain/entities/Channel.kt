@@ -3,7 +3,7 @@ package alektas.telecomapp.domain.entities
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 
-data class ChannelData(
+data class Channel(
     val name: String = "${channelsCount + 1}",
     val carrierFrequency: Double = QpskContract.DEFAULT_CARRIER_FREQUENCY,
     var frameData: BooleanArray = booleanArrayOf(),
@@ -33,7 +33,7 @@ data class ChannelData(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is ChannelData) return false
+        if (other !is Channel) return false
 
         if (name != other.name) return false
         if (!frameData.contentEquals(other.frameData)) return false

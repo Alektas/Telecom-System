@@ -1,7 +1,7 @@
 package alektas.telecomapp.ui.datasource
 
 import alektas.telecomapp.R
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 import android.graphics.Color
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.item_channel.view.*
 
 class ChannelAdapter(private val controller: ChannelController) :
     RecyclerView.Adapter<ChannelAdapter.ChannelViewHolder>() {
-    var channels = listOf<ChannelData>()
+    var channels = listOf<Channel>()
         set(value) {
             field = value
             notifyDataSetChanged()
@@ -45,7 +45,7 @@ class ChannelAdapter(private val controller: ChannelController) :
         var channelData: TextView = view.channel_data
         var channelCode: TextView = view.channel_code
 
-        fun bind(channel: ChannelData) {
+        fun bind(channel: Channel) {
             channelName.text = channel.name
             channelCode.text = channel.getCodeString()
 
@@ -56,7 +56,7 @@ class ChannelAdapter(private val controller: ChannelController) :
             }
         }
 
-        private fun withHighlightedErrors(channel: ChannelData): Spannable {
+        private fun withHighlightedErrors(channel: Channel): Spannable {
             val spanBuilder = SpannableStringBuilder()
 
             channel.frameData.forEachIndexed { i, b ->

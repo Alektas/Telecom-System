@@ -40,8 +40,8 @@ class SystemProcessor {
     @Inject
     lateinit var storage: Repository
     private var codedGroupData: DoubleArray? = null
-    private var simulatedChannels: List<ChannelData>? = null
-    private var decodedChannels: List<ChannelData>? = null
+    private var simulatedChannels: List<Channel>? = null
+    private var decodedChannels: List<Channel>? = null
     @JvmField
     @field:[Inject Named("sourceSnr")]
     var noiseSnr: Double? = null
@@ -110,7 +110,7 @@ class SystemProcessor {
             Observable.combineLatest(
                 storage.observeSimulatedChannels(),
                 storage.observeDecodedChannels(),
-                BiFunction<List<ChannelData>, List<ChannelData>, Map<BooleanArray, List<Int>>> { origin, decoded ->
+                BiFunction<List<Channel>, List<Channel>, Map<BooleanArray, List<Int>>> { origin, decoded ->
                     diffChannels(origin, decoded)
                 })
                 .subscribeOn(Schedulers.computation())
@@ -146,7 +146,6 @@ class SystemProcessor {
             }
     }
 
-    private var usbFrameCount = 0
     private fun generateFrames(samplingRate: Double, data: DoubleArray): Observable<Signal> {
         return Observable.create<Signal> { subscriber ->
             val dc = storage.getCurrentDemodulatorConfig()
@@ -158,9 +157,7 @@ class SystemProcessor {
 
             val frameTimeline = Simulator.getTimeline(samplingRate, framePoints)
             val frames = data.toList().chunked(framePoints)
-
-            usbFrameCount = frames.size
-            storage.setExpectedFrameCount(usbFrameCount)
+            storage.setExpectedFrameCount(frames.size)
 
             frames.forEach {
                 val frameSignal = BaseSignal(frameTimeline, it.toDoubleArray())
@@ -186,8 +183,8 @@ class SystemProcessor {
             generateChannels(count, carrierFrequency, dataSpeed, codeLength, frameLength, codesType)
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
-                .subscribe { channels: List<ChannelData> ->
-                    startTransmitting(channels, frameLength, frameCount)
+                .subscribe { channels: List<Channel> ->
+                    transmitData(channels, frameLength, frameCount)
                 }
     }
 
@@ -198,9 +195,9 @@ class SystemProcessor {
         codeLength: Int,
         frameLength: Int,
         codesType: Int
-    ): Single<List<ChannelData>> {
-        return Single.create<List<ChannelData>> {
-            val channels = mutableListOf<ChannelData>()
+    ): Single<List<Channel>> {
+        return Single.create<List<Channel>> {
+            val channels = mutableListOf<Channel>()
             val codeGen = CodeGenerator()
             val codes = when (codesType) {
                 CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
@@ -210,7 +207,7 @@ class SystemProcessor {
             val bitTime = 1.0e-3 / dataSpeed // скорость в период бита (в секундах)
 
             for (i in 0 until count) {
-                val channel = ChannelData(
+                val channel = Channel(
                     name = "${i + 1}",
                     carrierFrequency = carrierFrequency * 1.0e6, // МГц -> Гц
                     bitTime = bitTime,
@@ -222,27 +219,30 @@ class SystemProcessor {
 
             // Так как продолжительность данных изменилась, обновляем время симуляции
             val dataTime = frameLength * codes[0].size * bitTime
-            Simulator.simulationTime = dataTime
-            noiseSnr?.let { n -> setNoise(n) } // генерируем новый шум с обновленной продолжительностью
-            interferenceRate?.let { rate ->
-                interferenceSparseness?.let { sp ->
-                    setInterference(
-                        sp,
-                        rate
-                    )
-                }
-            } // генерируем новые помехи с обновленной продолжительностью
+            changeSimulationTime(dataTime)
 
             it.onSuccess(channels)
         }
     }
 
-    private fun startTransmitting(channels: List<ChannelData>, frameSize: Int, frameCount: Int) {
+    private fun changeSimulationTime(time: Double) {
+        if (Simulator.simulationTime == time) return
+
+        Simulator.simulationTime = time
+        noiseSnr?.let { n -> setNoise(n) } // генерируем новый шум с обновленной продолжительностью
+        interferenceRate?.let { rate ->
+            interferenceSparseness?.let { sp ->
+                setInterference(sp, rate)
+            }
+        } // генерируем новые помехи с обновленной продолжительностью
+    }
+
+    private fun transmitData(channels: List<Channel>, frameSize: Int, frameCount: Int) {
         var framesTransmitted = 0
 
         transmitSubscription?.dispose()
         transmitSubscription = Observable
-            .create<List<ChannelData>> {
+            .create<List<Channel>> {
                 // генерировать на 1 фрейм меньше, так как первый фрейм отправляется в startWith
                 for (i in 1 until frameCount) {
                     val chls = channels.map { c ->
@@ -284,7 +284,7 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun generateChannelsFrameSignal(channels: List<ChannelData>) {
+    fun generateChannelsFrameSignal(channels: List<Channel>) {
         if (channels.isEmpty()) {
             storage.setChannelsFrameSignal(BaseSignal())
             return
@@ -303,7 +303,7 @@ class SystemProcessor {
             .subscribe { signal: Signal -> storage.setChannelsFrameSignal(signal) }
     }
 
-    private fun aggregate(channels: List<ChannelData>): DoubleArray {
+    private fun aggregate(channels: List<Channel>): DoubleArray {
         return channels
             .map { channel ->
                 // Преобразование однополярных двоичных данных в биполярные
@@ -316,7 +316,7 @@ class SystemProcessor {
             }
     }
 
-    fun removeChannel(channel: ChannelData) {
+    fun removeChannel(channel: Channel) {
         storage.removeChannel(channel)
     }
 
@@ -408,7 +408,7 @@ class SystemProcessor {
             }
     }
 
-    private fun updateDecodedChannels(channels: List<ChannelData>, groupData: DoubleArray) {
+    private fun updateDecodedChannels(channels: List<Channel>, groupData: DoubleArray) {
         val chls = channels.map {
             it.copy().apply {
                 val frameData =
@@ -431,7 +431,7 @@ class SystemProcessor {
             val frameData = CdmaDecimalCoder(decodingThreshold).decode(code.toBipolar(), it)
             val errors = mutableListOf<Int>()
             frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
-            val channel = ChannelData(frameData = frameData.toUnipolar(), code = code)
+            val channel = Channel(frameData = frameData.toUnipolar(), code = code)
             channel.errors = errors
             storage.addDecodedChannel(channel)
         }
@@ -441,9 +441,9 @@ class SystemProcessor {
     fun createDecodedChannels(count: Int, codeLength: Int, codesType: Int, threshold: Float) {
         decodingThreshold = threshold.toDouble()
 
-        Single.create<List<ChannelData>> { emitter ->
+        Single.create<List<Channel>> { emitter ->
             codedGroupData?.let {
-                val channels = mutableListOf<ChannelData>()
+                val channels = mutableListOf<Channel>()
                 val codeGen = CodeGenerator()
                 val codes = when (codesType) {
                     CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
@@ -455,7 +455,7 @@ class SystemProcessor {
                         CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
                     val errors = mutableListOf<Int>()
                     frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
-                    val channel = ChannelData(frameData = frameData.toUnipolar(), code = codes[i])
+                    val channel = Channel(frameData = frameData.toUnipolar(), code = codes[i])
                     channel.errors = errors
                     channels.add(channel)
                 }
@@ -465,7 +465,7 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
-            .subscribe { channels: List<ChannelData> ->
+            .subscribe { channels: List<Channel> ->
                 L.d(this, "setDecodedChannels: create")
                 storage.setDecodedChannels(channels)
             }
@@ -516,8 +516,8 @@ class SystemProcessor {
      */
     @SuppressLint("CheckResult")
     private fun diffChannels(
-        transmitted: List<ChannelData>,
-        received: List<ChannelData>
+        transmitted: List<Channel>,
+        received: List<Channel>
     ): Map<BooleanArray, List<Int>> {
         val channelsErrorBits = mutableMapOf<BooleanArray, List<Int>>()
 

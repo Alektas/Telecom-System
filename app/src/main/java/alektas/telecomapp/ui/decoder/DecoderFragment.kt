@@ -10,7 +10,7 @@ import android.view.ViewGroup
 import alektas.telecomapp.R
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
@@ -105,11 +105,11 @@ class DecoderFragment : Fragment(), ChannelController {
         })
     }
 
-    override fun removeChannel(channel: ChannelData) {
+    override fun removeChannel(channel: Channel) {
         viewModel.removeChannel(channel)
     }
 
-    override fun showChannelDetails(channel: ChannelData) {}
+    override fun showChannelDetails(channel: Channel) {}
 
     private fun setupCodeTypesDropdown() {
         val adapter = SimpleArrayAdapter(

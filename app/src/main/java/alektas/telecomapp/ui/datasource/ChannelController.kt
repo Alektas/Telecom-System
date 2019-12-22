@@ -1,8 +1,8 @@
 package alektas.telecomapp.ui.datasource
 
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 
 interface ChannelController {
-    fun showChannelDetails(channel: ChannelData)
-    fun removeChannel(channel: ChannelData)
+    fun showChannelDetails(channel: Channel)
+    fun removeChannel(channel: Channel)
 }

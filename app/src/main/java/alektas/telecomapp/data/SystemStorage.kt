@@ -2,7 +2,7 @@ package alektas.telecomapp.data
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.converters.ValueConverter
 import alektas.telecomapp.domain.entities.filters.FilterConfig
@@ -57,10 +57,10 @@ class SystemStorage : Repository {
      */
     private var isSavedToFile = false
     private var adcBitDepth = 8
-    private var channelList = mutableListOf<ChannelData>()
-    private var decodedChannelList = mutableListOf<ChannelData>()
+    private var channelList = mutableListOf<Channel>()
+    private var decodedChannelList = mutableListOf<Channel>()
     private val disposable = CompositeDisposable()
-    private val simulatedChannelsSource = BehaviorSubject.create<List<ChannelData>>()
+    private val simulatedChannelsSource = BehaviorSubject.create<List<Channel>>()
     private val channelsFrameSignalSource = BehaviorSubject.create<Signal>()
     private val channelISource = BehaviorSubject.create<Signal>()
     private val channelQSource = BehaviorSubject.create<Signal>()
@@ -73,9 +73,9 @@ class SystemStorage : Repository {
     private val demodulatedSignalConstellationSource =
         BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource =
-        BehaviorSubject.create<List<ChannelData>>()
+        BehaviorSubject.create<List<Channel>>()
     private val decodedChannelsLiveSource =
-        PublishSubject.create<List<ChannelData>>()
+        PublishSubject.create<List<Channel>>()
     private val channelsErrorsSource =
         BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
     private val etherSource: Observable<Signal>
@@ -192,7 +192,7 @@ class SystemStorage : Repository {
 
         berByNoiseSource = Observable.zip(
             decodedChannelsSource, noiseSource,
-            BiFunction { channels: List<ChannelData>, noise: Noise ->
+            BiFunction { channels: List<Channel>, noise: Noise ->
                 val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
                 val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
                 Pair(noise.rate(), errorsCount / bitsReceived * 100)
@@ -258,16 +258,16 @@ class SystemStorage : Repository {
         expectedFramesCount = count
     }
 
-    override fun setChannelsData(channels: List<ChannelData>) {
+    override fun setChannelsData(channels: List<Channel>) {
         channelList = channels.toMutableList()
         simulatedChannelsSource.onNext(channelList)
     }
 
-    override fun removeChannel(channel: ChannelData) {
+    override fun removeChannel(channel: Channel) {
         if (channelList.remove(channel)) simulatedChannelsSource.onNext(channelList)
     }
 
-    override fun observeSimulatedChannels(): Observable<List<ChannelData>> {
+    override fun observeSimulatedChannels(): Observable<List<Channel>> {
         return simulatedChannelsSource
     }
 
@@ -390,20 +390,20 @@ class SystemStorage : Repository {
     }
 
 
-    override fun addDecodedChannel(channel: ChannelData) {
+    override fun addDecodedChannel(channel: Channel) {
         decodedChannelList.add(channel)
         decodedChannelsSource.onNext(decodedChannelList)
         decodedChannelsLiveSource.onNext(decodedChannelList)
     }
 
-    override fun removeDecodedChannel(channel: ChannelData) {
+    override fun removeDecodedChannel(channel: Channel) {
         if (decodedChannelList.remove(channel)) {
             decodedChannelsSource.onNext(decodedChannelList)
             decodedChannelsLiveSource.onNext(decodedChannelList)
         }
     }
 
-    override fun setDecodedChannels(channels: List<ChannelData>) {
+    override fun setDecodedChannels(channels: List<Channel>) {
         decodedChannelList = channels.toMutableList()
         decodedChannelsSource.onNext(decodedChannelList)
         decodedChannelsLiveSource.onNext(decodedChannelList)
@@ -412,7 +412,7 @@ class SystemStorage : Repository {
     /**
      * @param withLast true - источник при подписке выдает последний список декодированных каналов
      */
-    override fun observeDecodedChannels(withLast: Boolean): Observable<List<ChannelData>> {
+    override fun observeDecodedChannels(withLast: Boolean): Observable<List<Channel>> {
         return if (withLast) decodedChannelsSource else decodedChannelsLiveSource
     }
 

@@ -3,7 +3,7 @@ package alektas.telecomapp.ui.datasource.simulation
 import alektas.telecomapp.App
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
@@ -21,7 +21,7 @@ class SimulationDataSourceViewModel : ViewModel() {
     @Inject
     lateinit var processor: SystemProcessor
     private val disposable = CompositeDisposable()
-    val channels = MutableLiveData<List<ChannelData>>()
+    val channels = MutableLiveData<List<Channel>>()
     val ether = MutableLiveData<Array<DataPoint>>()
     val adcFrequency = MutableLiveData<Double>()
     val noiseRate = MutableLiveData<Double>()
@@ -42,8 +42,8 @@ class SimulationDataSourceViewModel : ViewModel() {
             storage.observeSimulatedChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
-                    override fun onNext(it: List<ChannelData>) {
+                .subscribeWith(object : DisposableObserver<List<Channel>>() {
+                    override fun onNext(it: List<Channel>) {
                         channels.value = it
                     }
 
@@ -134,7 +134,7 @@ class SimulationDataSourceViewModel : ViewModel() {
         processor.setAdcFrequency(freq)
     }
 
-    fun removeChannel(channel: ChannelData) {
+    fun removeChannel(channel: Channel) {
         processor.removeChannel(channel)
     }
 

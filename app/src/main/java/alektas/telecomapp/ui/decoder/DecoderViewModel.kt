@@ -3,7 +3,7 @@ package alektas.telecomapp.ui.decoder
 import alektas.telecomapp.App
 import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
@@ -22,7 +22,7 @@ class DecoderViewModel : ViewModel() {
     lateinit var processor: SystemProcessor
     private val disposable = CompositeDisposable()
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
-    val channels = MutableLiveData<List<ChannelData>>()
+    val channels = MutableLiveData<List<Channel>>()
     val codeType = MutableLiveData<Int>()
     val channelCount = MutableLiveData<Int>()
     val threshold = MutableLiveData<Float>()
@@ -50,8 +50,8 @@ class DecoderViewModel : ViewModel() {
             storage.observeDecodedChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
-                    override fun onNext(t: List<ChannelData>) {
+                .subscribeWith(object : DisposableObserver<List<Channel>>() {
+                    override fun onNext(t: List<Channel>) {
                         channels.value = t
                     }
 
@@ -113,7 +113,7 @@ class DecoderViewModel : ViewModel() {
         }
     }
 
-    fun removeChannel(channel: ChannelData) {
+    fun removeChannel(channel: Channel) {
         storage.removeDecodedChannel(channel)
     }
 

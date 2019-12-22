@@ -2,7 +2,7 @@ package alektas.telecomapp.ui.statistic.ber
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.ChannelData
+import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,7 +22,7 @@ class BerViewModel : ViewModel() {
     val viewportData = MutableLiveData<Pair<Double, Double>>()
     val berData = MutableLiveData<Array<DataPoint>>()
     val berList = mutableListOf<DataPoint>()
-    var channels = listOf<ChannelData>()
+    var channels = listOf<Channel>()
 
     companion object {
         const val INVALID_SNR = -1000.0
@@ -53,8 +53,8 @@ class BerViewModel : ViewModel() {
             storage.observeDecodedChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<ChannelData>>() {
-                    override fun onNext(t: List<ChannelData>) {
+                .subscribeWith(object : DisposableObserver<List<Channel>>() {
+                    override fun onNext(t: List<Channel>) {
                         channels = t
                     }
 
