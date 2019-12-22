@@ -37,8 +37,7 @@ class SimulationDataSourceFragment : Fragment(),
     private val graphPoints = LineGraphSeries<DataPoint>()
 
     companion object {
-        fun newInstance() =
-            SimulationDataSourceFragment()
+        fun newInstance() = SimulationDataSourceFragment()
     }
 
     override fun onCreateView(
@@ -68,70 +67,14 @@ class SimulationDataSourceFragment : Fragment(),
             MODE_PRIVATE
         )
         setupCodeTypesDropdown()
-        setFieldsValidation()
+        setupFieldsValidation()
         setInitValues(prefs)
         observeSettings(viewModel, prefs)
+        setupControls()
 
-        val channelAdapter =
-            ChannelAdapter(this)
+        val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
-
-        noise_checkbox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                viewModel.enableNoise()
-                noise_rate_layout.isEnabled = true
-                prefs.edit().putBoolean(getString(R.string.source_noise_enable_key), true).apply()
-            } else {
-                viewModel.disableNoise()
-                noise_rate_layout.isEnabled = false
-                prefs.edit().putBoolean(getString(R.string.source_noise_enable_key), false).apply()
-            }
-        }
-
-        interference_checkbox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                viewModel.enableInterference()
-                interference_rate_layout.isEnabled = true
-                interference_sparseness_layout.isEnabled = true
-                prefs.edit().putBoolean(getString(R.string.source_interference_enable_key), true).apply()
-            } else {
-                viewModel.disableInterference()
-                interference_rate_layout.isEnabled = false
-                interference_sparseness_layout.isEnabled = false
-                prefs.edit().putBoolean(getString(R.string.source_interference_enable_key), false).apply()
-            }
-        }
-
-        noise_rate.setOnEditorActionListener { tv, _, _ ->
-            changeNoiseRate(tv.text.toString())
-            false
-        }
-
-        interference_rate.setOnEditorActionListener { tv, _, _ ->
-            changeInterferenceRate(tv.text.toString())
-            false
-        }
-
-        interference_sparseness.setOnEditorActionListener { tv, _, _ ->
-            changeInterferenceSparseness(tv.text.toString())
-            false
-        }
-
-        adc_frequency.setOnEditorActionListener { tv, _, _ ->
-            changeAdcFrequency(tv.text.toString())
-            false
-        }
-
-        source_frame_count.setOnEditorActionListener { _, _, _ ->
-            generate_channels_btn.performClick()
-            false
-        }
-
-        generate_channels_btn.setOnClickListener {
-            SystemUtils.hideKeyboard(this)
-            generateChannels()
-        }
 
         viewModel.channels.observe(viewLifecycleOwner, Observer {
             channelAdapter.channels = it
@@ -143,36 +86,6 @@ class SimulationDataSourceFragment : Fragment(),
     }
 
     private fun setInitValues(prefs: SharedPreferences) {
-        val isNoiseEnabled = prefs.getBoolean(getString(R.string.source_noise_enable_key), false)
-        noise_checkbox.isChecked = isNoiseEnabled
-        noise_rate_layout.isEnabled = isNoiseEnabled
-
-        prefs.getFloat(
-            getString(R.string.source_noise_snr_key),
-            QpskContract.DEFAULT_SIGNAL_NOISE_RATE.toFloat()
-        ).let {
-            noise_rate.setText(it.toString())
-        }
-
-        val isInterferenceEnabled = prefs.getBoolean(getString(R.string.source_interference_enable_key), false)
-        interference_checkbox.isChecked = isInterferenceEnabled
-        interference_rate_layout.isEnabled = isInterferenceEnabled
-        interference_sparseness_layout.isEnabled = isInterferenceEnabled
-
-        prefs.getFloat(
-            getString(R.string.source_interference_snr_key),
-            QpskContract.DEFAULT_SIGNAL_NOISE_RATE.toFloat()
-        ).let {
-            interference_rate.setText(it.toString())
-        }
-
-        prefs.getFloat(
-            getString(R.string.source_interference_sparseness_key),
-            QpskContract.DEFAULT_INTERFERENCE_SPARSENESS.toFloat()
-        ).let {
-            interference_sparseness.setText(it.toString())
-        }
-
         val defaultAdcFreq = (1.0e-6 * Simulator.DEFAULT_SAMPLING_RATE).toFloat()
         prefs.getFloat(
             getString(R.string.source_adc_freq_key),
@@ -231,18 +144,6 @@ class SimulationDataSourceFragment : Fragment(),
     }
 
     private fun observeSettings(viewModel: SimulationDataSourceViewModel, prefs: SharedPreferences) {
-        viewModel.noiseRate.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_noise_snr_key), it.toFloat()).apply()
-        })
-
-        viewModel.interferenceRate.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_interference_snr_key), it.toFloat()).apply()
-        })
-
-        viewModel.interferenceSparseness.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_interference_sparseness_key), it.toFloat()).apply()
-        })
-
         viewModel.adcFrequency.observe(viewLifecycleOwner, Observer {
             prefs.edit().putFloat(getString(R.string.source_adc_freq_key), it.toFloat()).apply()
         })
@@ -301,7 +202,24 @@ class SimulationDataSourceFragment : Fragment(),
         }
     }
 
-    private fun setFieldsValidation() {
+    private fun setupControls() {
+        adc_frequency.setOnEditorActionListener { tv, _, _ ->
+            changeAdcFrequency(tv.text.toString())
+            false
+        }
+
+        source_frame_count.setOnEditorActionListener { _, _, _ ->
+            generate_channels_btn.performClick()
+            false
+        }
+
+        generate_channels_btn.setOnClickListener {
+            SystemUtils.hideKeyboard(this)
+            generateChannels()
+        }
+    }
+
+    private fun setupFieldsValidation() {
         adc_frequency.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseFrequency(text.toString()) > 0) {
                 adc_frequency_layout.error = null
@@ -358,30 +276,6 @@ class SimulationDataSourceFragment : Fragment(),
                 source_frame_length_layout.error = getString(R.string.error_positive_num)
             }
         }
-
-        noise_rate.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseSnr(text.toString()) != SimulationDataSourceViewModel.INVALID_SNR) {
-                noise_rate_layout.error = null
-            } else {
-                noise_rate_layout.error = getString(R.string.error_num)
-            }
-        }
-
-        interference_rate.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseSnr(text.toString()) != SimulationDataSourceViewModel.INVALID_SNR) {
-                interference_rate_layout.error = null
-            } else {
-                interference_rate_layout.error = getString(R.string.error_num)
-            }
-        }
-
-        interference_sparseness.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseSparseness(text.toString()) >= 0) {
-                interference_sparseness_layout.error = null
-            } else {
-                interference_sparseness_layout.error = getString(R.string.error_positive_num)
-            }
-        }
     }
 
     private fun generateChannels() {
@@ -412,33 +306,6 @@ class SimulationDataSourceFragment : Fragment(),
         }
 
         viewModel.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
-    }
-
-    private fun changeNoiseRate(snr: String) {
-        if (snr.isEmpty() || noise_rate_layout.error != null) {
-            Toast.makeText(requireContext(), getString(R.string.error_num), Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        viewModel.setNoise(snr)
-    }
-
-    private fun changeInterferenceSparseness(sparseness: String) {
-        if (sparseness.isEmpty() || interference_sparseness_layout.error != null) {
-            Toast.makeText(requireContext(), getString(R.string.error_positive_num), Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        viewModel.changeInterferenceSparseness(sparseness)
-    }
-
-    private fun changeInterferenceRate(rate: String) {
-        if (rate.isEmpty() || interference_rate_layout.error != null) {
-            Toast.makeText(requireContext(), getString(R.string.error_num), Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        viewModel.changeInterferenceRate(rate)
     }
 
     private fun changeAdcFrequency(freq: String) {

@@ -4,6 +4,7 @@ import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.ui.MainViewModel
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
+import alektas.telecomapp.ui.datasource.simulation.EtherSettingsViewModel
 import alektas.telecomapp.ui.datasource.simulation.SimulationDataSourceViewModel
 import alektas.telecomapp.ui.decoder.DecoderViewModel
 import alektas.telecomapp.ui.demodulator.QpskDemodulatorViewModel
@@ -41,6 +42,7 @@ interface AppComponent {
     fun inject(vm: BerViewModel)
     fun inject(vm: MainViewModel)
     fun inject(storage: SystemStorage)
+    fun inject(vm: EtherSettingsViewModel)
 
     fun context(): Context
 

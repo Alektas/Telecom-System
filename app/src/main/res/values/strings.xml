@@ -109,4 +109,5 @@
     <string name="source_interference_snr_key">source_interference_rate_key</string>
     <string name="source_interference_sparseness_key">source_interference_sparseness_key</string>
     <string name="ether_interference_enable">Включить помехи</string>
+    <string name="ether_settings">Настройка эфира</string>
 </resources>
