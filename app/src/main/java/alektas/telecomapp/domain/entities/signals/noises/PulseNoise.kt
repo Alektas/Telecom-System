@@ -10,21 +10,21 @@ import kotlin.math.pow
  *
  * @param sparseness коэффициент разреженности импульсов, при 0 имеет вид АБГШ
  * (обратнопропорционален частоте появления импульсов)
- * @param snr отношение сигнал/шум (signal/noise rate) в дБ
+ * @param rate отношение сигнал/шум (signal/noise rate) в дБ
  * @param signalMagnitude среднеквадратическая амплитуда полезного сигнала
  */
 class PulseNoise(
-    private val sparseness: Double = 1.2,
-    private val snr: Double,
+    val sparseness: Double,
+    val rate: Double,
     signalMagnitude: Double
-) :
-    BaseNoise(snr) {
+) : BaseNoise(rate) {
 
     init {
-        val deviation = signalMagnitude / 10.0.pow(snr / 20)
+        val deviation = signalMagnitude / 10.0.pow(rate / 20)
         data = Simulator.simulate {
             val rand = deviation * Random().nextGaussian()
             if (abs(rand) > sparseness * deviation) rand else 0.0
         }
     }
+
 }
