@@ -23,88 +23,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.checkbox.MaterialCheckBox
-            android:id="@+id/noise_checkbox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_top_text"
-            android:text="@string/ether_noise_enable"
-            android:checked="true"
-            app:layout_constraintTop_toBottomOf="@id/ether_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/noise_rate_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/SNR"
-            app:errorEnabled="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/noise_checkbox">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/noise_rate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:imeOptions="actionDone"
-                android:inputType="numberSigned|numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.checkbox.MaterialCheckBox
-            android:id="@+id/interference_checkbox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_top_text"
-            android:text="@string/ether_interference_enable"
-            android:checked="true"
-            app:layout_constraintTop_toBottomOf="@id/noise_rate_layout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/interference_rate_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/SIR"
-            app:errorEnabled="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/interference_checkbox">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/interference_rate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:imeOptions="actionNext"
-                android:inputType="numberSigned|numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/interference_sparseness_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/sparseness"
-            app:errorEnabled="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/interference_rate_layout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/interference_sparseness"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:imeOptions="actionDone"
-                android:inputType="numberSigned|numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
-
         <com.jjoe64.graphview.GraphView
             android:id="@+id/ether_chart"
             android:layout_width="match_parent"
@@ -112,7 +30,18 @@
             android:layout_marginTop="@dimen/margin_top_text"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/interference_sparseness_layout" />
+            app:layout_constraintTop_toBottomOf="@id/ether_label" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/to_ether_settings_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
+            android:text="@string/ether_settings"
+            android:onClick="onNavigateBtnClick"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ether_chart"/>
 
         <View
             android:id="@+id/divider1"
@@ -120,7 +49,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
             android:background="?android:attr/listDivider"
-            app:layout_constraintTop_toBottomOf="@id/ether_chart" />
+            app:layout_constraintTop_toBottomOf="@id/to_ether_settings_btn" />
 
         <TextView
             android:id="@+id/adc_label"
@@ -314,7 +243,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/start_transmitting"
-            app:errorEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/source_frame_count_layout" />
