@@ -118,4 +118,9 @@ class EtherSettingsViewModel : ViewModel() {
             -1.0
         }
     }
+
+    override fun onCleared() {
+        disposable.dispose()
+        super.onCleared()
+    }
 }

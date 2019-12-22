@@ -1,14 +1,12 @@
 package alektas.telecomapp.ui.datasource.simulation
 
 import alektas.telecomapp.R
-import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
-import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -19,8 +17,6 @@ import android.view.ViewGroup
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
@@ -66,7 +62,7 @@ class SimulationDataSourceFragment : Fragment(),
             getString(R.string.settings_source_key),
             MODE_PRIVATE
         )
-        setupCodeTypesDropdown()
+
         setupFieldsValidation()
         setInitValues(prefs)
         observeSettings(viewModel, prefs)
@@ -95,47 +91,6 @@ class SimulationDataSourceFragment : Fragment(),
         }
 
         prefs.getInt(
-            getString(R.string.source_channels_codetype_key),
-            CdmaContract.DEFAULT_CODE_TYPE
-        ).let {
-            source_channel_code_type.setText(CodeGenerator.getCodeName(it))
-        }
-
-        val defaultCarFreq = (1.0e-6 * QpskContract.DEFAULT_CARRIER_FREQUENCY).toFloat()
-        prefs.getFloat(
-            getString(R.string.source_channels_freq_key),
-            defaultCarFreq
-        ).let {
-            source_carrier_frequency.setText(String.format("%.3f", it))
-        }
-
-        val defaultDataspeed = (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
-        prefs.getFloat(getString(R.string.source_channels_dataspeed_key), defaultDataspeed).let {
-            source_data_speed.setText(it.toString())
-        }
-
-        prefs.getInt(
-            getString(R.string.source_channels_count_key),
-            CdmaContract.DEFAULT_CHANNEL_COUNT
-        ).let {
-            source_channel_count.setText(it.toString())
-        }
-
-        prefs.getInt(
-            getString(R.string.source_channels_codesize_key),
-            CdmaContract.DEFAULT_CODE_SIZE
-        ).let {
-            source_code_length.setText(it.toString())
-        }
-
-        prefs.getInt(
-            getString(R.string.source_channels_framesize_key),
-            CdmaContract.DEFAULT_FRAME_SIZE
-        ).let {
-            source_frame_length.setText(it.toString())
-        }
-
-        prefs.getInt(
             getString(R.string.source_channels_frame_count_key),
             CdmaContract.DEFAULT_FRAME_COUNT
         ).let {
@@ -146,30 +101,6 @@ class SimulationDataSourceFragment : Fragment(),
     private fun observeSettings(viewModel: SimulationDataSourceViewModel, prefs: SharedPreferences) {
         viewModel.adcFrequency.observe(viewLifecycleOwner, Observer {
             prefs.edit().putFloat(getString(R.string.source_adc_freq_key), it.toFloat()).apply()
-        })
-
-        viewModel.codeType.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putInt(getString(R.string.source_channels_codetype_key), it).apply()
-        })
-
-        viewModel.carrierFrequency.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_channels_freq_key), it.toFloat()).apply()
-        })
-
-        viewModel.dataSpeed.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_channels_dataspeed_key), it.toFloat()).apply()
-        })
-
-        viewModel.channelCount.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putInt(getString(R.string.source_channels_count_key), it).apply()
-        })
-
-        viewModel.codeSize.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putInt(getString(R.string.source_channels_codesize_key), it).apply()
-        })
-
-        viewModel.frameSize.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putInt(getString(R.string.source_channels_framesize_key), it).apply()
         })
 
         viewModel.frameCount.observe(viewLifecycleOwner, Observer {
@@ -183,25 +114,6 @@ class SimulationDataSourceFragment : Fragment(),
 
     override fun showChannelDetails(channel: Channel) {}
 
-    private fun setupCodeTypesDropdown() {
-        val adapter = SimpleArrayAdapter(
-            requireContext(),
-            R.layout.support_simple_spinner_dropdown_item,
-            CodeGenerator.codeNames.values.toList()
-        )
-        source_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
-
-        val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
-        source_channel_code_type.setText(defaultType)
-
-        source_channel_code_type_layout.setOnTouchListener { v, _ ->
-            SystemUtils.hideKeyboard(this)
-            val dropDown = v.findViewById<AutoCompleteTextView>(R.id.source_channel_code_type)
-            dropDown.showDropDown()
-            false
-        }
-    }
-
     private fun setupControls() {
         adc_frequency.setOnEditorActionListener { tv, _, _ ->
             changeAdcFrequency(tv.text.toString())
@@ -209,13 +121,13 @@ class SimulationDataSourceFragment : Fragment(),
         }
 
         source_frame_count.setOnEditorActionListener { _, _, _ ->
-            generate_channels_btn.performClick()
+            transmit_frames_btn.performClick()
             false
         }
 
-        generate_channels_btn.setOnClickListener {
+        transmit_frames_btn.setOnClickListener {
             SystemUtils.hideKeyboard(this)
-            generateChannels()
+            transmitFrames()
         }
     }
 
@@ -228,14 +140,6 @@ class SimulationDataSourceFragment : Fragment(),
             }
         }
 
-        source_channel_count.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseChannelCount(text.toString()) > 0) {
-                source_channel_count_layout.error = null
-            } else {
-                source_channel_count_layout.error = getString(R.string.error_positive_num)
-            }
-        }
-
         source_frame_count.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseChannelCount(text.toString()) > 0) {
                 source_frame_count_layout.error = null
@@ -243,69 +147,22 @@ class SimulationDataSourceFragment : Fragment(),
                 source_frame_count_layout.error = getString(R.string.error_positive_num)
             }
         }
-
-        source_carrier_frequency.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseFrequency(text.toString()) > 0) {
-                source_carrier_frequency_layout.error = null
-            } else {
-                source_carrier_frequency_layout.error =
-                    getString(R.string.error_positive_num_decimal)
-            }
-        }
-
-        source_data_speed.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseDataspeed(text.toString()) > 0) {
-                source_data_speed_layout.error = null
-            } else {
-                source_data_speed_layout.error = getString(R.string.error_positive_num_decimal)
-            }
-        }
-
-        source_code_length.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseFrameLength(text.toString()) > 0) {
-                source_code_length_layout.error = null
-            } else {
-                source_code_length_layout.error = getString(R.string.error_positive_num)
-            }
-        }
-
-        source_frame_length.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseFrameLength(text.toString()) > 0) {
-                source_frame_length_layout.error = null
-            } else {
-                source_frame_length_layout.error = getString(R.string.error_positive_num)
-            }
-        }
     }
 
-    private fun generateChannels() {
-        val channelCount = source_channel_count.text.toString()
-        val freq = source_carrier_frequency.text.toString()
-        val dataSpeed = source_data_speed.text.toString()
-        val frameLength = source_frame_length.text.toString()
-        val codeLength = source_code_length.text.toString()
-        val codeType = source_channel_code_type.text.toString()
-        val frameCount = source_frame_count.text.toString()
+    private fun transmitFrames() {
+        val channelCount = channel_list.adapter?.itemCount ?: 0
+        if (channelCount == 0) {
+            Toast.makeText(requireContext(), "Для передачи настройте каналы", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        if (source_channel_count_layout.error != null ||
-            source_carrier_frequency_layout.error != null ||
-            source_data_speed_layout.error != null ||
-            source_code_length_layout.error != null ||
-            source_frame_length_layout.error != null ||
-            source_frame_count_layout.error != null ||
-            channelCount.isEmpty() ||
-            freq.isEmpty() ||
-            dataSpeed.isEmpty() ||
-            codeLength.isEmpty() ||
-            frameLength.isEmpty() ||
-            codeType.isEmpty() ||
-            frameCount.isEmpty()
-        ) {
+        val frameCount = source_frame_count.text.toString()
+        if (source_frame_count_layout.error != null || frameCount.isEmpty()) {
             Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
             return
         }
 
-        viewModel.generateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
+        viewModel.transmitFrames(frameCount)
     }
 
     private fun changeAdcFrequency(freq: String) {

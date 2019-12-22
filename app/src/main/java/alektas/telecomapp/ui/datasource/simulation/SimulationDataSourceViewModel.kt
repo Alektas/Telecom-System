@@ -1,7 +1,6 @@
 package alektas.telecomapp.ui.datasource.simulation
 
 import alektas.telecomapp.App
-import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
@@ -24,12 +23,6 @@ class SimulationDataSourceViewModel : ViewModel() {
     val channels = MutableLiveData<List<Channel>>()
     val ether = MutableLiveData<Array<DataPoint>>()
     val adcFrequency = MutableLiveData<Double>()
-    val carrierFrequency = MutableLiveData<Double>()
-    val dataSpeed = MutableLiveData<Double>()
-    val channelCount = MutableLiveData<Int>()
-    val codeType = MutableLiveData<Int>()
-    val frameSize = MutableLiveData<Int>()
-    val codeSize = MutableLiveData<Int>()
     val frameCount = MutableLiveData<Int>()
 
     init {
@@ -79,46 +72,16 @@ class SimulationDataSourceViewModel : ViewModel() {
         processor.removeChannel(channel)
     }
 
-    fun generateChannels(
-        countString: String,
-        carrierFrequencyString: String,
-        dataSpeedString: String,
-        codeLengthString: String,
-        frameLengthString: String,
-        codeTypeString: String,
-        frameCountString: String
-    ) {
-        val channelCount = parseChannelCount(countString)
+    fun transmitFrames(frameCountString: String) {
         val frameCount = parseChannelCount(frameCountString)
-        val freq = parseFrequency(carrierFrequencyString)
-        val dataSpeed = parseDataspeed(dataSpeedString)
-        val codeLength = parseFrameLength(codeLengthString)
-        val frameLength = parseFrameLength(frameLengthString)
-        val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+        if (frameCount <= 0) return
 
-        if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || codeLength <= 0 ||
-            frameLength <= 0 || codeType < 0 || frameCount <= 0) return
+        saveChannelsSettings(frameCount)
 
-        saveChannelsSettings(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
-
-        processor.simulateChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType, frameCount)
+        channels.value?.let { processor.transmitFrames(it, frameCount) }
     }
 
-    private fun saveChannelsSettings(
-        channelCount: Int,
-        freq: Double,
-        dataSpeed: Double,
-        codeLength: Int,
-        frameLength: Int,
-        codeType: Int,
-        frameCount: Int
-    ) {
-        this.channelCount.value = channelCount
-        carrierFrequency.value = freq
-        this.dataSpeed.value = dataSpeed
-        frameSize.value = frameLength
-        codeSize.value = codeLength
-        this.codeType.value = codeType
+    private fun saveChannelsSettings(frameCount: Int) {
         this.frameCount.value = frameCount
     }
 

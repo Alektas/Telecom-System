@@ -169,14 +169,13 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun simulateChannels(
+    fun createChannels(
         count: Int,
         carrierFrequency: Double, // МГц
         dataSpeed: Double, // кБит/с
         codeLength: Int,
         frameLength: Int,
-        codesType: Int,
-        frameCount: Int
+        codesType: Int
     ) {
         simulationSubscription?.dispose()
         simulationSubscription =
@@ -184,7 +183,7 @@ class SystemProcessor {
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
                 .subscribe { channels: List<Channel> ->
-                    transmitData(channels, frameLength, frameCount)
+                    storage.setChannels(channels)
                 }
     }
 
@@ -210,6 +209,7 @@ class SystemProcessor {
                 val channel = Channel(
                     name = "${i + 1}",
                     carrierFrequency = carrierFrequency * 1.0e6, // МГц -> Гц
+                    frameLength = frameLength,
                     bitTime = bitTime,
                     code = codes[i],
                     codeType = codesType
@@ -237,8 +237,9 @@ class SystemProcessor {
         } // генерируем новые помехи с обновленной продолжительностью
     }
 
-    private fun transmitData(channels: List<Channel>, frameSize: Int, frameCount: Int) {
+    fun transmitFrames(channels: List<Channel>, frameCount: Int) {
         var framesTransmitted = 0
+        val frameSize = if (channels.isEmpty()) 0 else channels.first().frameLength
 
         transmitSubscription?.dispose()
         transmitSubscription = Observable
@@ -279,7 +280,7 @@ class SystemProcessor {
                     return@subscribe
                 }
 
-                storage.setChannelsData(it) // передача очередного фрейма всеми каналами
+                storage.setChannels(it) // передача очередного фрейма всеми каналами
             }
     }
 

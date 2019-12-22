@@ -110,4 +110,8 @@
     <string name="source_interference_sparseness_key">source_interference_sparseness_key</string>
     <string name="ether_interference_enable">Включить помехи</string>
     <string name="ether_settings">Настройка эфира</string>
+    <string name="apply">Применить</string>
+    <string name="channels_settings">Настройка каналов</string>
+    <string name="simulation">Симуляция</string>
+    <string name="simulation_frequency_in_megaherz">Частота дискретизации, МГц</string>
 </resources>
