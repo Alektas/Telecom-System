@@ -475,12 +475,14 @@ class SystemProcessor {
         val step = (toSnr - fromSnr) / BER_POINTS_COUNT
         val snrs = DoubleArray(BER_POINTS_COUNT) { fromSnr + it * step }
         val isNoiseWasEnabled = storage.isNoiseEnabled()
+        val isInterferenceWasEnabled = storage.isInterferenceEnabled()
 
         disposable.add(snrs.toObservable()
             .skip(1) // Первое SNR вручную запускается в doOnSubscribe, поэтому пропускаем
             .zipWith(storage.observeBerByNoise()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
             .doOnSubscribe {
                 berProcess.onNext(0)
+                if (isInterferenceWasEnabled) storage.disableInterference()
                 if (!isNoiseWasEnabled) storage.enableNoise(false)
                 setNoise(fromSnr, true)
             }
@@ -496,7 +498,9 @@ class SystemProcessor {
             }, {
                 berProcess.onNext(100)
             }, {
-                if (!isNoiseWasEnabled) disableNoise() // Восстановить исходное состояние
+                // Восстановить исходное состояние
+                if (!isNoiseWasEnabled) disableNoise()
+                if (isInterferenceWasEnabled) enableInterference()
                 berProcess.onNext(100)
             })
         )

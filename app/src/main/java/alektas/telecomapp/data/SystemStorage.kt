@@ -317,6 +317,10 @@ class SystemStorage : Repository {
         interferenceSource.onNext(BaseNoise())
     }
 
+    override fun isInterferenceEnabled(): Boolean {
+        return isInterferenceEnabled
+    }
+
     override fun observeInterference(): Observable<Noise> {
         return interferenceSource
     }
