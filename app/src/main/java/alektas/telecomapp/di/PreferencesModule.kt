@@ -42,9 +42,33 @@ class PreferencesModule {
     }
 
     @Provides
+    @Named("interferenceRate")
+    fun providesInterferenceRate(context: Context, @Named("sourcePrefs") prefs: SharedPreferences): Double {
+        return prefs.getFloat(
+            context.getString(R.string.source_interference_snr_key),
+            QpskContract.DEFAULT_SIGNAL_NOISE_RATE.toFloat()
+        ).toDouble()
+    }
+
+    @Provides
+    @Named("interferenceSparseness")
+    fun providesInterferenceSparseness(context: Context, @Named("sourcePrefs") prefs: SharedPreferences): Double {
+        return prefs.getFloat(
+            context.getString(R.string.source_interference_sparseness_key),
+            QpskContract.DEFAULT_INTERFERENCE_SPARSENESS.toFloat()
+        ).toDouble()
+    }
+
+    @Provides
     @Named("sourceSnrEnabled")
     fun providesSourceSnrEnabled(context: Context, @Named("sourcePrefs") prefs: SharedPreferences): Boolean {
         return prefs.getBoolean(context.getString(R.string.source_noise_enable_key), false)
+    }
+
+    @Provides
+    @Named("sourceInterferenceEnabled")
+    fun providesInterferenceEnabled(context: Context, @Named("sourcePrefs") prefs: SharedPreferences): Boolean {
+        return prefs.getBoolean(context.getString(R.string.source_interference_enable_key), false)
     }
 
     @Provides

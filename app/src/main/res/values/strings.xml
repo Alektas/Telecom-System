@@ -103,4 +103,10 @@
     <string name="usb_source_channels_codesize_key">usb_source_channels_codesize_key</string>
     <string name="usb_source_channels_framesize_key">usb_source_channels_framesize_key</string>
     <string name="file_data_source">Файл</string>
+    <string name="source_interference_enable_key">source_interference_enable_key</string>
+    <string name="sparseness">Разреженность</string>
+    <string name="SIR">Отношение С/П, дБ</string>
+    <string name="source_interference_snr_key">source_interference_rate_key</string>
+    <string name="source_interference_sparseness_key">source_interference_sparseness_key</string>
+    <string name="ether_interference_enable">Включить помехи</string>
 </resources>

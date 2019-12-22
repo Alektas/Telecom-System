@@ -24,7 +24,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.checkbox.MaterialCheckBox
-            android:id="@+id/ether_noise_checkbox"
+            android:id="@+id/noise_checkbox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top_text"
@@ -35,7 +35,7 @@
             app:layout_constraintEnd_toEndOf="parent"/>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/ether_snr_layout"
+            android:id="@+id/noise_rate_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -43,10 +43,61 @@
             app:errorEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ether_noise_checkbox">
+            app:layout_constraintTop_toBottomOf="@id/noise_checkbox">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/ether_snr"
+                android:id="@+id/noise_rate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/interference_checkbox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
+            android:text="@string/ether_interference_enable"
+            android:checked="true"
+            app:layout_constraintTop_toBottomOf="@id/noise_rate_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/interference_rate_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/SIR"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/interference_checkbox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/interference_rate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionNext"
+                android:inputType="numberSigned|numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/interference_sparseness_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/sparseness"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/interference_rate_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/interference_sparseness"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
@@ -58,10 +109,10 @@
             android:id="@+id/ether_chart"
             android:layout_width="match_parent"
             android:layout_height="@dimen/height_graph_signal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/margin_top_text"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ether_snr_layout" />
+            app:layout_constraintTop_toBottomOf="@id/interference_sparseness_layout" />
 
         <View
             android:id="@+id/divider1"

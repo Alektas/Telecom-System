@@ -15,6 +15,7 @@ import alektas.telecomapp.utils.FileWorker
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
+import io.reactivex.functions.Function3
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
@@ -33,13 +34,23 @@ class SystemStorage : Repository {
     /**
      * Шум источника.
      * Если шум отключен с помощью метода {@see #disableNoise}, то этот объект сохраняется,
-     * а потребителям выдается пустой сигнал. При включении шума методом {@see #enableNoise}
+     * а потребителям взамен выдается пустой сигнал. При включении шума методом {@see #enableNoise}
      * потребителям снова выдается данный объект (если он не был нулевым)
      */
     private var noise: Noise? = null
     @JvmField
     @field:[Inject Named("sourceSnrEnabled")]
     var isNoiseEnabled: Boolean = false
+    /**
+     * Помехи источника.
+     * Если помехи отключены с помощью метода [@see #disableInterference()], то этот объект сохраняется,
+     * а потребителям взамен выдается пустой сигнал. При включении шума методом [@see #enableInterference()]
+     * потребителям снова выдается данный объект (если он не был нулевым)
+     */
+    private var interference: Noise? = null
+    @JvmField
+    @field:[Inject Named("sourceInterferenceEnabled")]
+    var isInterferenceEnabled: Boolean = false
     private var isStatisticsCounted: Boolean = false
     /**
      * Сохряняется ли эфир в файл в виде битов с разрядностью {@code adcBitDepth}.
@@ -56,6 +67,7 @@ class SystemStorage : Repository {
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
     private val filteredChannelQSource = BehaviorSubject.create<Signal>()
     private val noiseSource = BehaviorSubject.create<Noise>()
+    private val interferenceSource = BehaviorSubject.create<Noise>()
     private val demodulatedSignalSource =
         BehaviorSubject.create<DigitalSignal>()
     private val demodulatedSignalConstellationSource =
@@ -167,7 +179,10 @@ class SystemStorage : Repository {
         etherSource = Observable.combineLatest(
             channelsFrameSignalSource.startWith(BaseSignal()),
             noiseSource.startWith(BaseNoise()),
-            BiFunction<Signal, Signal, Signal> { signal, noise -> signal + noise })
+            interferenceSource.startWith(BaseNoise()),
+            Function3<Signal, Signal, Signal, Signal> { signal, noise, interf ->
+                signal + noise + interf
+            })
             .apply {
                 subscribe { ether ->
                     demodulatorConfig.inputSignal = ether
@@ -180,7 +195,7 @@ class SystemStorage : Repository {
             BiFunction { channels: List<ChannelData>, noise: Noise ->
                 val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
                 val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
-                Pair(noise.snr(), errorsCount / bitsReceived * 100)
+                Pair(noise.rate(), errorsCount / bitsReceived * 100)
             })
     }
 
@@ -281,6 +296,29 @@ class SystemStorage : Repository {
 
     override fun observeNoise(): Observable<Noise> {
         return noiseSource
+    }
+
+    override fun setInterference(signal: Noise) {
+        interference = signal
+        if (isInterferenceEnabled) interferenceSource.onNext(signal)
+    }
+
+    /**
+     * Включить помехи.
+     * @param fromCache Если <code>true</code>, то сохраненный в кэше экземпляр помех добавляется в эфир.
+     */
+    override fun enableInterference(fromCache: Boolean) {
+        isInterferenceEnabled = true
+        if (fromCache) interference?.let { interferenceSource.onNext(it) }
+    }
+
+    override fun disableInterference() {
+        isInterferenceEnabled = false
+        interferenceSource.onNext(BaseNoise())
+    }
+
+    override fun observeInterference(): Observable<Noise> {
+        return interferenceSource
     }
 
     override fun setChannelsFrameSignal(signal: Signal) {

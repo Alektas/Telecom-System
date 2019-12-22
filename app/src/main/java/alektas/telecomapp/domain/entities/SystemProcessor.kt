@@ -17,6 +17,7 @@ import alektas.telecomapp.domain.entities.signals.BaseSignal
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.domain.entities.signals.noises.PulseNoise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import alektas.telecomapp.utils.L
 import android.annotation.SuppressLint
@@ -44,6 +45,12 @@ class SystemProcessor {
     @JvmField
     @field:[Inject Named("sourceSnr")]
     var noiseSnr: Double? = null
+    @JvmField
+    @field:[Inject Named("interferenceRate")]
+    var interferenceRate: Double? = null
+    @JvmField
+    @field:[Inject Named("interferenceSparseness")]
+    var interferenceSparseness: Double? = null
     private var decodingThreshold = QpskContract.DEFAULT_SIGNAL_THRESHOLD
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
@@ -55,6 +62,13 @@ class SystemProcessor {
 
         if (noiseSnr != null) {
             setNoise(noiseSnr ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE)
+        }
+
+        if (interferenceRate != null && interferenceSparseness != null) {
+            setInterference(
+                interferenceSparseness ?: QpskContract.DEFAULT_INTERFERENCE_SPARSENESS,
+                interferenceRate ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE
+            )
         }
 
         disposable.addAll(
@@ -82,7 +96,16 @@ class SystemProcessor {
 
             storage.observeNoise()
                 .subscribeOn(Schedulers.io())
-                .subscribe { noiseSnr = it.snr() },
+                .subscribe { noiseSnr = it.rate() },
+
+            storage.observeInterference()
+                .subscribeOn(Schedulers.io())
+                .subscribe {
+                    if (it is PulseNoise) {
+                        interferenceRate = it.rate()
+                        interferenceSparseness = it.sparseness
+                    }
+                },
 
             Observable.combineLatest(
                 storage.observeSimulatedChannels(),
@@ -201,6 +224,14 @@ class SystemProcessor {
             val dataTime = frameLength * codes[0].size * bitTime
             Simulator.simulationTime = dataTime
             noiseSnr?.let { n -> setNoise(n) } // генерируем новый шум с обновленной продолжительностью
+            interferenceRate?.let { rate ->
+                interferenceSparseness?.let { sp ->
+                    setInterference(
+                        sp,
+                        rate
+                    )
+                }
+            } // генерируем новые помехи с обновленной продолжительностью
 
             it.onSuccess(channels)
         }
@@ -306,6 +337,55 @@ class SystemProcessor {
 
     fun enableNoise() {
         storage.enableNoise(true)
+    }
+
+    @SuppressLint("CheckResult")
+    fun setInterference(sparseness: Double, snr: Double, singleThread: Boolean = false) {
+        Single.create<Noise> {
+            val noise = PulseNoise(sparseness, snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
+            it.onSuccess(noise)
+        }
+            .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
+            .observeOn(Schedulers.io())
+            .subscribe { noise: Noise -> storage.setInterference(noise) }
+    }
+
+    @SuppressLint("CheckResult")
+    fun setInterferenceSparseness(sparseness: Double) {
+        Single.create<Noise> {
+            val noise = PulseNoise(
+                sparseness,
+                interferenceRate ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE,
+                QpskContract.DEFAULT_SIGNAL_MAGNITUDE
+            )
+            it.onSuccess(noise)
+        }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(Schedulers.io())
+            .subscribe { noise: Noise -> storage.setInterference(noise) }
+    }
+
+    @SuppressLint("CheckResult")
+    fun setInterferenceRate(rate: Double) {
+        Single.create<Noise> {
+            val noise = PulseNoise(
+                interferenceSparseness ?: QpskContract.DEFAULT_INTERFERENCE_SPARSENESS,
+                rate,
+                QpskContract.DEFAULT_SIGNAL_MAGNITUDE
+            )
+            it.onSuccess(noise)
+        }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(Schedulers.io())
+            .subscribe { noise: Noise -> storage.setInterference(noise) }
+    }
+
+    fun disableInterference() {
+        storage.disableInterference()
+    }
+
+    fun enableInterference() {
+        storage.enableInterference(true)
     }
 
     @SuppressLint("CheckResult")

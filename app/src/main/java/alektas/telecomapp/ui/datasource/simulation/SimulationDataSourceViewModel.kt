@@ -24,7 +24,9 @@ class SimulationDataSourceViewModel : ViewModel() {
     val channels = MutableLiveData<List<ChannelData>>()
     val ether = MutableLiveData<Array<DataPoint>>()
     val adcFrequency = MutableLiveData<Double>()
-    val noiseSnr = MutableLiveData<Double>()
+    val noiseRate = MutableLiveData<Double>()
+    val interferenceRate = MutableLiveData<Double>()
+    val interferenceSparseness = MutableLiveData<Double>()
     val carrierFrequency = MutableLiveData<Double>()
     val dataSpeed = MutableLiveData<Double>()
     val channelCount = MutableLiveData<Int>()
@@ -84,8 +86,43 @@ class SimulationDataSourceViewModel : ViewModel() {
 
         if (snr == INVALID_SNR) return
 
-        noiseSnr.value = snr
+        noiseRate.value = snr
         processor.setNoise(snr)
+    }
+
+    fun enableInterference() {
+        processor.enableInterference()
+    }
+
+    fun disableInterference() {
+        processor.disableInterference()
+    }
+
+    fun changeInterferenceSparseness(sparsenessString: String) {
+        val sparseness = parseSparseness(sparsenessString)
+        if ( sparseness < 0) return
+
+        interferenceSparseness.value = sparseness
+        processor.setInterferenceSparseness(sparseness)
+    }
+
+    fun changeInterferenceRate(rateString: String) {
+        val rate = parseSnr(rateString)
+        if (rate == INVALID_SNR) return
+
+        interferenceRate.value = rate
+        processor.setInterferenceRate(rate)
+    }
+
+    fun setInterference(rateString: String, sparsenessString: String) {
+        val rate = parseSnr(rateString)
+        val sparseness = parseSparseness(sparsenessString)
+
+        if (rate == INVALID_SNR || sparseness < 0) return
+
+        interferenceRate.value = rate
+        interferenceSparseness.value = sparseness
+        processor.setInterference(sparseness, rate)
     }
 
     fun setAdcFrequency(freqString: String) {
@@ -189,6 +226,16 @@ class SimulationDataSourceViewModel : ViewModel() {
             snr.toDouble()
         } catch (e: NumberFormatException) {
             INVALID_SNR
+        }
+    }
+
+    fun parseSparseness(sparsenessString: String): Double {
+        return try {
+            val c = sparsenessString.toDouble()
+            if (c < 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1.0
         }
     }
 
