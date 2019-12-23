@@ -3,28 +3,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="@dimen/padding_horiz_page"
-    android:layout_marginEnd="@dimen/padding_horiz_page"
     android:layout_marginTop="@dimen/padding_top_page"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.statistic.ber.BerFragment">
 
     <TextView
         android:id="@+id/ber_label"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/ber"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"/>
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/ber_graph"
         android:layout_width="match_parent"
         android:layout_height="@dimen/height_ber_graph"
-        app:layout_constraintTop_toBottomOf="@id/ber_label"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/ber_label"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/ber_from_snr_layout"
@@ -36,7 +32,7 @@
         android:hint="@string/from_snr_in_db"
         app:errorEnabled="true"
         app:layout_constraintEnd_toStartOf="@id/ber_to_snr_layout"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"
         app:layout_constraintTop_toBottomOf="@id/ber_graph">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -55,7 +51,7 @@
         android:layout_height="wrap_content"
         android:hint="@string/to_snr_in_db"
         app:errorEnabled="true"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
         app:layout_constraintStart_toEndOf="@id/ber_from_snr_layout"
         app:layout_constraintBaseline_toBaselineOf="@id/ber_from_snr_layout">
 
@@ -70,13 +66,27 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/ber_draw_graph_btn"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_text"
         android:text="@string/draw_graph"
         app:errorEnabled="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"
         app:layout_constraintTop_toBottomOf="@id/ber_to_snr_layout" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_left_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_right_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
