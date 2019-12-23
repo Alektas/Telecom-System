@@ -258,7 +258,7 @@ class SystemStorage : Repository {
         expectedFramesCount = count
     }
 
-    override fun setChannelsData(channels: List<Channel>) {
+    override fun setChannels(channels: List<Channel>) {
         channelList = channels.toMutableList()
         simulatedChannelsSource.onNext(channelList)
     }

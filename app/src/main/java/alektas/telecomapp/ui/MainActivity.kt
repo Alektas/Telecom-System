@@ -4,6 +4,7 @@ import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.datasource.DataSourceFragment
 import alektas.telecomapp.ui.datasource.external.FileDataSourceFragment
+import alektas.telecomapp.ui.datasource.simulation.ChannelsSettingsFragment
 import alektas.telecomapp.ui.datasource.simulation.EtherSettingsFragment
 import alektas.telecomapp.ui.datasource.simulation.SimulationDataSourceFragment
 import alektas.telecomapp.ui.decoder.DecoderFragment
@@ -92,6 +93,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.to_data_source_btn -> DataSourceFragment.newInstance()
                     R.id.to_simulation_data_source_btn -> SimulationDataSourceFragment.newInstance()
                     R.id.to_ether_settings_btn -> EtherSettingsFragment.newInstance()
+                    R.id.to_channels_settings_btn -> ChannelsSettingsFragment.newInstance()
                     R.id.to_demodulation_btn -> QpskDemodulatorFragment.newInstance()
                     R.id.to_demodulator_input_btn -> DemodulatorInputFragment.newInstance()
                     R.id.to_demodulator_generator_btn -> DemodulatorGeneratorFragment.newInstance()

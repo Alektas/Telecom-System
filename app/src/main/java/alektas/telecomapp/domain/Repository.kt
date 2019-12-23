@@ -25,7 +25,7 @@ interface Repository {
     fun endCountingStatistics()
     fun setExpectedFrameCount(count: Int)
 
-    fun setChannelsData(channels: List<Channel>)
+    fun setChannels(channels: List<Channel>)
     fun removeChannel(channel: Channel)
     fun observeSimulatedChannels(): Observable<List<Channel>>
 
