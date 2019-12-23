@@ -60,20 +60,39 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:imeOptions="actionDone"
+            android:imeOptions="actionNext"
             android:inputType="numberSigned|numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/ber_points_count_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/points_count"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+        app:layout_constraintStart_toEndOf="@id/guideline_left_border"
+        app:layout_constraintTop_toBottomOf="@id/ber_from_snr_layout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ber_points_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:imeOptions="actionDone"
+            android:inputType="number" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/ber_draw_graph_btn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_text"
         android:text="@string/draw_graph"
         app:errorEnabled="true"
         app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
         app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-        app:layout_constraintTop_toBottomOf="@id/ber_to_snr_layout" />
+        app:layout_constraintTop_toBottomOf="@id/ber_points_count_layout" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_left_border"

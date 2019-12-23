@@ -46,7 +46,7 @@ class BerFragment : Fragment() {
         viewModel = ViewModelProviders.of(this).get(BerViewModel::class.java)
         setFieldsValidation()
 
-        ber_to_snr.setOnEditorActionListener { _, _, _ ->
+        ber_points_count.setOnEditorActionListener { _, _, _ ->
             SystemUtils.hideKeyboard(this)
             ber_draw_graph_btn.performClick()
             false
@@ -71,7 +71,8 @@ class BerFragment : Fragment() {
     private fun calculateBer() {
         val from = ber_from_snr.text.toString()
         val to = ber_to_snr.text.toString()
-        val isSuccess = viewModel.calculateBer(from, to)
+        val count = ber_points_count.text.toString()
+        val isSuccess = viewModel.calculateBer(from, to, count)
         if (!isSuccess) {
             Toast.makeText(
                 requireContext(),
@@ -95,6 +96,14 @@ class BerFragment : Fragment() {
                 ber_to_snr_layout.error = null
             } else {
                 ber_to_snr_layout.error = getString(R.string.error_num)
+            }
+        }
+
+        ber_points_count.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseSnr(text.toString()) > 0) {
+                ber_points_count_layout.error = null
+            } else {
+                ber_points_count_layout.error = getString(R.string.error_positive_num)
             }
         }
     }

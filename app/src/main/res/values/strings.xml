@@ -116,4 +116,5 @@
     <string name="simulation_frequency_in_megaherz">Частота дискретизации, МГц</string>
     <string name="settings_changed">Настройки изменены</string>
     <string name="setup_channels_hint">*Настройте каналы чтобы начать передачу</string>
+    <string name="points_count">Количество точек</string>
 </resources>

@@ -65,14 +65,16 @@ class BerViewModel : ViewModel() {
         )
     }
 
-    fun calculateBer(from: String, to: String): Boolean {
+    fun calculateBer(from: String, to: String, count: String): Boolean {
         val fromSnr = parseSnr(from)
         val toSnr = parseSnr(to)
+        val pointsCount = parseCount(count)
 
-        if (fromSnr != INVALID_SNR && toSnr != INVALID_SNR && fromSnr < toSnr && channels.isNotEmpty()) {
+        if (fromSnr != INVALID_SNR && toSnr != INVALID_SNR && fromSnr < toSnr &&
+            pointsCount > 0 && channels.isNotEmpty()) {
             viewportData.value = Pair(fromSnr, toSnr)
             berList.clear()
-            processor.calculateBer(fromSnr, toSnr)
+            processor.calculateBer(fromSnr, toSnr, pointsCount)
             return true
         }
 
@@ -84,6 +86,16 @@ class BerViewModel : ViewModel() {
             snr.toDouble()
         } catch (e: NumberFormatException) {
             INVALID_SNR
+        }
+    }
+
+    fun parseCount(count: String): Int {
+        return try {
+            val c = count.toInt()
+            if (c <= 0) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1
         }
     }
 

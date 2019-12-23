@@ -34,8 +34,6 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.max
 
-private const val BER_POINTS_COUNT = 20
-
 class SystemProcessor {
     @Inject
     lateinit var storage: Repository
@@ -472,9 +470,9 @@ class SystemProcessor {
             }
     }
 
-    fun calculateBer(fromSnr: Double, toSnr: Double) {
-        val step = (toSnr - fromSnr) / BER_POINTS_COUNT
-        val snrs = DoubleArray(BER_POINTS_COUNT) { fromSnr + it * step }
+    fun calculateBer(fromSnr: Double, toSnr: Double, pointsCount: Int) {
+        val step = (toSnr - fromSnr) / pointsCount
+        val snrs = DoubleArray(pointsCount) { fromSnr + it * step }
         val isNoiseWasEnabled = storage.isNoiseEnabled()
         val isInterferenceWasEnabled = storage.isInterferenceEnabled()
 
@@ -492,7 +490,7 @@ class SystemProcessor {
             .subscribe({
                 val index = snrs.indexOf(it)
                 if (index > 0) {
-                    val progress = (index / BER_POINTS_COUNT.toDouble() * 100).toInt()
+                    val progress = (index / pointsCount.toDouble() * 100).toInt()
                     berProcess.onNext(progress)
                 }
                 setNoise(it, true)
