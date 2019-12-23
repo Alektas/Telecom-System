@@ -114,4 +114,5 @@
     <string name="channels_settings">Настройка каналов</string>
     <string name="simulation">Симуляция</string>
     <string name="simulation_frequency_in_megaherz">Частота дискретизации, МГц</string>
+    <string name="settings_changed">Настройки изменены</string>
 </resources>

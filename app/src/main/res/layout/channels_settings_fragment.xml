@@ -17,6 +17,21 @@
         app:layout_constraintStart_toStartOf="@id/guideline_left_border"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/settings_changed_label"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_title"
+        android:text="@string/settings_changed"
+        android:textAlignment="viewEnd"
+        android:textColor="@color/design_default_color_error"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        app:layout_constraintBaseline_toBaselineOf="@id/channels_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+        app:layout_constraintStart_toEndOf="@id/channels_label" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/source_channel_code_type_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"

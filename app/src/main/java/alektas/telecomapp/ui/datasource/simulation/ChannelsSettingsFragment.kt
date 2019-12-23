@@ -46,9 +46,11 @@ class ChannelsSettingsFragment : Fragment() {
             Context.MODE_PRIVATE
         )
 
-        setupFieldsValidation()
         setupCodeTypesDropdown()
         setInitValues(prefs)
+        // Нужно вызывать после setInitValues, иначе метка изменений настроек
+        // будет всегда появлятся при открытии страницы
+        setupFieldsValidation()
         observeSettings(viewModel, prefs)
         setupControls()
     }
@@ -120,6 +122,10 @@ class ChannelsSettingsFragment : Fragment() {
         viewModel.frameSize.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.source_channels_framesize_key), it).apply()
         })
+
+        viewModel.isSettingsChanged.observe(viewLifecycleOwner, Observer {
+            settings_changed_label.visibility = if (it) View.VISIBLE else View.INVISIBLE
+        })
     }
 
     private fun setupCodeTypesDropdown() {
@@ -130,9 +136,9 @@ class ChannelsSettingsFragment : Fragment() {
         )
         source_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
-        val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
-        source_channel_code_type.setText(defaultType)
-
+        source_channel_code_type.setOnItemClickListener { _, _, _, _ ->
+            viewModel.setSettingsChanged()
+        }
         source_channel_code_type_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
             val dropDown = v.findViewById<AutoCompleteTextView>(R.id.source_channel_code_type)
@@ -143,6 +149,7 @@ class ChannelsSettingsFragment : Fragment() {
 
     private fun setupFieldsValidation() {
         source_channel_count.doOnTextChanged { text, _, _, _ ->
+            viewModel.setSettingsChanged()
             if (viewModel.parseChannelCount(text.toString()) > 0) {
                 source_channel_count_layout.error = null
             } else {
@@ -151,6 +158,7 @@ class ChannelsSettingsFragment : Fragment() {
         }
 
         source_carrier_frequency.doOnTextChanged { text, _, _, _ ->
+            viewModel.setSettingsChanged()
             if (viewModel.parseFrequency(text.toString()) > 0) {
                 source_carrier_frequency_layout.error = null
             } else {
@@ -160,6 +168,7 @@ class ChannelsSettingsFragment : Fragment() {
         }
 
         source_data_speed.doOnTextChanged { text, _, _, _ ->
+            viewModel.setSettingsChanged()
             if (viewModel.parseDataspeed(text.toString()) > 0) {
                 source_data_speed_layout.error = null
             } else {
@@ -168,6 +177,7 @@ class ChannelsSettingsFragment : Fragment() {
         }
 
         source_code_length.doOnTextChanged { text, _, _, _ ->
+            viewModel.setSettingsChanged()
             if (viewModel.parseFrameLength(text.toString()) > 0) {
                 source_code_length_layout.error = null
             } else {
@@ -176,6 +186,7 @@ class ChannelsSettingsFragment : Fragment() {
         }
 
         source_frame_length.doOnTextChanged { text, _, _, _ ->
+            viewModel.setSettingsChanged()
             if (viewModel.parseFrameLength(text.toString()) > 0) {
                 source_frame_length_layout.error = null
             } else {

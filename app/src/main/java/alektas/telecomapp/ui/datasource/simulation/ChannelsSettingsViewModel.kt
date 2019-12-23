@@ -21,6 +21,7 @@ class ChannelsSettingsViewModel : ViewModel() {
     val codeType = MutableLiveData<Int>()
     val frameSize = MutableLiveData<Int>()
     val codeSize = MutableLiveData<Int>()
+    val isSettingsChanged = MutableLiveData<Boolean>()
 
     init {
         App.component.inject(this)
@@ -45,8 +46,13 @@ class ChannelsSettingsViewModel : ViewModel() {
             frameLength <= 0 || codeType < 0) return
 
         saveChannelsSettings(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
+        isSettingsChanged.value = false
 
         processor.createChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
+    }
+
+    fun setSettingsChanged() {
+        isSettingsChanged.value = true
     }
 
     private fun saveChannelsSettings(
