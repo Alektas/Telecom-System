@@ -74,6 +74,13 @@ class SimulationDataSourceFragment : Fragment(),
 
         viewModel.channels.observe(viewLifecycleOwner, Observer {
             channelAdapter.channels = it
+            if (it.isNotEmpty()) {
+                setup_channels_hint.visibility = View.INVISIBLE
+                transmit_frames_btn.isEnabled = true
+            } else {
+                setup_channels_hint.visibility = View.VISIBLE
+                transmit_frames_btn.isEnabled = false
+            }
         })
 
         viewModel.ether.observe(viewLifecycleOwner, Observer {

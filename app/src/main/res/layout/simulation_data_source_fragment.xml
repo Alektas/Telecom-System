@@ -119,18 +119,29 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/start_transmitting"
+            android:enabled="false"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/source_frame_count_layout" />
+
+        <TextView
+            style="@style/TextAppearance.MaterialComponents.Caption"
+            android:id="@+id/setup_channels_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_channels_hint"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/transmit_frames_btn"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/channel_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
             android:nestedScrollingEnabled="true"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-            app:layout_constraintTop_toBottomOf="@id/transmit_frames_btn"
+            app:layout_constraintTop_toBottomOf="@id/setup_channels_hint"
             tools:itemCount="4"
             tools:listitem="@layout/item_channel" />
 
