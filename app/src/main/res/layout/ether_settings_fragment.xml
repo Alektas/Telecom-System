@@ -25,9 +25,6 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/height_graph_signal"
             android:layout_marginTop="@dimen/margin_top_text"
-            android:paddingStart="@dimen/margin_start_body"
-            android:paddingEnd="@dimen/margin_start_body"
-            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/ether_label" />
 
         <com.google.android.material.checkbox.MaterialCheckBox

@@ -16,5 +16,6 @@
     <dimen name="textsize_graph_view_label">16sp</dimen>
     <dimen name="margin_top_text">8dp</dimen>
     <dimen name="height_ber_graph">250dp</dimen>
+    <dimen name="margin_horiz_divider">32dp</dimen>
 
 </resources>
