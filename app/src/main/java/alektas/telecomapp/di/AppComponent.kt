@@ -2,6 +2,7 @@ package alektas.telecomapp.di
 
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.domain.processes.CalculateBerProcess
 import alektas.telecomapp.ui.MainViewModel
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.ui.datasource.simulation.ChannelsSettingsViewModel
@@ -45,6 +46,7 @@ interface AppComponent {
     fun inject(vm: EtherSettingsViewModel)
     fun inject(vm: ChannelsSettingsViewModel)
     fun inject(storage: SystemStorage)
+    fun inject(process: CalculateBerProcess)
 
     fun context(): Context
 

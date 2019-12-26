@@ -119,7 +119,7 @@ class SystemStorage : Repository {
             berSource.onNext(value)
         }
     private val berSource = BehaviorSubject.create<Double>()
-    private val berByNoiseSource: Observable<Pair<Double, Double>>
+    private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val berProcess = BehaviorSubject.create<Int>()
     private val transmitProcess = BehaviorSubject.create<Int>()
 
@@ -189,14 +189,6 @@ class SystemStorage : Repository {
                     demodulatorConfigSource.onNext(demodulatorConfig)
                 }
             }
-
-        berByNoiseSource = Observable.zip(
-            decodedChannelsSource, noiseSource,
-            BiFunction { channels: List<Channel>, noise: Noise ->
-                val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
-                val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
-                Pair(noise.rate(), errorsCount / bitsReceived * 100)
-            })
     }
 
     override fun getCurrentDemodulatorConfig(): DemodulatorConfig {
@@ -450,6 +442,10 @@ class SystemStorage : Repository {
 
     override fun observeBerProcess(): Observable<Int> {
         return berProcess
+    }
+
+    override fun setBerByNoise(berByNoise: Pair<Double, Double>) {
+        berByNoiseSource.onNext(berByNoise)
     }
 
     override fun observeBerByNoise(): Observable<Pair<Double, Double>> {

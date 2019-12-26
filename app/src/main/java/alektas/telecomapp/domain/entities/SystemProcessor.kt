@@ -19,6 +19,7 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.PulseNoise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
+import alektas.telecomapp.domain.processes.CalculateBerProcess
 import alektas.telecomapp.utils.L
 import android.annotation.SuppressLint
 import io.reactivex.Observable
@@ -26,7 +27,6 @@ import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
-import io.reactivex.rxkotlin.toObservable
 import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
@@ -53,7 +53,8 @@ class SystemProcessor {
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
     private var transmitSubscription: Disposable? = null
-    val berProcess = BehaviorSubject.create<Int>()
+    private var berProcess: CalculateBerProcess? = null
+    val berProgress = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
@@ -471,38 +472,15 @@ class SystemProcessor {
     }
 
     fun calculateBer(fromSnr: Double, toSnr: Double, pointsCount: Int) {
-        val step = (toSnr - fromSnr) / pointsCount
-        val snrs = DoubleArray(pointsCount) { fromSnr + it * step }
-        val isNoiseWasEnabled = storage.isNoiseEnabled()
-        val isInterferenceWasEnabled = storage.isInterferenceEnabled()
+        val signal = storage.observeChannelsSignal().blockingFirst(BaseSignal())
+        val demodConfig = storage.getCurrentDemodulatorConfig()
+        val decodedChannels = storage.observeDecodedChannels().blockingFirst(listOf())
 
-        disposable.add(snrs.toObservable()
-            .skip(1) // Первое SNR вручную запускается в doOnSubscribe, поэтому пропускаем
-            .zipWith(storage.observeBerByNoise()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
-            .doOnSubscribe {
-                berProcess.onNext(0)
-                if (isInterferenceWasEnabled) storage.disableInterference()
-                if (!isNoiseWasEnabled) storage.enableNoise(false)
-                setNoise(fromSnr, true)
-            }
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .subscribe({
-                val index = snrs.indexOf(it)
-                if (index > 0) {
-                    val progress = (index / pointsCount.toDouble() * 100).toInt()
-                    berProcess.onNext(progress)
-                }
-                setNoise(it, true)
-            }, {
-                berProcess.onNext(100)
-            }, {
-                // Восстановить исходное состояние
-                if (!isNoiseWasEnabled) disableNoise()
-                if (isInterferenceWasEnabled) enableInterference()
-                berProcess.onNext(100)
-            })
-        )
+        berProcess?.cancel()
+        berProcess = CalculateBerProcess(signal, demodConfig, decodedChannels, 0.3)
+        berProcess?.execute(fromSnr, toSnr, pointsCount) {
+            berProgress.onNext(it)
+        }
     }
 
     /**

@@ -21,7 +21,7 @@ class MainViewModel : ViewModel() {
         App.component.inject(this)
 
         disposable.addAll(
-            processor.berProcess
+            processor.berProgress
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     processProgress.value = it

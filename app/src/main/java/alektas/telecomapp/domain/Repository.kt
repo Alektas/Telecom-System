@@ -77,5 +77,6 @@ interface Repository {
     fun observeBer(): Observable<Double>
     fun observeBerProcess(): Observable<Int>
 
+    fun setBerByNoise(berByNoise: Pair<Double, Double>)
     fun observeBerByNoise(): Observable<Pair<Double, Double>>
 }
