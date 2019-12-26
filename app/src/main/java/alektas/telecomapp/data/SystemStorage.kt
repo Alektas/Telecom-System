@@ -125,6 +125,7 @@ class SystemStorage : Repository {
 
     init {
         App.component.inject(this)
+        demodulatorConfigSource.onNext(demodulatorConfig)
 
         disposable.addAll(
             simulatedChannelsSource

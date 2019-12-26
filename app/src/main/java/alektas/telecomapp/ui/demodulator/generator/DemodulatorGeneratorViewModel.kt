@@ -13,6 +13,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
+import java.lang.NumberFormatException
 import javax.inject.Inject
 
 class DemodulatorGeneratorViewModel : ViewModel() {
@@ -43,10 +44,16 @@ class DemodulatorGeneratorViewModel : ViewModel() {
 
     /**
      * Частота генератор задается в МГц, поэтому введенное число умножается на 10^6
+     *
+     * @return true если парсинг и установка частоты прошли успешно, false в противном случае
      */
-    fun setGeneratorFrequency(frequency: Double) {
-        generatorFrequency.value = frequency.toFloat()
-        storage.setDemodulatorFrequency(frequency * 1.0e6)
+    fun setGeneratorFrequency(freqString: String): Boolean {
+        val f = parseFrequency(freqString)
+        if (f <= 0) return false
+
+        generatorFrequency.value = f.toFloat()
+        storage.setDemodulatorFrequency(f * 1.0e6)
+        return true
     }
 
     private fun showGeneratorSignal(frequency: Double) {
@@ -57,6 +64,14 @@ class DemodulatorGeneratorViewModel : ViewModel() {
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { s: Array<DataPoint> -> generatorSignalData.value = s })
+    }
+
+    fun parseFrequency(freqString: String): Double {
+        return try {
+            freqString.toDouble()
+        } catch (e: NumberFormatException) {
+            -1.0
+        }
     }
 
     override fun onCleared() {

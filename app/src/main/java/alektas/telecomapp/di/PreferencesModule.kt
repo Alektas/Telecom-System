@@ -79,8 +79,8 @@ class PreferencesModule {
     ): DemodulatorConfig {
         val genFreq = prefs.getFloat(
             context.getString(R.string.demodulator_generator_freq_key),
-            QpskContract.DEFAULT_CARRIER_FREQUENCY.toFloat()
-        ).let { it * 1.0e6 }
+            (QpskContract.DEFAULT_CARRIER_FREQUENCY.toFloat() * 1.0e-6).toFloat() // Гц -> МГц
+        ).let { it * 1.0e6 } // МГц -> Гц
 
         val dataspeed = prefs.getFloat(
             context.getString(R.string.demodulator_process_dataspeed_key),
