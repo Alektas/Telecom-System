@@ -27,7 +27,6 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
     var filteredSigI: Signal = BaseSignal()
     var sigQ: Signal = BaseSignal()
     var filteredSigQ: Signal = BaseSignal()
-    var constellation: List<Pair<Double, Double>> = listOf()
 
     /**
      * Демодуляция одного фрейма QPSK сигнала.
@@ -46,7 +45,6 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
         sigQ = signal * sin
         filteredSigI = filter.filter(sigI)
         filteredSigQ = filter.filter(sigQ)
-        constellation = getConstellation(sigI, sigQ)
 
         val dataI = integrate(
             filteredSigI,

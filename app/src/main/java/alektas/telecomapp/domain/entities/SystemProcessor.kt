@@ -403,7 +403,6 @@ class SystemProcessor {
                 storage.setFilteredChannelI(demodulator.filteredSigI)
                 storage.setChannelQ(demodulator.sigQ)
                 storage.setFilteredChannelQ(demodulator.filteredSigQ)
-                storage.setDemodulatedSignalConstellation(demodulator.constellation)
             }
     }
 

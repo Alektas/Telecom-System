@@ -350,14 +350,6 @@ class SystemStorage : Repository {
         return demodulatedSignalSource
     }
 
-    override fun setDemodulatedSignalConstellation(points: List<Pair<Double, Double>>) {
-        demodulatedSignalConstellationSource.onNext(points)
-    }
-
-    override fun observeDemodulatedSignalConstellation(): Observable<List<Pair<Double, Double>>> {
-        return demodulatedSignalConstellationSource
-    }
-
     override fun setChannelI(sigI: Signal) {
         channelISource.onNext(sigI)
     }

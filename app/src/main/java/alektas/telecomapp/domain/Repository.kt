@@ -49,8 +49,6 @@ interface Repository {
 
     fun setDemodulatedSignal(signal: DigitalSignal)
     fun observeDemodulatedSignal(): Observable<DigitalSignal>
-    fun setDemodulatedSignalConstellation(points: List<Pair<Double, Double>>)
-    fun observeDemodulatedSignalConstellation(): Observable<List<Pair<Double, Double>>>
 
     fun setChannelI(sigI: Signal)
     fun observeChannelI(): Observable<Signal>

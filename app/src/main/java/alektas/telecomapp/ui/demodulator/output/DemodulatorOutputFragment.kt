@@ -32,15 +32,13 @@ class DemodulatorOutputFragment : Fragment() {
         viewModel = ViewModelProviders.of(this).get(DemodulatorOutputViewModel::class.java)
 
         viewModel.outputSignalData.observe(viewLifecycleOwner, Observer {
+            output_signal_chart.removeAllSeries()
             output_signal_chart.addSeries(LineGraphSeries(it))
         })
 
         viewModel.specturmData.observe(viewLifecycleOwner, Observer {
+            spectrum_chart.removeAllSeries()
             spectrum_chart.addSeries(LineGraphSeries(it))
-        })
-
-        viewModel.constellationData.observe(viewLifecycleOwner, Observer {
-            constellation_chart.setData(it)
         })
     }
 
