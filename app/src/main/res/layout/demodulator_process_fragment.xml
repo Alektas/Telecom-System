@@ -25,13 +25,33 @@
             android:layout_height="@dimen/height_graph_signal"/>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/process_frame_length_layout"
+            android:id="@+id/process_delay_compensation_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_field"
             android:layout_marginEnd="@dimen/margin_start_field"
             android:layout_marginTop="@dimen/margin_top_title"
+            app:errorEnabled="true"
+            android:hint="@string/filters_delay_compensation">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_delay_compensation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/process_code_length"
+                android:ems="10"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_frame_length_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_field"
+            android:layout_marginEnd="@dimen/margin_start_field"
             app:errorEnabled="true"
             android:hint="@string/frame_length">
 

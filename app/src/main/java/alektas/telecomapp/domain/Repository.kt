@@ -16,6 +16,7 @@ interface Repository {
     fun setDemodulatorFilterConfig(config: FilterConfig)
     fun setDemodulatorFrequency(frequency: Double)
     fun updateDemodulatorConfig(
+        delayCompensation: Float,
         frameLength: Int,
         bitTime: Double,
         codeLength: Int

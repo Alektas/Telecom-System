@@ -133,6 +133,11 @@ class PreferencesModule {
         @Named("demodulatorPrefs") prefs: SharedPreferences,
         filterConfig: FilterConfig
     ): DemodulatorConfig {
+        val delayCompensation = prefs.getFloat(
+            context.getString(R.string.demodulator_process_delay_compensation_key),
+            QpskContract.DEFAULT_FILTERS_DELAY_COMPENSATION
+        )
+
         val genFreq = prefs.getFloat(
             context.getString(R.string.demodulator_generator_freq_key),
             (QpskContract.DEFAULT_CARRIER_FREQUENCY.toFloat() * 1.0e-6).toFloat() // Гц -> МГц
@@ -155,6 +160,7 @@ class PreferencesModule {
         )
 
         return DemodulatorConfig(
+            delayCompensation = delayCompensation,
             carrierFrequency = genFreq,
             frameLength = frameLength,
             codeLength = codeLength,

@@ -203,10 +203,12 @@ class SystemStorage : Repository {
     }
 
     override fun updateDemodulatorConfig(
+        delayCompensation: Float,
         frameLength: Int,
         bitTime: Double,
         codeLength: Int
     ) {
+        demodulatorConfig.delayCompensation = delayCompensation
         demodulatorConfig.frameLength = frameLength
         demodulatorConfig.bitTime = bitTime
         demodulatorConfig.codeLength = codeLength

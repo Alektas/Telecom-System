@@ -21,7 +21,7 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
     private val bitTime = config.bitTime
     private val symbolTime = bitTime * 2
     private val dataTime = bitTime * frameLength * codeLength
-    private val timeOffset = bitTime / 2
+    private val timeOffset = bitTime * config.delayCompensation
     private val carrierFrequency = config.carrierFrequency
     var sigI: Signal = BaseSignal()
     var filteredSigI: Signal = BaseSignal()

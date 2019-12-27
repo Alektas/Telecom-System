@@ -118,4 +118,9 @@
     <string name="setup_channels_hint">*Настройте каналы чтобы начать передачу</string>
     <string name="points_count">Количество точек</string>
     <string name="settings_decoder_key">settings_decoder_key</string>
+    <string name="filters_delay_compensation">Компенсация задержки фильтров, 0…1</string>
+    <string name="error_not_negative_num_decimal">Введите неотрицательное число</string>
+    <string name="demodulator_process_delay_compensation_key">demodulator_process_delay_compensation_key</string>
+    <string name="enter_valid_data">Введите корректные данные</string>
+    <string name="error_from_zero_to_one">Введите число от 0 до 1</string>
 </resources>
