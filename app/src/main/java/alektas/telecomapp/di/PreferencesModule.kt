@@ -1,6 +1,7 @@
 package alektas.telecomapp.di
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
@@ -69,6 +70,51 @@ class PreferencesModule {
     @Named("sourceInterferenceEnabled")
     fun providesInterferenceEnabled(context: Context, @Named("sourcePrefs") prefs: SharedPreferences): Boolean {
         return prefs.getBoolean(context.getString(R.string.source_interference_enable_key), false)
+    }
+
+    @Provides
+    fun providesChannelsConfig(
+        context: Context,
+        @Named("sourcePrefs") prefs: SharedPreferences
+    ): ChannelsConfig {
+        val codeType = prefs.getInt(
+            context.getString(R.string.source_channels_codetype_key),
+            CdmaContract.DEFAULT_CODE_TYPE
+        )
+
+        val carrierFrequency = prefs.getFloat(
+            context.getString(R.string.source_channels_freq_key),
+            (1.0e-6 * QpskContract.DEFAULT_CARRIER_FREQUENCY).toFloat()
+        ).toDouble()
+
+        val dataSpeed = prefs.getFloat(
+            context.getString(R.string.source_channels_dataspeed_key),
+            (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
+        ).toDouble()
+
+        val channelCount = prefs.getInt(
+            context.getString(R.string.source_channels_count_key),
+            CdmaContract.DEFAULT_CHANNEL_COUNT
+        )
+
+        val codeLength = prefs.getInt(
+            context.getString(R.string.source_channels_codesize_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        )
+
+        val frameLength = prefs.getInt(
+            context.getString(R.string.source_channels_framesize_key),
+            CdmaContract.DEFAULT_FRAME_SIZE
+        )
+
+        return ChannelsConfig(
+            channelCount,
+            carrierFrequency,
+            dataSpeed,
+            codeLength,
+            frameLength,
+            codeType
+        )
     }
 
     @Provides
