@@ -63,25 +63,31 @@ class DemodulatorProcessFragment : Fragment() {
     }
 
     private fun processData() {
+        val delayCompensation = process_delay_compensation.text.toString()
         val frameLength = process_frame_length.text.toString()
         val dataSpeed = process_data_speed.text.toString()
         val codeLength = process_code_length.text.toString()
 
-        if (process_code_length_layout.error != null ||
-            process_data_speed_layout.error != null ||
-            process_frame_length_layout.error != null ||
-            codeLength.isEmpty() ||
-            dataSpeed.isEmpty() ||
-            frameLength.isEmpty()
-        ) {
-            Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
-            return
+        val isSuccess = viewModel.processData(delayCompensation, frameLength, dataSpeed, codeLength)
+        if (!isSuccess) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.enter_valid_data),
+                Toast.LENGTH_SHORT
+            ).show()
         }
-
-        viewModel.processData(frameLength, dataSpeed, codeLength)
     }
 
     private fun setFieldsValidation() {
+        process_delay_compensation.doOnTextChanged { text, _, _, _ ->
+            if (viewModel.parseDelayCompensation(text.toString()) >= 0) {
+                process_delay_compensation_layout.error = null
+            } else {
+                process_delay_compensation_layout.error =
+                    getString(R.string.error_from_zero_to_one)
+            }
+        }
+
         process_frame_length.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseFrameLength(text.toString()) > 0) {
                 process_frame_length_layout.error = null
@@ -109,6 +115,13 @@ class DemodulatorProcessFragment : Fragment() {
 
     private fun setInitValues(prefs: SharedPreferences) {
         prefs.getFloat(
+            getString(R.string.demodulator_process_delay_compensation_key),
+            QpskContract.DEFAULT_FILTERS_DELAY_COMPENSATION
+        ).let {
+            process_delay_compensation.setText(it.toString())
+        }
+
+        prefs.getFloat(
             getString(R.string.demodulator_process_dataspeed_key),
             (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
         ).let {
@@ -132,7 +145,8 @@ class DemodulatorProcessFragment : Fragment() {
 
     private fun observeSettings(viewModel: DemodulatorProcessViewModel, prefs: SharedPreferences) {
         viewModel.frameLength.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putInt(getString(R.string.demodulator_process_frame_length_key), it).apply()
+            prefs.edit().putInt(getString(R.string.demodulator_process_frame_length_key), it)
+                .apply()
         })
 
         viewModel.codeLength.observe(viewLifecycleOwner, Observer {
@@ -141,6 +155,12 @@ class DemodulatorProcessFragment : Fragment() {
 
         viewModel.dataSpeed.observe(viewLifecycleOwner, Observer {
             prefs.edit().putFloat(getString(R.string.demodulator_process_dataspeed_key), it).apply()
+        })
+
+        viewModel.delayCompensation.observe(viewLifecycleOwner, Observer {
+            prefs.edit()
+                .putFloat(getString(R.string.demodulator_process_delay_compensation_key), it)
+                .apply()
         })
     }
 

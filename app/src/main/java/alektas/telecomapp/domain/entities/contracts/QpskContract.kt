@@ -10,5 +10,6 @@ class QpskContract {
         const val DEFAULT_SIGNAL_POWER = 1.0
         const val DEFAULT_SIGNAL_NOISE_RATE = 3.0e0
         const val DEFAULT_SIGNAL_THRESHOLD = 0.3f
+        const val DEFAULT_FILTERS_DELAY_COMPENSATION = 0.1f
     }
 }

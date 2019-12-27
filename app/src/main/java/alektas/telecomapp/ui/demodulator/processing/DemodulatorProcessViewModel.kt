@@ -20,6 +20,7 @@ class DemodulatorProcessViewModel : ViewModel() {
     val frameLength = MutableLiveData<Int>()
     val codeLength = MutableLiveData<Int>()
     val dataSpeed = MutableLiveData<Float>()
+    val delayCompensation = MutableLiveData<Float>()
 
     init {
         App.component.inject(this)
@@ -43,22 +44,26 @@ class DemodulatorProcessViewModel : ViewModel() {
     }
 
     fun processData(
+        delayCompensationString: String,
         frameLengthString: String,
         dataSpeedString: String,
         codeLengthString: String
-    ) {
+    ): Boolean {
+        val delayCompensation = parseDelayCompensation(delayCompensationString)
         val frameLength = parseFrameLength(frameLengthString)
         val dataSpeed = parseDataspeed(dataSpeedString)
         val bitTime = 1.0e-3 / dataSpeed // преобразование в скорость (кБит/с)
         val codeLength = parseCodeLength(codeLengthString)
 
-        if (codeLength <= 0 || dataSpeed <= 0 || frameLength <= 0) return
+        if (codeLength <= 0 || dataSpeed <= 0 || frameLength <= 0 || delayCompensation < 0) return false
 
         this.frameLength.value = frameLength
         this.codeLength.value = codeLength
         this.dataSpeed.value = dataSpeed.toFloat()
+        this.delayCompensation.value = delayCompensation
 
-        storage.updateDemodulatorConfig(frameLength, bitTime, codeLength)
+        storage.updateDemodulatorConfig(delayCompensation, frameLength, bitTime, codeLength)
+        return true
     }
 
     fun parseDataspeed(speed: String): Double {
@@ -88,6 +93,16 @@ class DemodulatorProcessViewModel : ViewModel() {
             c
         } catch (e: NumberFormatException) {
             -1
+        }
+    }
+
+    fun parseDelayCompensation(compensation: String): Float {
+        return try {
+            val c = compensation.toFloat()
+            if (c > 1f) throw NumberFormatException()
+            c
+        } catch (e: NumberFormatException) {
+            -1f
         }
     }
 
