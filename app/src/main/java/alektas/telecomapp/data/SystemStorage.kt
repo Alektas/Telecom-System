@@ -184,12 +184,6 @@ class SystemStorage : Repository {
             Function3<Signal, Signal, Signal, Signal> { signal, noise, interf ->
                 signal + noise + interf
             })
-            .apply {
-                subscribe { ether ->
-                    demodulatorConfig.inputSignal = ether
-                    demodulatorConfigSource.onNext(demodulatorConfig)
-                }
-            }
 
         berByNoiseSource = Observable.zip(
             decodedChannelsSource, noiseSource,

@@ -18,7 +18,7 @@ class QpskDemodulatorTest {
     private val inSig = QpskModulator(QpskContract.DEFAULT_DATA_BIT_TIME).modulate(carrier, inData)
     private val config =
         DemodulatorConfig(
-            inSig, carrier.frequency, 4, 2,
+            carrier.frequency, 4, 2,
             filterConfig = dummyFilterConfig
         )
     private val demodulator = QpskDemodulator(config)

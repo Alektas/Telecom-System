@@ -95,9 +95,13 @@ class SystemProcessor {
                     generateChannelsFrameSignal(it)
                 },
 
-            storage.observeDemodulatorConfig()
+            Observable.combineLatest(
+                storage.observeEther(),
+                storage.observeDemodulatorConfig(),
+                BiFunction { s: Signal, c: DemodulatorConfig -> s to c }
+            )
                 .subscribeOn(Schedulers.io())
-                .subscribe { demodulate(it) },
+                .subscribe { demodulate(it.first, it.second) },
 
             storage.observeDemodulatedSignal()
                 .subscribeOn(Schedulers.io())
@@ -406,17 +410,17 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun demodulate(config: DemodulatorConfig) {
+    fun demodulate(signal: Signal, config: DemodulatorConfig) {
         val demodulator = QpskDemodulator(config)
 
         Single.create<DigitalSignal> {
-            val demodSignal = demodulator.demodulateFrame(config.inputSignal)
+            val demodSignal = demodulator.demodulateFrame(signal)
             it.onSuccess(demodSignal)
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
-            .subscribe { signal: DigitalSignal ->
-                storage.setDemodulatedSignal(signal)
+            .subscribe { s: DigitalSignal ->
+                storage.setDemodulatedSignal(s)
                 storage.setChannelI(demodulator.sigI)
                 storage.setFilteredChannelI(demodulator.filteredSigI)
                 storage.setChannelQ(demodulator.sigQ)
