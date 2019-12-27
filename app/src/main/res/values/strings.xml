@@ -123,4 +123,8 @@
     <string name="demodulator_process_delay_compensation_key">demodulator_process_delay_compensation_key</string>
     <string name="enter_valid_data">Введите корректные данные</string>
     <string name="error_from_zero_to_one">Введите число от 0 до 1</string>
+    <string name="last_transmitting">Последняя передача</string>
+    <string name="channel_generated">Каналов сгенерировано</string>
+    <string name="error_probability">Вероятность ошибки</string>
+    <string name="characteristics_calculation">Расчет характеристик</string>
 </resources>

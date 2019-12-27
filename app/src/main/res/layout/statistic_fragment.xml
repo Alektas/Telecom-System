@@ -10,14 +10,25 @@
     tools:context=".ui.statistic.StatisticFragment">
 
     <TextView
+        android:id="@+id/statistic_label"
+        style="@style/TextAppearance.MaterialComponents.Headline6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_title"
+        android:layout_marginTop="@dimen/margin_top_title"
+        android:text="@string/last_transmitting"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
         android:id="@+id/statistic_channel_count_label"
         style="@style/TextAppearance.MaterialComponents.Subtitle1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_text"
-        android:text="@string/channel_count"
+        android:text="@string/channel_generated"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/statistic_label" />
 
     <TextView
         android:id="@+id/statistic_channel_count"
@@ -99,7 +110,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_text"
-        android:text="@string/ber"
+        android:text="@string/error_probability"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/statistic_error_bits_count_label" />
 
@@ -139,7 +150,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_text"
         android:onClick="onNavigateBtnClick"
-        android:text="@string/ber_calculation"
+        android:text="@string/characteristics_calculation"
         app:layout_constraintTop_toBottomOf="@id/statistic_ber_label"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
