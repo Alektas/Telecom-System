@@ -14,10 +14,10 @@ class FilterConfig(
     companion object {
         const val NONE = 0
         const val FIR = 1
-        const val DEFAULT_ORDER = 256
+        const val DEFAULT_ORDER = 10
         const val DEFAULT_BANDWIDTH = 1.0e3
         const val DEFAULT_SUPPRESS_BAND = 1.0e1
         const val DEFAULT_SAMPLING_RATE = Simulator.DEFAULT_SAMPLING_RATE
-        const val DEFAULT_WINDOW_TYPE = Window.HAMMING
+        const val DEFAULT_WINDOW_TYPE = Window.BLACKMANN
     }
 }
