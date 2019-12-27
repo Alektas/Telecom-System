@@ -124,7 +124,7 @@ class DecoderFragment : Fragment(), ChannelController {
 
         decoder_channel_code_type_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
-            (v as AutoCompleteTextView).showDropDown()
+            v.findViewById<AutoCompleteTextView>(R.id.decoder_channel_code_type).showDropDown()
             false
         }
     }

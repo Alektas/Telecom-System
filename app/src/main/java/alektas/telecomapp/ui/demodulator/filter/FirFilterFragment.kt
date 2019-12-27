@@ -105,7 +105,7 @@ class FirFilterFragment : Fragment() {
 
         filter_window_input_layout.setOnTouchListener { v, _ ->
             SystemUtils.hideKeyboard(this)
-            (v as AutoCompleteTextView).showDropDown()
+            v.findViewById<AutoCompleteTextView>(R.id.filter_window_input).showDropDown() // TODO: проверить в других местах (ClassCastException)
             false
         }
     }
