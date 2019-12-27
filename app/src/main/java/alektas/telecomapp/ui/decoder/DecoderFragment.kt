@@ -63,7 +63,7 @@ class DecoderFragment : Fragment(), ChannelController {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DecoderViewModel::class.java)
         prefs = requireContext().getSharedPreferences(
-            getString(R.string.settings_source_key),
+            getString(R.string.settings_decoder_key),
             Context.MODE_PRIVATE
         )
         setupCodeTypesDropdown()
@@ -221,16 +221,7 @@ class DecoderFragment : Fragment(), ChannelController {
             return
         }
 
-        viewModel.inputSignalData.value?.let {
-            viewModel.decodeChannels(channelCount, codeLength, codeType, threshold)
-            return
-        }
-
-        Toast.makeText(
-            requireContext(),
-            "Сначала необходимо настроить источник данных",
-            Toast.LENGTH_SHORT
-        ).show()
+        viewModel.createChannels(channelCount, codeLength, codeType, threshold)
     }
 
     private fun decodeCustomChannel() {
@@ -253,7 +244,7 @@ class DecoderFragment : Fragment(), ChannelController {
             ).show()
             return
         }
-        viewModel.decodeCustomChannel(codeString, threshold)
+        viewModel.createCustomChannel(codeString, threshold)
     }
 
 }

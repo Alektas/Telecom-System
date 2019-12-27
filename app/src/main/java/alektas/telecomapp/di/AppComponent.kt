@@ -3,6 +3,7 @@ package alektas.telecomapp.di
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.configs.ChannelsConfig
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.ui.MainViewModel
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.ui.datasource.simulation.ChannelsSettingsViewModel
@@ -49,6 +50,7 @@ interface AppComponent {
 
     fun context(): Context
     fun channelsConfig(): ChannelsConfig
+    fun decoderConfig(): DecoderConfig
 
     @Component.Builder
     interface Builder {

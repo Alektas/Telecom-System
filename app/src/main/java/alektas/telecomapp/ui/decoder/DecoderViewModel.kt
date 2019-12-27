@@ -62,12 +62,12 @@ class DecoderViewModel : ViewModel() {
         )
     }
 
-    fun decodeCustomChannel(codeString: String, threshold: Float) {
+    fun createCustomChannel(codeString: String, threshold: Float) {
         val code = parseChannelCode(codeString)
         processor.addDecodedChannel(code, threshold)
     }
 
-    fun decodeChannels(
+    fun createChannels(
         countString: String,
         codeLengthString: String,
         codeTypeString: String,
@@ -86,6 +86,10 @@ class DecoderViewModel : ViewModel() {
         this.threshold.value = threshold
 
         processor.createDecodedChannels(channelCount, codeLength, codeType, threshold)
+    }
+
+    fun removeChannel(channel: Channel) {
+        storage.removeDecodedChannel(channel)
     }
 
     fun parseChannelCount(count: String): Int {
@@ -113,8 +117,9 @@ class DecoderViewModel : ViewModel() {
         }
     }
 
-    fun removeChannel(channel: Channel) {
-        storage.removeDecodedChannel(channel)
+    override fun onCleared() {
+        disposable.dispose()
+        super.onCleared()
     }
 
 }

@@ -67,6 +67,14 @@ class SystemProcessor {
                 it.codeType
             )
         }
+        App.component.decoderConfig().let {
+            createDecodedChannels(
+                it.channelCount,
+                it.codeLength,
+                it.codeType,
+                it.threshold
+            )
+        }
 
         if (noiseSnr != null) {
             setNoise(noiseSnr ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE)
@@ -428,12 +436,12 @@ class SystemProcessor {
             }
         }
 
-        L.d(this, "setDecodedChannels: update")
+        L.d(this, "DecodedChannels: update")
         storage.setDecodedChannels(chls)
     }
 
     fun addDecodedChannel(code: BooleanArray, threshold: Float) {
-        decodingThreshold = threshold.toDouble()
+        decodingThreshold = threshold
 
         codedGroupData?.let {
             val frameData = CdmaDecimalCoder(decodingThreshold).decode(code.toBipolar(), it)
@@ -447,34 +455,34 @@ class SystemProcessor {
 
     @SuppressLint("CheckResult")
     fun createDecodedChannels(count: Int, codeLength: Int, codesType: Int, threshold: Float) {
-        decodingThreshold = threshold.toDouble()
+        decodingThreshold = threshold
 
         Single.create<List<Channel>> { emitter ->
-            codedGroupData?.let {
-                val channels = mutableListOf<Channel>()
-                val codeGen = CodeGenerator()
-                val codes = when (codesType) {
-                    CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
-                    else -> codeGen.generateRandomCodes(count, codeLength)
-                }
-
-                for (i in 0 until count) {
-                    val frameData =
-                        CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
-                    val errors = mutableListOf<Int>()
-                    frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
-                    val channel = Channel(frameData = frameData.toUnipolar(), code = codes[i])
-                    channel.errors = errors
-                    channels.add(channel)
-                }
-
-                emitter.onSuccess(channels)
+            val channels = mutableListOf<Channel>()
+            val codeGen = CodeGenerator()
+            val codes = when (codesType) {
+                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
+                else -> codeGen.generateRandomCodes(count, codeLength)
             }
+
+            for (i in 0 until count) {
+                var frameData = doubleArrayOf()
+                val errors = mutableListOf<Int>()
+                codedGroupData?.let {
+                    frameData = CdmaDecimalCoder(threshold).decode(codes[i].toBipolar(), it)
+                    frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
+                }
+                val channel = Channel(frameData = frameData.toUnipolar(), code = codes[i])
+                channel.errors = errors
+                channels.add(channel)
+            }
+
+            emitter.onSuccess(channels)
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
             .subscribe { channels: List<Channel> ->
-                L.d(this, "setDecodedChannels: create")
+                L.d(this, "DecodedChannels: create")
                 storage.setDecodedChannels(channels)
             }
     }

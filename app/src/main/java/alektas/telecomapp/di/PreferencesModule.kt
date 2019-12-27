@@ -2,6 +2,7 @@ package alektas.telecomapp.di
 
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.configs.ChannelsConfig
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
@@ -29,6 +30,15 @@ class PreferencesModule {
     fun providesDemodulatorPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(
             context.getString(R.string.settings_demodulator_key),
+            Context.MODE_PRIVATE
+        )
+    }
+
+    @Provides
+    @Named("decoderPrefs")
+    fun providesDecoderPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences(
+            context.getString(R.string.settings_decoder_key),
             Context.MODE_PRIVATE
         )
     }
@@ -178,6 +188,39 @@ class PreferencesModule {
             order = order,
             bandwidth = cutoffFreq,
             windowType = windowType
+        )
+    }
+
+    @Provides
+    fun providesDecoderConfig(
+        context: Context,
+        @Named("decoderPrefs") prefs: SharedPreferences
+    ): DecoderConfig {
+        val codeType = prefs.getInt(
+            context.getString(R.string.decoder_channels_codetype_key),
+            CdmaContract.DEFAULT_CODE_TYPE
+        )
+
+        val threshold = prefs.getFloat(
+            context.getString(R.string.decoder_threshold_key),
+            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
+        )
+
+        val channelCount = prefs.getInt(
+            context.getString(R.string.decoder_channels_count_key),
+            CdmaContract.DEFAULT_CHANNEL_COUNT
+        )
+
+        val codeLength = prefs.getInt(
+            context.getString(R.string.decoder_code_length_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        )
+
+        return DecoderConfig(
+            channelCount,
+            codeLength,
+            codeType,
+            threshold
         )
     }
 }
