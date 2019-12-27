@@ -2,6 +2,7 @@ package alektas.telecomapp.di
 
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.ui.MainViewModel
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.ui.datasource.simulation.ChannelsSettingsViewModel
@@ -47,6 +48,7 @@ interface AppComponent {
     fun inject(storage: SystemStorage)
 
     fun context(): Context
+    fun channelsConfig(): ChannelsConfig
 
     @Component.Builder
     interface Builder {

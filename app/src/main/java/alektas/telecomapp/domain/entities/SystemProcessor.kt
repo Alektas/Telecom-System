@@ -57,6 +57,16 @@ class SystemProcessor {
 
     init {
         App.component.inject(this)
+        App.component.channelsConfig().let {
+            createChannels(
+                it.channelCount,
+                it.carrierFrequency,
+                it.dataSpeed,
+                it.codeLength,
+                it.frameLength,
+                it.codeType
+            )
+        }
 
         if (noiseSnr != null) {
             setNoise(noiseSnr ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE)
