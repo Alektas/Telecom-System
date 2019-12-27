@@ -322,7 +322,7 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setNoise(snr: Double, singleThread: Boolean = false) {
         Single.create<Noise> {
-            val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
+            val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_POWER)
             it.onSuccess(noise)
         }
             .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
@@ -341,7 +341,7 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setInterference(sparseness: Double, snr: Double, singleThread: Boolean = false) {
         Single.create<Noise> {
-            val noise = PulseNoise(sparseness, snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
+            val noise = PulseNoise(sparseness, snr, QpskContract.DEFAULT_SIGNAL_POWER)
             it.onSuccess(noise)
         }
             .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
@@ -355,7 +355,7 @@ class SystemProcessor {
             val noise = PulseNoise(
                 sparseness,
                 interferenceRate ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE,
-                QpskContract.DEFAULT_SIGNAL_MAGNITUDE
+                QpskContract.DEFAULT_SIGNAL_POWER
             )
             it.onSuccess(noise)
         }
@@ -370,7 +370,7 @@ class SystemProcessor {
             val noise = PulseNoise(
                 interferenceSparseness ?: QpskContract.DEFAULT_INTERFERENCE_SPARSENESS,
                 rate,
-                QpskContract.DEFAULT_SIGNAL_MAGNITUDE
+                QpskContract.DEFAULT_SIGNAL_POWER
             )
             it.onSuccess(noise)
         }
