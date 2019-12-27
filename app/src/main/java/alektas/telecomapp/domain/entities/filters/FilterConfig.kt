@@ -18,6 +18,6 @@ class FilterConfig(
         const val DEFAULT_BANDWIDTH = 1.0e3
         const val DEFAULT_SUPPRESS_BAND = 1.0e1
         const val DEFAULT_SAMPLING_RATE = Simulator.DEFAULT_SAMPLING_RATE
-        const val DEFAULT_WINDOW_TYPE = Window.BLACKMANN
+        const val DEFAULT_WINDOW_TYPE = Window.BLACKMAN
     }
 }

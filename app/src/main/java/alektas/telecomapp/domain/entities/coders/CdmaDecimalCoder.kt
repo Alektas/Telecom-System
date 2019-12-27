@@ -2,7 +2,7 @@ package alektas.telecomapp.domain.entities.coders
 
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 
-class CdmaDecimalCoder(private val threshold: Double = QpskContract.DEFAULT_SIGNAL_THRESHOLD) : Coder<DoubleArray> {
+class CdmaDecimalCoder(private val threshold: Float = QpskContract.DEFAULT_SIGNAL_THRESHOLD) : Coder<DoubleArray> {
 
     /**
      * Кодирование биполярной информации.
@@ -43,7 +43,7 @@ class CdmaDecimalCoder(private val threshold: Double = QpskContract.DEFAULT_SIGN
             .toDoubleArray()
     }
 
-    private fun normalize(value: Double, threshold: Double): Double {
+    private fun normalize(value: Double, threshold: Float): Double {
         return when {
             value > threshold -> 1.0
             value < -threshold -> -1.0
