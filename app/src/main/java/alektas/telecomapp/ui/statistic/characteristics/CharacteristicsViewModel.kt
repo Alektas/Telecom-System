@@ -21,7 +21,9 @@ class CharacteristicsViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val viewportData = MutableLiveData<Pair<Double, Double>>()
     val berData = MutableLiveData<Array<DataPoint>>()
+    val capacityData = MutableLiveData<Array<DataPoint>>()
     val berList = mutableListOf<DataPoint>()
+    val capacityList = mutableListOf<DataPoint>()
     var channels = listOf<Channel>()
 
     companion object {
@@ -35,7 +37,6 @@ class CharacteristicsViewModel : ViewModel() {
             storage.observeBerByNoise()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .skip(1)
                 .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
                     override fun onNext(t: Pair<Double, Double>) {
                         berList.apply {
@@ -43,6 +44,23 @@ class CharacteristicsViewModel : ViewModel() {
                             sortBy { it.x }
                         }
                         berData.value = berList.toTypedArray()
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeCapacityByNoise()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
+                    override fun onNext(t: Pair<Double, Double>) {
+                        capacityList.apply {
+                            add(DataPoint(t.first, t.second))
+                            sortBy { it.x }
+                        }
+                        capacityData.value = capacityList.toTypedArray()
                     }
 
                     override fun onComplete() {}
@@ -74,7 +92,8 @@ class CharacteristicsViewModel : ViewModel() {
             pointsCount > 0 && channels.isNotEmpty()) {
             viewportData.value = Pair(fromSnr, toSnr)
             berList.clear()
-            processor.calculateBer(fromSnr, toSnr, pointsCount)
+            capacityList.clear()
+            processor.calculateCharacteristics(fromSnr, toSnr, pointsCount)
             return true
         }
 

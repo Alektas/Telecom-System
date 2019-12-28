@@ -491,7 +491,7 @@ class SystemProcessor {
             }
     }
 
-    fun calculateBer(fromSnr: Double, toSnr: Double, pointsCount: Int) {
+    fun calculateCharacteristics(fromSnr: Double, toSnr: Double, pointsCount: Int) {
         val step = (toSnr - fromSnr) / pointsCount
         val snrs = DoubleArray(pointsCount) { fromSnr + it * step }
         val isNoiseWasEnabled = storage.isNoiseEnabled()

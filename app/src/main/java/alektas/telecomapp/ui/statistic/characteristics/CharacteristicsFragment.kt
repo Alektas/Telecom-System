@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
+import alektas.telecomapp.ui.utils.setupLabels
 import alektas.telecomapp.utils.SystemUtils
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
@@ -19,7 +20,8 @@ import kotlinx.android.synthetic.main.characteristics_fragment.*
 
 class CharacteristicsFragment : Fragment() {
     private lateinit var viewModel: CharacteristicsViewModel
-    private val graphPoints = LineGraphSeries<DataPoint>()
+    private val berGraphPoints = LineGraphSeries<DataPoint>()
+    private val capacityGraphPoints = LineGraphSeries<DataPoint>()
 
     companion object {
         fun newInstance() = CharacteristicsFragment()
@@ -35,7 +37,15 @@ class CharacteristicsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         view.findViewById<GraphView>(R.id.ber_graph).apply {
-            addSeries(graphPoints)
+            gridLabelRenderer.padding = 45
+            setupLabels(xIntMax = 3, yIntMax = 3)
+            addSeries(berGraphPoints)
+            viewport.isXAxisBoundsManual = true
+        }
+        view.findViewById<GraphView>(R.id.capacity_graph).apply {
+            gridLabelRenderer.padding = 45
+            setupLabels(xIntMax = 3, yIntMax = 3)
+            addSeries(capacityGraphPoints)
             viewport.isXAxisBoundsManual = true
         }
         super.onViewCreated(view, savedInstanceState)
@@ -61,10 +71,18 @@ class CharacteristicsFragment : Fragment() {
                 setMinX(it.first)
                 setMaxX(it.second)
             }
+            capacity_graph.viewport.apply {
+                setMinX(it.first)
+                setMaxX(it.second)
+            }
         })
 
         viewModel.berData.observe(viewLifecycleOwner, Observer {
-            graphPoints.resetData(it)
+            berGraphPoints.resetData(it)
+        })
+
+        viewModel.capacityData.observe(viewLifecycleOwner, Observer {
+            capacityGraphPoints.resetData(it)
         })
     }
 
