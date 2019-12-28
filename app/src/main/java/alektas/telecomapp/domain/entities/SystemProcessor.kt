@@ -19,7 +19,7 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.PulseNoise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
-import alektas.telecomapp.domain.processes.CalculateBerProcess
+import alektas.telecomapp.domain.processes.CalculateCharacteristicsProcess
 import alektas.telecomapp.utils.L
 import android.annotation.SuppressLint
 import io.reactivex.Observable
@@ -53,8 +53,7 @@ class SystemProcessor {
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
     private var transmitSubscription: Disposable? = null
-    val characteristicsProcess = BehaviorSubject.create<Int>()
-    private var berProcess: CalculateBerProcess? = null
+    private var characteristicsProcess: CalculateCharacteristicsProcess? = null
     val characteristicsProgress = BehaviorSubject.create<Int>()
 
     init {
@@ -498,10 +497,10 @@ class SystemProcessor {
         val demodConfig = storage.getCurrentDemodulatorConfig()
         val decodedChannels = storage.observeDecodedChannels().blockingFirst(listOf())
 
-        berProcess?.cancel()
-        berProcess = CalculateBerProcess(signal, demodConfig, decodedChannels, 0.3)
-        berProcess?.execute(fromSnr, toSnr, pointsCount) {
-            characteristics.onNext(it)
+        characteristicsProcess?.cancel()
+        characteristicsProcess = CalculateCharacteristicsProcess(signal, demodConfig, decodedChannels, decodingThreshold)
+        characteristicsProcess?.execute(fromSnr, toSnr, pointsCount) {
+            characteristicsProgress.onNext(it)
         }
     }
 
