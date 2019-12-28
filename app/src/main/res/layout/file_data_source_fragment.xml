@@ -8,9 +8,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="@dimen/padding_horiz_page"
         android:paddingTop="@dimen/padding_top_page"
-        android:paddingEnd="@dimen/padding_horiz_page"
         android:paddingBottom="@dimen/padding_top_page"
         tools:context=".ui.datasource.simulation.SimulationDataSourceFragment">
 
@@ -21,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_start_title"
             android:text="@string/ether"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.jjoe64.graphview.GraphView
@@ -29,16 +27,16 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/height_graph_signal"
             android:layout_marginTop="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ether_label" />
 
         <View
             android:id="@+id/divider1"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
             android:background="?android:attr/listDivider"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintTop_toBottomOf="@id/ether_chart" />
 
         <TextView
@@ -49,7 +47,7 @@
             android:layout_marginStart="@dimen/margin_start_title"
             android:layout_marginTop="@dimen/margin_top_title"
             android:text="@string/adc"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/divider1" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -60,8 +58,8 @@
             android:layout_marginTop="@dimen/margin_top_text"
             android:hint="@string/resolution"
             app:errorEnabled="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/adc_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -80,8 +78,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/frequency_in_megaherz"
             app:errorEnabled="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/adc_resolution_layout">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -95,23 +93,38 @@
 
         <View
             android:id="@+id/divider2"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_marginTop="@dimen/margin_top_text"
             android:background="?android:attr/listDivider"
-            app:layout_constraintTop_toBottomOf="@+id/adc_frequency_layout"
-            tools:layout_editor_absoluteX="32dp" />
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintTop_toBottomOf="@+id/adc_frequency_layout"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/receive_channels_btn"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top_text"
             android:text="@string/start_processing"
             app:errorEnabled="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/divider2" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_right_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

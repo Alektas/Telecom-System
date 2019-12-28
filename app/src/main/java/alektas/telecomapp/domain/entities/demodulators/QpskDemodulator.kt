@@ -21,13 +21,12 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
     private val bitTime = config.bitTime
     private val symbolTime = bitTime * 2
     private val dataTime = bitTime * frameLength * codeLength
-    private val timeOffset = bitTime / 2
+    private val timeOffset = bitTime * config.delayCompensation
     private val carrierFrequency = config.carrierFrequency
     var sigI: Signal = BaseSignal()
     var filteredSigI: Signal = BaseSignal()
     var sigQ: Signal = BaseSignal()
     var filteredSigQ: Signal = BaseSignal()
-    var constellation: List<Pair<Double, Double>> = listOf()
 
     /**
      * Демодуляция одного фрейма QPSK сигнала.
@@ -46,7 +45,6 @@ class QpskDemodulator(config: DemodulatorConfig) : Demodulator<DigitalSignal> {
         sigQ = signal * sin
         filteredSigI = filter.filter(sigI)
         filteredSigQ = filter.filter(sigQ)
-        constellation = getConstellation(sigI, sigQ)
 
         val dataI = integrate(
             filteredSigI,

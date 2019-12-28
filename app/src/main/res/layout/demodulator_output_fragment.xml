@@ -36,22 +36,4 @@
         android:layout_height="@dimen/height_graph_signal"
         app:layout_constraintTop_toBottomOf="@id/spectrum_label" />
 
-    <TextView
-        android:id="@+id/output_constellation_label"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_start_graph_label"
-        android:layout_marginTop="16dp"
-        android:text="@string/output_constellation"
-        app:layout_constraintTop_toBottomOf="@id/spectrum_chart" />
-
-    <alektas.telecomapp.ui.charts.polar.PolarGraphView
-        android:id="@+id/constellation_chart"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/size_graph_constellation"
-        app:label_x="I"
-        app:label_y="Q"
-        app:labels_text_size="@dimen/textsize_graph_view_label"
-        app:layout_constraintTop_toBottomOf="@id/output_constellation_label" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

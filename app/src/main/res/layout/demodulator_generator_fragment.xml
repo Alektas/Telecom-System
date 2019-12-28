@@ -5,26 +5,23 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingTop="@dimen/padding_top_page"
-    android:paddingStart="@dimen/padding_horiz_page"
-    android:paddingEnd="@dimen/padding_horiz_page"
     tools:context=".ui.demodulator.generator.DemodulatorGeneratorFragment">
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/generator_signal_chart"
         android:layout_width="match_parent"
         android:layout_height="@dimen/height_graph_signal"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/generator_frequency_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
         android:hint="@string/frequency_in_megaherz"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
         app:layout_constraintTop_toBottomOf="@id/generator_signal_chart">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -34,5 +31,19 @@
             android:ems="10"
             android:inputType="numberDecimal" />
     </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_left_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_right_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

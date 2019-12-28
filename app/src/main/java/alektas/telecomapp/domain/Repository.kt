@@ -16,6 +16,7 @@ interface Repository {
     fun setDemodulatorFilterConfig(config: FilterConfig)
     fun setDemodulatorFrequency(frequency: Double)
     fun updateDemodulatorConfig(
+        delayCompensation: Float,
         frameLength: Int,
         bitTime: Double,
         codeLength: Int
@@ -49,8 +50,6 @@ interface Repository {
 
     fun setDemodulatedSignal(signal: DigitalSignal)
     fun observeDemodulatedSignal(): Observable<DigitalSignal>
-    fun setDemodulatedSignalConstellation(points: List<Pair<Double, Double>>)
-    fun observeDemodulatedSignalConstellation(): Observable<List<Pair<Double, Double>>>
 
     fun setChannelI(sigI: Signal)
     fun observeChannelI(): Observable<Signal>
@@ -79,4 +78,5 @@ interface Repository {
 
     fun setBerByNoise(berByNoise: Pair<Double, Double>)
     fun observeBerByNoise(): Observable<Pair<Double, Double>>
+    fun observeCapacityByNoise(): Observable<Pair<Double, Double>>
 }

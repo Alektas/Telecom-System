@@ -1,6 +1,8 @@
 package alektas.telecomapp.di
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
@@ -28,6 +30,15 @@ class PreferencesModule {
     fun providesDemodulatorPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(
             context.getString(R.string.settings_demodulator_key),
+            Context.MODE_PRIVATE
+        )
+    }
+
+    @Provides
+    @Named("decoderPrefs")
+    fun providesDecoderPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences(
+            context.getString(R.string.settings_decoder_key),
             Context.MODE_PRIVATE
         )
     }
@@ -72,15 +83,65 @@ class PreferencesModule {
     }
 
     @Provides
+    fun providesChannelsConfig(
+        context: Context,
+        @Named("sourcePrefs") prefs: SharedPreferences
+    ): ChannelsConfig {
+        val codeType = prefs.getInt(
+            context.getString(R.string.source_channels_codetype_key),
+            CdmaContract.DEFAULT_CODE_TYPE
+        )
+
+        val carrierFrequency = prefs.getFloat(
+            context.getString(R.string.source_channels_freq_key),
+            (1.0e-6 * QpskContract.DEFAULT_CARRIER_FREQUENCY).toFloat()
+        ).toDouble()
+
+        val dataSpeed = prefs.getFloat(
+            context.getString(R.string.source_channels_dataspeed_key),
+            (1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME).toFloat()
+        ).toDouble()
+
+        val channelCount = prefs.getInt(
+            context.getString(R.string.source_channels_count_key),
+            CdmaContract.DEFAULT_CHANNEL_COUNT
+        )
+
+        val codeLength = prefs.getInt(
+            context.getString(R.string.source_channels_codesize_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        )
+
+        val frameLength = prefs.getInt(
+            context.getString(R.string.source_channels_framesize_key),
+            CdmaContract.DEFAULT_FRAME_SIZE
+        )
+
+        return ChannelsConfig(
+            channelCount,
+            carrierFrequency,
+            dataSpeed,
+            codeLength,
+            frameLength,
+            codeType
+        )
+    }
+
+    @Provides
     fun providesDemodulatorConfig(
         context: Context,
         @Named("demodulatorPrefs") prefs: SharedPreferences,
         filterConfig: FilterConfig
     ): DemodulatorConfig {
+        val delayCompensation = prefs.getFloat(
+            context.getString(R.string.demodulator_process_delay_compensation_key),
+            QpskContract.DEFAULT_FILTERS_DELAY_COMPENSATION
+        )
+
         val genFreq = prefs.getFloat(
             context.getString(R.string.demodulator_generator_freq_key),
-            QpskContract.DEFAULT_CARRIER_FREQUENCY.toFloat()
-        ).let { it * 1.0e6 }
+            (QpskContract.DEFAULT_CARRIER_FREQUENCY.toFloat() * 1.0e-6).toFloat() // Гц -> МГц
+        ).let { it * 1.0e6 } // МГц -> Гц
 
         val dataspeed = prefs.getFloat(
             context.getString(R.string.demodulator_process_dataspeed_key),
@@ -99,6 +160,7 @@ class PreferencesModule {
         )
 
         return DemodulatorConfig(
+            delayCompensation = delayCompensation,
             carrierFrequency = genFreq,
             frameLength = frameLength,
             codeLength = codeLength,
@@ -132,6 +194,39 @@ class PreferencesModule {
             order = order,
             bandwidth = cutoffFreq,
             windowType = windowType
+        )
+    }
+
+    @Provides
+    fun providesDecoderConfig(
+        context: Context,
+        @Named("decoderPrefs") prefs: SharedPreferences
+    ): DecoderConfig {
+        val codeType = prefs.getInt(
+            context.getString(R.string.decoder_channels_codetype_key),
+            CdmaContract.DEFAULT_CODE_TYPE
+        )
+
+        val threshold = prefs.getFloat(
+            context.getString(R.string.decoder_threshold_key),
+            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
+        )
+
+        val channelCount = prefs.getInt(
+            context.getString(R.string.decoder_channels_count_key),
+            CdmaContract.DEFAULT_CHANNEL_COUNT
+        )
+
+        val codeLength = prefs.getInt(
+            context.getString(R.string.decoder_code_length_key),
+            CdmaContract.DEFAULT_CODE_SIZE
+        )
+
+        return DecoderConfig(
+            channelCount,
+            codeLength,
+            codeType,
+            threshold
         )
     }
 }

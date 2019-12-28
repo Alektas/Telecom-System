@@ -1,4 +1,4 @@
-package alektas.telecomapp.ui.statistic.ber
+package alektas.telecomapp.ui.statistic.characteristics
 
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
@@ -13,7 +13,7 @@ import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
-class BerViewModel : ViewModel() {
+class CharacteristicsViewModel : ViewModel() {
     @Inject
     lateinit var storage: Repository
     @Inject
@@ -21,7 +21,9 @@ class BerViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val viewportData = MutableLiveData<Pair<Double, Double>>()
     val berData = MutableLiveData<Array<DataPoint>>()
+    val capacityData = MutableLiveData<Array<DataPoint>>()
     val berList = mutableListOf<DataPoint>()
+    val capacityList = mutableListOf<DataPoint>()
     var channels = listOf<Channel>()
 
     companion object {
@@ -35,7 +37,6 @@ class BerViewModel : ViewModel() {
             storage.observeBerByNoise()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .skip(1)
                 .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
                     override fun onNext(t: Pair<Double, Double>) {
                         berList.apply {
@@ -43,6 +44,23 @@ class BerViewModel : ViewModel() {
                             sortBy { it.x }
                         }
                         berData.value = berList.toTypedArray()
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeCapacityByNoise()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
+                    override fun onNext(t: Pair<Double, Double>) {
+                        capacityList.apply {
+                            add(DataPoint(t.first, t.second))
+                            sortBy { it.x }
+                        }
+                        capacityData.value = capacityList.toTypedArray()
                     }
 
                     override fun onComplete() {}
@@ -65,7 +83,7 @@ class BerViewModel : ViewModel() {
         )
     }
 
-    fun calculateBer(from: String, to: String, count: String): Boolean {
+    fun calculateCharacteristics(from: String, to: String, count: String): Boolean {
         val fromSnr = parseSnr(from)
         val toSnr = parseSnr(to)
         val pointsCount = parseCount(count)
@@ -74,7 +92,8 @@ class BerViewModel : ViewModel() {
             pointsCount > 0 && channels.isNotEmpty()) {
             viewportData.value = Pair(fromSnr, toSnr)
             berList.clear()
-            processor.calculateBer(fromSnr, toSnr, pointsCount)
+            capacityList.clear()
+            processor.calculateCharacteristics(fromSnr, toSnr, pointsCount)
             return true
         }
 

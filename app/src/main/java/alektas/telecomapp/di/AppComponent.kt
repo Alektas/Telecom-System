@@ -2,6 +2,8 @@ package alektas.telecomapp.di
 
 import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.processes.CalculateBerProcess
 import alektas.telecomapp.ui.MainViewModel
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
@@ -20,7 +22,7 @@ import alektas.telecomapp.ui.demodulator.output.DemodulatorOutputViewModel
 import alektas.telecomapp.ui.statistic.StatisticViewModel
 import android.app.Application
 import dagger.BindsInstance
-import alektas.telecomapp.ui.statistic.ber.BerViewModel
+import alektas.telecomapp.ui.statistic.characteristics.CharacteristicsViewModel
 import android.content.Context
 import dagger.Component
 import javax.inject.Singleton
@@ -41,7 +43,7 @@ interface AppComponent {
     fun inject(vm: IChannelViewModel)
     fun inject(vm: QChannelViewModel)
     fun inject(vm: StatisticViewModel)
-    fun inject(vm: BerViewModel)
+    fun inject(vm: CharacteristicsViewModel)
     fun inject(vm: MainViewModel)
     fun inject(vm: EtherSettingsViewModel)
     fun inject(vm: ChannelsSettingsViewModel)
@@ -49,6 +51,8 @@ interface AppComponent {
     fun inject(process: CalculateBerProcess)
 
     fun context(): Context
+    fun channelsConfig(): ChannelsConfig
+    fun decoderConfig(): DecoderConfig
 
     @Component.Builder
     interface Builder {

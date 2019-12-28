@@ -12,6 +12,8 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.utils.FileWorker
+import alektas.telecomapp.utils.L
+import alektas.telecomapp.utils.format
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
@@ -21,6 +23,8 @@ import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.math.log2
+import kotlin.math.pow
 
 private const val INTERNAL_ETHER_DATA_FILE_NAME = "ether_data.txt"
 
@@ -120,11 +124,13 @@ class SystemStorage : Repository {
         }
     private val berSource = BehaviorSubject.create<Double>()
     private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
+    private val capacityByNoiseSource: PublishSubject.create<Pair<Double, Double>>
     private val berProcess = BehaviorSubject.create<Int>()
     private val transmitProcess = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
+        demodulatorConfigSource.onNext(demodulatorConfig)
 
         disposable.addAll(
             simulatedChannelsSource
@@ -189,6 +195,22 @@ class SystemStorage : Repository {
                     demodulatorConfigSource.onNext(demodulatorConfig)
                 }
             }
+
+        capacityByNoiseSource = Observable.zip(
+            decodedChannelsSource, noiseSource,
+            BiFunction { channels: List<Channel>, noise: Noise ->
+                var bandwidth = 0.0
+                if (channels.isNotEmpty()) {
+                    bandwidth = 1 / channels.first().bitTime
+                }
+                val linearSnr = 10.0.pow(noise.rate() / 10)
+                val capacity = bandwidth * log2(1 + linearSnr) * 1.0e-3 // кБит/с
+                L.d(
+                    "Capacity calculation",
+                    "B=${(bandwidth * 1.0e-3).format(3)}кГц, SNR=${noise.rate()}дБ, linSNR=${linearSnr.format(3)}, C=${capacity.format(3)}кБит/с"
+                )
+                Pair(noise.rate(), capacity)
+            })
     }
 
     override fun getCurrentDemodulatorConfig(): DemodulatorConfig {
@@ -200,10 +222,12 @@ class SystemStorage : Repository {
     }
 
     override fun updateDemodulatorConfig(
+        delayCompensation: Float,
         frameLength: Int,
         bitTime: Double,
         codeLength: Int
     ) {
+        demodulatorConfig.delayCompensation = delayCompensation
         demodulatorConfig.frameLength = frameLength
         demodulatorConfig.bitTime = bitTime
         demodulatorConfig.codeLength = codeLength
@@ -341,14 +365,6 @@ class SystemStorage : Repository {
         return demodulatedSignalSource
     }
 
-    override fun setDemodulatedSignalConstellation(points: List<Pair<Double, Double>>) {
-        demodulatedSignalConstellationSource.onNext(points)
-    }
-
-    override fun observeDemodulatedSignalConstellation(): Observable<List<Pair<Double, Double>>> {
-        return demodulatedSignalConstellationSource
-    }
-
     override fun setChannelI(sigI: Signal) {
         channelISource.onNext(sigI)
     }
@@ -450,5 +466,9 @@ class SystemStorage : Repository {
 
     override fun observeBerByNoise(): Observable<Pair<Double, Double>> {
         return berByNoiseSource
+    }
+
+    override fun observeCapacityByNoise(): Observable<Pair<Double, Double>> {
+        return capacityByNoiseSource
     }
 }

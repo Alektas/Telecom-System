@@ -16,7 +16,7 @@ class Window(val type: Int) {
                 GAUSSE -> ::gausse
                 HAMMING -> ::hamming
                 HANN -> ::hann
-                BLACKMANN -> ::blackmannHarris
+                BLACKMAN -> ::blackmannHarris
                 else -> ::square
             }
         )
@@ -34,7 +34,7 @@ class Window(val type: Int) {
             GAUSSE -> gausse(n, frameSize)
             HAMMING -> hamming(n, frameSize)
             HANN -> hann(n, frameSize)
-            BLACKMANN -> blackmannHarris(n, frameSize)
+            BLACKMAN -> blackmannHarris(n, frameSize)
             else -> square(n, frameSize)
         }
     }
@@ -51,13 +51,13 @@ class Window(val type: Int) {
         const val GAUSSE = 0
         const val HAMMING = 1
         const val HANN = 2
-        const val BLACKMANN = 3
+        const val BLACKMAN = 3
         const val SQUARE = 999
         val windowNames = mapOf(
             GAUSSE to "Гаусс",
             HANN to "Ханн",
             HAMMING to "Хамминг",
-            BLACKMANN to "Блэкмэн",
+            BLACKMAN to "Блэкмэн",
             SQUARE to "Равномерная"
         )
 

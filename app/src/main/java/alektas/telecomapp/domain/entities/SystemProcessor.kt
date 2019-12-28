@@ -53,11 +53,30 @@ class SystemProcessor {
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
     private var transmitSubscription: Disposable? = null
+    val characteristicsProcess = BehaviorSubject.create<Int>()
     private var berProcess: CalculateBerProcess? = null
-    val berProgress = BehaviorSubject.create<Int>()
+    val characteristicsProgress = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
+        App.component.channelsConfig().let {
+            createChannels(
+                it.channelCount,
+                it.carrierFrequency,
+                it.dataSpeed,
+                it.codeLength,
+                it.frameLength,
+                it.codeType
+            )
+        }
+        App.component.decoderConfig().let {
+            createDecodedChannels(
+                it.channelCount,
+                it.codeLength,
+                it.codeType,
+                it.threshold
+            )
+        }
 
         if (noiseSnr != null) {
             setNoise(noiseSnr ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE)
@@ -78,9 +97,13 @@ class SystemProcessor {
                     generateChannelsFrameSignal(it)
                 },
 
-            storage.observeDemodulatorConfig()
+            Observable.combineLatest(
+                storage.observeEther(),
+                storage.observeDemodulatorConfig(),
+                BiFunction { s: Signal, c: DemodulatorConfig -> s to c }
+            )
                 .subscribeOn(Schedulers.io())
-                .subscribe { demodulate(it) },
+                .subscribe { demodulate(it.first, it.second) },
 
             storage.observeDemodulatedSignal()
                 .subscribeOn(Schedulers.io())
@@ -323,7 +346,7 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setNoise(snr: Double, singleThread: Boolean = false) {
         Single.create<Noise> {
-            val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
+            val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_POWER)
             it.onSuccess(noise)
         }
             .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
@@ -342,7 +365,7 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setInterference(sparseness: Double, snr: Double, singleThread: Boolean = false) {
         Single.create<Noise> {
-            val noise = PulseNoise(sparseness, snr, QpskContract.DEFAULT_SIGNAL_MAGNITUDE)
+            val noise = PulseNoise(sparseness, snr, QpskContract.DEFAULT_SIGNAL_POWER)
             it.onSuccess(noise)
         }
             .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
@@ -356,7 +379,7 @@ class SystemProcessor {
             val noise = PulseNoise(
                 sparseness,
                 interferenceRate ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE,
-                QpskContract.DEFAULT_SIGNAL_MAGNITUDE
+                QpskContract.DEFAULT_SIGNAL_POWER
             )
             it.onSuccess(noise)
         }
@@ -371,7 +394,7 @@ class SystemProcessor {
             val noise = PulseNoise(
                 interferenceSparseness ?: QpskContract.DEFAULT_INTERFERENCE_SPARSENESS,
                 rate,
-                QpskContract.DEFAULT_SIGNAL_MAGNITUDE
+                QpskContract.DEFAULT_SIGNAL_POWER
             )
             it.onSuccess(noise)
         }
@@ -389,22 +412,21 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun demodulate(config: DemodulatorConfig) {
+    fun demodulate(signal: Signal, config: DemodulatorConfig) {
         val demodulator = QpskDemodulator(config)
 
         Single.create<DigitalSignal> {
-            val demodSignal = demodulator.demodulateFrame(config.inputSignal)
+            val demodSignal = demodulator.demodulateFrame(signal)
             it.onSuccess(demodSignal)
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
-            .subscribe { signal: DigitalSignal ->
-                storage.setDemodulatedSignal(signal)
+            .subscribe { s: DigitalSignal ->
+                storage.setDemodulatedSignal(s)
                 storage.setChannelI(demodulator.sigI)
                 storage.setFilteredChannelI(demodulator.filteredSigI)
                 storage.setChannelQ(demodulator.sigQ)
                 storage.setFilteredChannelQ(demodulator.filteredSigQ)
-                storage.setDemodulatedSignalConstellation(demodulator.constellation)
             }
     }
 
@@ -420,12 +442,12 @@ class SystemProcessor {
             }
         }
 
-        L.d(this, "setDecodedChannels: update")
+        L.d(this, "DecodedChannels: update")
         storage.setDecodedChannels(chls)
     }
 
     fun addDecodedChannel(code: BooleanArray, threshold: Float) {
-        decodingThreshold = threshold.toDouble()
+        decodingThreshold = threshold
 
         codedGroupData?.let {
             val frameData = CdmaDecimalCoder(decodingThreshold).decode(code.toBipolar(), it)
@@ -439,39 +461,39 @@ class SystemProcessor {
 
     @SuppressLint("CheckResult")
     fun createDecodedChannels(count: Int, codeLength: Int, codesType: Int, threshold: Float) {
-        decodingThreshold = threshold.toDouble()
+        decodingThreshold = threshold
 
         Single.create<List<Channel>> { emitter ->
-            codedGroupData?.let {
-                val channels = mutableListOf<Channel>()
-                val codeGen = CodeGenerator()
-                val codes = when (codesType) {
-                    CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
-                    else -> codeGen.generateRandomCodes(count, codeLength)
-                }
-
-                for (i in 0 until count) {
-                    val frameData =
-                        CdmaDecimalCoder(decodingThreshold).decode(codes[i].toBipolar(), it)
-                    val errors = mutableListOf<Int>()
-                    frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
-                    val channel = Channel(frameData = frameData.toUnipolar(), code = codes[i])
-                    channel.errors = errors
-                    channels.add(channel)
-                }
-
-                emitter.onSuccess(channels)
+            val channels = mutableListOf<Channel>()
+            val codeGen = CodeGenerator()
+            val codes = when (codesType) {
+                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
+                else -> codeGen.generateRandomCodes(count, codeLength)
             }
+
+            for (i in 0 until count) {
+                var frameData = doubleArrayOf()
+                val errors = mutableListOf<Int>()
+                codedGroupData?.let {
+                    frameData = CdmaDecimalCoder(threshold).decode(codes[i].toBipolar(), it)
+                    frameData.forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
+                }
+                val channel = Channel(frameData = frameData.toUnipolar(), code = codes[i])
+                channel.errors = errors
+                channels.add(channel)
+            }
+
+            emitter.onSuccess(channels)
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
             .subscribe { channels: List<Channel> ->
-                L.d(this, "setDecodedChannels: create")
+                L.d(this, "DecodedChannels: create")
                 storage.setDecodedChannels(channels)
             }
     }
 
-    fun calculateBer(fromSnr: Double, toSnr: Double, pointsCount: Int) {
+    fun calculateCharacteristics(fromSnr: Double, toSnr: Double, pointsCount: Int) {
         val signal = storage.observeChannelsSignal().blockingFirst(BaseSignal())
         val demodConfig = storage.getCurrentDemodulatorConfig()
         val decodedChannels = storage.observeDecodedChannels().blockingFirst(listOf())
@@ -479,7 +501,7 @@ class SystemProcessor {
         berProcess?.cancel()
         berProcess = CalculateBerProcess(signal, demodConfig, decodedChannels, 0.3)
         berProcess?.execute(fromSnr, toSnr, pointsCount) {
-            berProgress.onNext(it)
+            characteristics.onNext(it)
         }
     }
 
