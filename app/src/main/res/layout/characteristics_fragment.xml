@@ -23,7 +23,7 @@
         app:layout_constraintTop_toBottomOf="@id/ber_label"/>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/ber_from_snr_layout"
+        android:id="@+id/from_snr_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -31,12 +31,12 @@
         android:layout_marginEnd="@dimen/margin_start_body"
         android:hint="@string/from_snr_in_db"
         app:errorEnabled="true"
-        app:layout_constraintEnd_toStartOf="@id/ber_to_snr_layout"
+        app:layout_constraintEnd_toStartOf="@id/to_snr_layout"
         app:layout_constraintStart_toStartOf="@id/guideline_left_border"
         app:layout_constraintTop_toBottomOf="@id/ber_graph">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/ber_from_snr"
+            android:id="@+id/from_snr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -45,18 +45,18 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/ber_to_snr_layout"
+        android:id="@+id/to_snr_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="@string/to_snr_in_db"
         app:errorEnabled="true"
         app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
-        app:layout_constraintStart_toEndOf="@id/ber_from_snr_layout"
-        app:layout_constraintBaseline_toBaselineOf="@id/ber_from_snr_layout">
+        app:layout_constraintStart_toEndOf="@id/from_snr_layout"
+        app:layout_constraintBaseline_toBaselineOf="@id/from_snr_layout">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/ber_to_snr"
+            android:id="@+id/to_snr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -65,7 +65,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/ber_points_count_layout"
+        android:id="@+id/points_count_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -73,10 +73,10 @@
         app:errorEnabled="true"
         app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
         app:layout_constraintStart_toEndOf="@id/guideline_left_border"
-        app:layout_constraintTop_toBottomOf="@id/ber_from_snr_layout">
+        app:layout_constraintTop_toBottomOf="@id/from_snr_layout">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/ber_points_count"
+            android:id="@+id/points_count"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -85,14 +85,14 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/ber_draw_graph_btn"
+        android:id="@+id/draw_graphs_btn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/draw_graph"
         app:errorEnabled="true"
         app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
         app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-        app:layout_constraintTop_toBottomOf="@id/ber_points_count_layout" />
+        app:layout_constraintTop_toBottomOf="@id/points_count_layout" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_left_border"

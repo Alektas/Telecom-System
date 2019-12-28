@@ -53,7 +53,7 @@ class SystemProcessor {
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
     private var transmitSubscription: Disposable? = null
-    val berProcess = BehaviorSubject.create<Int>()
+    val characteristicsProcess = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
@@ -501,7 +501,7 @@ class SystemProcessor {
             .skip(1) // Первое SNR вручную запускается в doOnSubscribe, поэтому пропускаем
             .zipWith(storage.observeBerByNoise()) { snr, _ -> snr } // Ждем вычисления BER, затем запускаем следующее SNR
             .doOnSubscribe {
-                berProcess.onNext(0)
+                characteristicsProcess.onNext(0)
                 if (isInterferenceWasEnabled) storage.disableInterference()
                 if (!isNoiseWasEnabled) storage.enableNoise(false)
                 setNoise(fromSnr, true)
@@ -512,16 +512,16 @@ class SystemProcessor {
                 val index = snrs.indexOf(it)
                 if (index > 0) {
                     val progress = (index / pointsCount.toDouble() * 100).toInt()
-                    berProcess.onNext(progress)
+                    characteristicsProcess.onNext(progress)
                 }
                 setNoise(it, true)
             }, {
-                berProcess.onNext(100)
+                characteristicsProcess.onNext(100)
             }, {
                 // Восстановить исходное состояние
                 if (!isNoiseWasEnabled) disableNoise()
                 if (isInterferenceWasEnabled) enableInterference()
-                berProcess.onNext(100)
+                characteristicsProcess.onNext(100)
             })
         )
     }

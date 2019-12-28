@@ -46,14 +46,14 @@ class CharacteristicsFragment : Fragment() {
         viewModel = ViewModelProviders.of(this).get(CharacteristicsViewModel::class.java)
         setFieldsValidation()
 
-        ber_points_count.setOnEditorActionListener { _, _, _ ->
+        points_count.setOnEditorActionListener { _, _, _ ->
             SystemUtils.hideKeyboard(this)
-            ber_draw_graph_btn.performClick()
+            draw_graphs_btn.performClick()
             false
         }
 
-        ber_draw_graph_btn.setOnClickListener {
-            calculateBer()
+        draw_graphs_btn.setOnClickListener {
+            calculateCharacteristics()
         }
 
         viewModel.viewportData.observe(viewLifecycleOwner, Observer {
@@ -68,42 +68,42 @@ class CharacteristicsFragment : Fragment() {
         })
     }
 
-    private fun calculateBer() {
-        val from = ber_from_snr.text.toString()
-        val to = ber_to_snr.text.toString()
-        val count = ber_points_count.text.toString()
-        val isSuccess = viewModel.calculateBer(from, to, count)
+    private fun calculateCharacteristics() {
+        val from = from_snr.text.toString()
+        val to = to_snr.text.toString()
+        val count = points_count.text.toString()
+        val isSuccess = viewModel.calculateCharacteristics(from, to, count)
         if (!isSuccess) {
             Toast.makeText(
                 requireContext(),
-                getString(R.string.error_ber_graph_invalid_data),
+                getString(R.string.error_graphs_invalid_data),
                 Toast.LENGTH_SHORT
             ).show()
         }
     }
 
     private fun setFieldsValidation() {
-        ber_from_snr.doOnTextChanged { text, _, _, _ ->
+        from_snr.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseSnr(text.toString()) != CharacteristicsViewModel.INVALID_SNR) {
-                ber_from_snr_layout.error = null
+                from_snr_layout.error = null
             } else {
-                ber_from_snr_layout.error = getString(R.string.error_num)
+                from_snr_layout.error = getString(R.string.error_num)
             }
         }
 
-        ber_to_snr.doOnTextChanged { text, _, _, _ ->
+        to_snr.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseSnr(text.toString()) != CharacteristicsViewModel.INVALID_SNR) {
-                ber_to_snr_layout.error = null
+                to_snr_layout.error = null
             } else {
-                ber_to_snr_layout.error = getString(R.string.error_num)
+                to_snr_layout.error = getString(R.string.error_num)
             }
         }
 
-        ber_points_count.doOnTextChanged { text, _, _, _ ->
+        points_count.doOnTextChanged { text, _, _, _ ->
             if (viewModel.parseSnr(text.toString()) > 0) {
-                ber_points_count_layout.error = null
+                points_count_layout.error = null
             } else {
-                ber_points_count_layout.error = getString(R.string.error_positive_num)
+                points_count_layout.error = getString(R.string.error_positive_num)
             }
         }
     }

@@ -65,7 +65,7 @@ class CharacteristicsViewModel : ViewModel() {
         )
     }
 
-    fun calculateBer(from: String, to: String, count: String): Boolean {
+    fun calculateCharacteristics(from: String, to: String, count: String): Boolean {
         val fromSnr = parseSnr(from)
         val toSnr = parseSnr(to)
         val pointsCount = parseCount(count)
