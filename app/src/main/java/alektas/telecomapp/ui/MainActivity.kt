@@ -18,7 +18,7 @@ import alektas.telecomapp.ui.demodulator.output.DemodulatorOutputFragment
 import alektas.telecomapp.ui.demodulator.processing.DemodulatorProcessFragment
 import alektas.telecomapp.ui.main.MainFragment
 import alektas.telecomapp.ui.statistic.StatisticFragment
-import alektas.telecomapp.ui.statistic.ber.BerFragment
+import alektas.telecomapp.ui.statistic.characteristics.CharacteristicsFragment
 import alektas.telecomapp.utils.FileWorker
 import android.app.Activity
 import android.content.Context
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.to_demodulator_output_btn -> DemodulatorOutputFragment.newInstance()
                     R.id.to_decoding_btn -> DecoderFragment.newInstance()
                     R.id.to_statistics_btn -> StatisticFragment.newInstance()
-                    R.id.to_ber_calculation_btn -> BerFragment.newInstance()
+                    R.id.to_ber_calculation_btn -> CharacteristicsFragment.newInstance()
                     else -> MainFragment.newInstance()
                 }
             )
