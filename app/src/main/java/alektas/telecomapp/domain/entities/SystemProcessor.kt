@@ -498,7 +498,12 @@ class SystemProcessor {
         val decodingChannels = storage.observeDecodedChannels().blockingFirst(listOf())
 
         characteristicsProcess?.cancel()
-        characteristicsProcess = CalculateCharacteristicsProcess(transmittingChannels, decodingChannels, demodConfig, decodingThreshold)
+        characteristicsProcess = CalculateCharacteristicsProcess(
+            transmittingChannels,
+            decodingChannels,
+            demodConfig,
+            decodingThreshold
+        )
         characteristicsProcess?.execute(fromSnr, toSnr, pointsCount) {
             characteristicsProgress.onNext(it)
         }

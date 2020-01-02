@@ -129,7 +129,7 @@
             android:id="@+id/setup_channels_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/setup_channels_hint"
+            android:text="@string/hint_setup_channels"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/transmit_frames_btn"/>
 
