@@ -493,12 +493,12 @@ class SystemProcessor {
     }
 
     fun calculateCharacteristics(fromSnr: Double, toSnr: Double, pointsCount: Int) {
-        val signal = storage.observeChannelsSignal().blockingFirst(BaseSignal())
+        val transmittingChannels = storage.observeSimulatedChannels().blockingFirst(listOf())
         val demodConfig = storage.getCurrentDemodulatorConfig()
-        val decodedChannels = storage.observeDecodedChannels().blockingFirst(listOf())
+        val decodingChannels = storage.observeDecodedChannels().blockingFirst(listOf())
 
         characteristicsProcess?.cancel()
-        characteristicsProcess = CalculateCharacteristicsProcess(signal, demodConfig, decodedChannels, decodingThreshold)
+        characteristicsProcess = CalculateCharacteristicsProcess(transmittingChannels, decodingChannels, demodConfig, decodingThreshold)
         characteristicsProcess?.execute(fromSnr, toSnr, pointsCount) {
             characteristicsProgress.onNext(it)
         }

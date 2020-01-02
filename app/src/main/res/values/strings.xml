@@ -16,7 +16,7 @@
     <string name="data">Данные: </string>
     <string name="code">Код: </string>
     <string name="channel_name">Канал: </string>
-    <string name="generate_channels">Сгенерировать каналы</string>
+    <string name="generate_channels">Создать каналы</string>
     <string name="channels">Каналы</string>
     <string name="ether">Эфир</string>
     <string name="SNR">Отношение С/Ш, дБ</string>
