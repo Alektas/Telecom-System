@@ -4,6 +4,7 @@ import alektas.telecomapp.data.SystemStorage
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
+import alektas.telecomapp.domain.processes.CalculateCharacteristicsProcess
 import alektas.telecomapp.ui.MainViewModel
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.ui.datasource.simulation.ChannelsSettingsViewModel
@@ -47,6 +48,7 @@ interface AppComponent {
     fun inject(vm: EtherSettingsViewModel)
     fun inject(vm: ChannelsSettingsViewModel)
     fun inject(storage: SystemStorage)
+    fun inject(process: CalculateCharacteristicsProcess)
 
     fun context(): Context
     fun channelsConfig(): ChannelsConfig

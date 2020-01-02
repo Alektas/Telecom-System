@@ -84,6 +84,17 @@ class CharacteristicsFragment : Fragment() {
         viewModel.capacityData.observe(viewLifecycleOwner, Observer {
             capacityGraphPoints.resetData(it)
         })
+
+        viewModel.isChannelsInvalid.observe(viewLifecycleOwner, Observer {
+            if (it) {
+                draw_graphs_btn.isEnabled = false
+                setup_channels_hint.visibility = View.VISIBLE
+            } else {
+                draw_graphs_btn.isEnabled = true
+                setup_channels_hint.visibility = View.INVISIBLE
+            }
+
+        })
     }
 
     private fun calculateCharacteristics() {
@@ -94,7 +105,7 @@ class CharacteristicsFragment : Fragment() {
         if (!isSuccess) {
             Toast.makeText(
                 requireContext(),
-                getString(R.string.error_graphs_invalid_data),
+                getString(R.string.enter_valid_data),
                 Toast.LENGTH_SHORT
             ).show()
         }

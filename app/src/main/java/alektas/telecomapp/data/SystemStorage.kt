@@ -74,8 +74,6 @@ class SystemStorage : Repository {
     private val interferenceSource = BehaviorSubject.create<Noise>()
     private val demodulatedSignalSource =
         BehaviorSubject.create<DigitalSignal>()
-    private val demodulatedSignalConstellationSource =
-        BehaviorSubject.create<List<Pair<Double, Double>>>()
     private val decodedChannelsSource =
         BehaviorSubject.create<List<Channel>>()
     private val decodedChannelsLiveSource =
@@ -123,8 +121,8 @@ class SystemStorage : Repository {
             berSource.onNext(value)
         }
     private val berSource = BehaviorSubject.create<Double>()
-    private val berByNoiseSource: Observable<Pair<Double, Double>>
-    private val capacityByNoiseSource: Observable<Pair<Double, Double>>
+    private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
+    private val capacityByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val berProcess = BehaviorSubject.create<Int>()
     private val transmitProcess = BehaviorSubject.create<Int>()
 
@@ -188,30 +186,6 @@ class SystemStorage : Repository {
             interferenceSource.startWith(BaseNoise()),
             Function3<Signal, Signal, Signal, Signal> { signal, noise, interf ->
                 signal + noise + interf
-            })
-
-        berByNoiseSource = Observable.zip(
-            decodedChannelsSource, noiseSource,
-            BiFunction { channels: List<Channel>, noise: Noise ->
-                val errorsCount = channels.sumBy { it.errors?.size ?: 0 }
-                val bitsReceived = channels.sumBy { it.frameData.size }.toDouble()
-                Pair(noise.rate(), errorsCount / bitsReceived * 100)
-            })
-
-        capacityByNoiseSource = Observable.zip(
-            decodedChannelsSource, noiseSource,
-            BiFunction { channels: List<Channel>, noise: Noise ->
-                var bandwidth = 0.0
-                if (channels.isNotEmpty()) {
-                    bandwidth = 1 / channels.first().bitTime
-                }
-                val linearSnr = 10.0.pow(noise.rate() / 10)
-                val capacity = bandwidth * log2(1 + linearSnr) * 1.0e-3 // кБит/с
-                L.d(
-                    "Capacity calculation",
-                    "B=${(bandwidth * 1.0e-3).format(3)}кГц, SNR=${noise.rate()}дБ, linSNR=${linearSnr.format(3)}, C=${capacity.format(3)}кБит/с"
-                )
-                Pair(noise.rate(), capacity)
             })
     }
 
@@ -462,8 +436,16 @@ class SystemStorage : Repository {
         return berProcess
     }
 
+    override fun setBerByNoise(berByNoise: Pair<Double, Double>) {
+        berByNoiseSource.onNext(berByNoise)
+    }
+
     override fun observeBerByNoise(): Observable<Pair<Double, Double>> {
         return berByNoiseSource
+    }
+
+    override fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>) {
+        capacityByNoiseSource.onNext(capacityByNoise)
     }
 
     override fun observeCapacityByNoise(): Observable<Pair<Double, Double>> {

@@ -16,7 +16,7 @@
     <string name="data">Данные: </string>
     <string name="code">Код: </string>
     <string name="channel_name">Канал: </string>
-    <string name="generate_channels">Сгенерировать каналы</string>
+    <string name="generate_channels">Создать каналы</string>
     <string name="channels">Каналы</string>
     <string name="ether">Эфир</string>
     <string name="SNR">Отношение С/Ш, дБ</string>
@@ -86,7 +86,7 @@
     <string name="source_channels_codesize_key">source_channels_codesize_key</string>
     <string name="decoder_code_length_key">decoder_code_length_key</string>
     <string name="decoder_threshold_key">decoder_threshold_key</string>
-    <string name="error_graphs_invalid_data">Необходимо настроить каналы и ввести корректные значения в поля</string>
+    <string name="hint_graphs_invalid_channels">*Необходимо настроить каналы источника и декодера</string>
     <string name="frame_count">Количество фреймов</string>
     <string name="start_transmitting">Начать передачу</string>
     <string name="source_channels_frame_count_key">source_channels_frame_count_key</string>
@@ -115,7 +115,7 @@
     <string name="simulation">Симуляция</string>
     <string name="simulation_frequency_in_megaherz">Частота дискретизации, МГц</string>
     <string name="settings_changed">Настройки изменены</string>
-    <string name="setup_channels_hint">*Настройте каналы чтобы начать передачу</string>
+    <string name="hint_setup_channels">*Настройте каналы чтобы начать передачу</string>
     <string name="points_count">Количество точек</string>
     <string name="settings_decoder_key">settings_decoder_key</string>
     <string name="filters_delay_compensation">Компенсация задержки фильтров, 0…1</string>
