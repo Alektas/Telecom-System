@@ -19,6 +19,7 @@ class FileDataSourceViewModel : ViewModel() {
     @Inject
     lateinit var processor: SystemProcessor
     private val disposable = CompositeDisposable()
+    private var data: String? = null
     val ether = MutableLiveData<Array<DataPoint>>()
     val adcFrequency = MutableLiveData<Double>()
     val adcResolution = MutableLiveData<Int>()
@@ -44,6 +45,10 @@ class FileDataSourceViewModel : ViewModel() {
         )
     }
 
+    fun setDataString(dataString: String) {
+        data = dataString
+    }
+
     fun setAdcFrequency(adcFrequencyString: String) {
         val freq = parseFrequency(adcFrequencyString)
         if (freq <= 0) return
@@ -52,18 +57,18 @@ class FileDataSourceViewModel : ViewModel() {
     }
 
     fun processData(
-        dataString: String,
         adcResolutionString: String,
         adcFrequencyString: String
-    ) {
+    ): Boolean {
         val freq = parseFrequency(adcFrequencyString)
         val res = parseResolution(adcResolutionString)
 
-        if (dataString.isEmpty() || freq <= 0 || res <= 0) return
+        if (data?.isEmpty() != false || freq <= 0 || res <= 0) return false
 
         adcFrequency.value = freq
         adcResolution.value = res
-        processor.processData(dataString, res, freq)
+        processor.processData(data ?: "", res, freq)
+        return true
     }
 
     fun parseFrequency(freqString: String): Double {

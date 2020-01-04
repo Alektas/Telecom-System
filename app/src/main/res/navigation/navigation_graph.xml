@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation_graph"
+    app:startDestination="@id/main_menu">
+
+    <fragment
+        android:id="@+id/main_menu"
+        android:name="alektas.telecomapp.ui.main.MainFragment"
+        android:label="Главное меню"
+        tools:layout="@layout/main_fragment" >
+        <action
+            android:id="@+id/action_main_menu_to_dataSourceFragment"
+            app:destination="@id/dataSourceFragment" />
+        <action
+            android:id="@+id/action_main_menu_to_qpskDemodulatorFragment"
+            app:destination="@id/qpskDemodulatorFragment" />
+        <action
+            android:id="@+id/action_main_menu_to_decoderFragment"
+            app:destination="@id/decoderFragment" />
+        <action
+            android:id="@+id/action_main_menu_to_statisticFragment"
+            app:destination="@id/statisticFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/dataSourceFragment"
+        android:name="alektas.telecomapp.ui.datasource.DataSourceFragment"
+        android:label="@string/data_source" >
+        <action
+            android:id="@+id/action_dataSourceFragment_to_fileDataSourceFragment"
+            app:destination="@id/fileDataSourceFragment" />
+        <action
+            android:id="@+id/action_dataSourceFragment_to_simulationDataSourceFragment"
+            app:destination="@id/simulationDataSourceFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/qpskDemodulatorFragment"
+        android:name="alektas.telecomapp.ui.demodulator.QpskDemodulatorFragment"
+        android:label="@string/demodulator"
+        tools:layout="@layout/qpsk_demodulator_fragment" >
+        <action
+            android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorInputFragment"
+            app:destination="@id/demodulatorInputFragment" />
+        <action
+            android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorGeneratorFragment"
+            app:destination="@id/demodulatorGeneratorFragment" />
+        <action
+            android:id="@+id/action_qpskDemodulatorFragment_to_firFilterFragment"
+            app:destination="@id/firFilterFragment" />
+        <action
+            android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorProcessFragment"
+            app:destination="@id/demodulatorProcessFragment" />
+        <action
+            android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorOutputFragment"
+            app:destination="@id/demodulatorOutputFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/decoderFragment"
+        android:name="alektas.telecomapp.ui.decoder.DecoderFragment"
+        android:label="@string/decoder" />
+    <fragment
+        android:id="@+id/statisticFragment"
+        android:name="alektas.telecomapp.ui.statistic.StatisticFragment"
+        android:label="@string/statistics"
+        tools:layout="@layout/statistic_fragment" >
+        <action
+            android:id="@+id/action_statisticFragment_to_characteristicsFragment"
+            app:destination="@id/characteristicsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/fileDataSourceFragment"
+        android:name="alektas.telecomapp.ui.datasource.external.FileDataSourceFragment"
+        android:label="Чтение из файла" />
+    <fragment
+        android:id="@+id/simulationDataSourceFragment"
+        android:name="alektas.telecomapp.ui.datasource.simulation.SimulationDataSourceFragment"
+        android:label="Симуляция" >
+        <action
+            android:id="@+id/action_simulationDataSourceFragment_to_etherSettingsFragment"
+            app:destination="@id/etherSettingsFragment" />
+        <action
+            android:id="@+id/action_simulationDataSourceFragment_to_channelsSettingsFragment"
+            app:destination="@id/channelsSettingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/demodulatorInputFragment"
+        android:name="alektas.telecomapp.ui.demodulator.input.DemodulatorInputFragment"
+        android:label="@string/input_signal"
+        tools:layout="@layout/demodulator_input_fragment" />
+    <fragment
+        android:id="@+id/demodulatorGeneratorFragment"
+        android:name="alektas.telecomapp.ui.demodulator.generator.DemodulatorGeneratorFragment"
+        android:label="@string/generator"
+        tools:layout="@layout/demodulator_generator_fragment" />
+    <fragment
+        android:id="@+id/demodulatorProcessFragment"
+        android:name="alektas.telecomapp.ui.demodulator.processing.DemodulatorProcessFragment"
+        android:label="@string/processing" />
+    <fragment
+        android:id="@+id/demodulatorOutputFragment"
+        android:name="alektas.telecomapp.ui.demodulator.output.DemodulatorOutputFragment"
+        android:label="@string/output_signal"
+        tools:layout="@layout/demodulator_output_fragment" />
+    <fragment
+        android:id="@+id/firFilterFragment"
+        android:name="alektas.telecomapp.ui.demodulator.filter.FirFilterFragment"
+        android:label="@string/filter" >
+        <action
+            android:id="@+id/action_firFilterFragment_to_IChannelFragment"
+            app:destination="@id/IChannelFragment" />
+        <action
+            android:id="@+id/action_firFilterFragment_to_QChannelFragment"
+            app:destination="@id/QChannelFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/characteristicsFragment"
+        android:name="alektas.telecomapp.ui.statistic.characteristics.CharacteristicsFragment"
+        android:label="@string/characteristics_calculation" />
+    <fragment
+        android:id="@+id/channelsSettingsFragment"
+        android:name="alektas.telecomapp.ui.datasource.simulation.ChannelsSettingsFragment"
+        android:label="@string/channels_settings"
+        tools:layout="@layout/channels_settings_fragment" />
+    <fragment
+        android:id="@+id/etherSettingsFragment"
+        android:name="alektas.telecomapp.ui.datasource.simulation.EtherSettingsFragment"
+        android:label="@string/ether_settings" />
+    <fragment
+        android:id="@+id/IChannelFragment"
+        android:name="alektas.telecomapp.ui.demodulator.filter.ichannel.IChannelFragment"
+        android:label="@string/i_channel"
+        tools:layout="@layout/ichannel_fragment" />
+    <fragment
+        android:id="@+id/QChannelFragment"
+        android:name="alektas.telecomapp.ui.demodulator.filter.qchannel.QChannelFragment"
+        android:label="@string/q_channel"
+        tools:layout="@layout/qchannel_fragment" />
+</navigation>

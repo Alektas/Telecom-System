@@ -2,23 +2,7 @@ package alektas.telecomapp.ui
 
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Simulator
-import alektas.telecomapp.ui.datasource.DataSourceFragment
-import alektas.telecomapp.ui.datasource.external.FileDataSourceFragment
-import alektas.telecomapp.ui.datasource.simulation.ChannelsSettingsFragment
-import alektas.telecomapp.ui.datasource.simulation.EtherSettingsFragment
-import alektas.telecomapp.ui.datasource.simulation.SimulationDataSourceFragment
-import alektas.telecomapp.ui.decoder.DecoderFragment
-import alektas.telecomapp.ui.demodulator.QpskDemodulatorFragment
-import alektas.telecomapp.ui.demodulator.filter.FirFilterFragment
-import alektas.telecomapp.ui.demodulator.filter.ichannel.IChannelFragment
-import alektas.telecomapp.ui.demodulator.filter.qchannel.QChannelFragment
-import alektas.telecomapp.ui.demodulator.generator.DemodulatorGeneratorFragment
-import alektas.telecomapp.ui.demodulator.input.DemodulatorInputFragment
-import alektas.telecomapp.ui.demodulator.output.DemodulatorOutputFragment
-import alektas.telecomapp.ui.demodulator.processing.DemodulatorProcessFragment
-import alektas.telecomapp.ui.main.MainFragment
-import alektas.telecomapp.ui.statistic.StatisticFragment
-import alektas.telecomapp.ui.statistic.characteristics.CharacteristicsFragment
+import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.utils.FileWorker
 import android.app.Activity
 import android.content.Context
@@ -31,6 +15,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
 import kotlinx.android.synthetic.main.main_activity.*
 
 private const val OPEN_DOCUMENT_REQUEST_CODE = 1
@@ -38,16 +26,18 @@ private const val EXTERNAL_FILE_URI_KEY = "EXTERNAL_FILE_URI_KEY"
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
+    private lateinit var appBarConfig: AppBarConfiguration
     private var externalData: String? = null
     private var externalFileUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+        val navController = findNavController(R.id.nav_host)
+        appBarConfig = AppBarConfiguration(navController.graph)
+        setupActionBarWithNavController(navController, appBarConfig)
         if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.container, MainFragment.newInstance())
-                .commitNow()
+            findNavController(R.id.nav_host).navigate(R.id.main_menu)
         }
 
         loadSettings()
@@ -71,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         externalData = externalFileUri?.let { FileWorker(this).readFile(it) }
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        return findNavController(R.id.nav_host).navigateUp(appBarConfig) || super.onSupportNavigateUp()
+    }
+
     fun onNavigateBtnClick(view: View) {
         if (view.id == R.id.to_file_explorer_btn) {
             selectFileForProcessing()
@@ -86,30 +80,26 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        supportFragmentManager.beginTransaction()
-            .replace(
-                R.id.container,
-                when (view.id) {
-                    R.id.to_data_source_btn -> DataSourceFragment.newInstance()
-                    R.id.to_simulation_data_source_btn -> SimulationDataSourceFragment.newInstance()
-                    R.id.to_ether_settings_btn -> EtherSettingsFragment.newInstance()
-                    R.id.to_channels_settings_btn -> ChannelsSettingsFragment.newInstance()
-                    R.id.to_demodulation_btn -> QpskDemodulatorFragment.newInstance()
-                    R.id.to_demodulator_input_btn -> DemodulatorInputFragment.newInstance()
-                    R.id.to_demodulator_generator_btn -> DemodulatorGeneratorFragment.newInstance()
-                    R.id.to_demodulator_filter_btn -> FirFilterFragment.newInstance()
-                    R.id.to_i_channel_btn -> IChannelFragment.newInstance()
-                    R.id.to_q_channel_btn -> QChannelFragment.newInstance()
-                    R.id.to_demodulator_process_btn -> DemodulatorProcessFragment.newInstance()
-                    R.id.to_demodulator_output_btn -> DemodulatorOutputFragment.newInstance()
-                    R.id.to_decoding_btn -> DecoderFragment.newInstance()
-                    R.id.to_statistics_btn -> StatisticFragment.newInstance()
-                    R.id.to_ber_calculation_btn -> CharacteristicsFragment.newInstance()
-                    else -> MainFragment.newInstance()
-                }
-            )
-            .addToBackStack(null)
-            .commit()
+        view.findNavController().navigate(
+            when (view.id) {
+                R.id.to_data_source_btn -> R.id.action_main_menu_to_dataSourceFragment
+                R.id.to_simulation_data_source_btn -> R.id.action_dataSourceFragment_to_simulationDataSourceFragment
+                R.id.to_ether_settings_btn -> R.id.action_simulationDataSourceFragment_to_etherSettingsFragment
+                R.id.to_channels_settings_btn -> R.id.action_simulationDataSourceFragment_to_channelsSettingsFragment
+                R.id.to_demodulation_btn -> R.id.action_main_menu_to_qpskDemodulatorFragment
+                R.id.to_demodulator_input_btn -> R.id.action_qpskDemodulatorFragment_to_demodulatorInputFragment
+                R.id.to_demodulator_generator_btn -> R.id.action_qpskDemodulatorFragment_to_demodulatorGeneratorFragment
+                R.id.to_demodulator_filter_btn -> R.id.action_qpskDemodulatorFragment_to_firFilterFragment
+                R.id.to_i_channel_btn -> R.id.action_firFilterFragment_to_IChannelFragment
+                R.id.to_q_channel_btn -> R.id.action_firFilterFragment_to_QChannelFragment
+                R.id.to_demodulator_process_btn -> R.id.action_qpskDemodulatorFragment_to_demodulatorProcessFragment
+                R.id.to_demodulator_output_btn -> R.id.action_qpskDemodulatorFragment_to_demodulatorOutputFragment
+                R.id.to_decoding_btn -> R.id.action_main_menu_to_decoderFragment
+                R.id.to_statistics_btn -> R.id.action_main_menu_to_statisticFragment
+                R.id.to_ber_calculation_btn -> R.id.action_statisticFragment_to_characteristicsFragment
+                else -> R.id.main
+            }
+        )
     }
 
     private fun selectFileForProcessing() {
@@ -142,10 +132,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun processData(data: String) {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.container, FileDataSourceFragment.newInstance(data))
-            .addToBackStack(null)
-            .commit()
+        val vm = ViewModelProviders.of(this).get(FileDataSourceViewModel::class.java)
+        vm.setDataString(data)
+        findNavController(R.id.nav_host).navigate(R.id.action_dataSourceFragment_to_fileDataSourceFragment)
     }
 
     private fun loadSettings() {
