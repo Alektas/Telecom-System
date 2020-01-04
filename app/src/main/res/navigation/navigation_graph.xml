@@ -12,16 +12,32 @@
         tools:layout="@layout/main_fragment" >
         <action
             android:id="@+id/action_main_menu_to_dataSourceFragment"
-            app:destination="@id/dataSourceFragment" />
+            app:destination="@id/dataSourceFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
         <action
             android:id="@+id/action_main_menu_to_qpskDemodulatorFragment"
-            app:destination="@id/qpskDemodulatorFragment" />
+            app:destination="@id/qpskDemodulatorFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_main_menu_to_decoderFragment"
-            app:destination="@id/decoderFragment" />
+            app:destination="@id/decoderFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_main_menu_to_statisticFragment"
-            app:destination="@id/statisticFragment" />
+            app:destination="@id/statisticFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
     </fragment>
     <fragment
         android:id="@+id/dataSourceFragment"
@@ -29,10 +45,18 @@
         android:label="@string/data_source" >
         <action
             android:id="@+id/action_dataSourceFragment_to_fileDataSourceFragment"
-            app:destination="@id/fileDataSourceFragment" />
+            app:destination="@id/fileDataSourceFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_dataSourceFragment_to_simulationDataSourceFragment"
-            app:destination="@id/simulationDataSourceFragment" />
+            app:destination="@id/simulationDataSourceFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
     </fragment>
     <fragment
         android:id="@+id/qpskDemodulatorFragment"
@@ -41,19 +65,39 @@
         tools:layout="@layout/qpsk_demodulator_fragment" >
         <action
             android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorInputFragment"
-            app:destination="@id/demodulatorInputFragment" />
+            app:destination="@id/demodulatorInputFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorGeneratorFragment"
-            app:destination="@id/demodulatorGeneratorFragment" />
+            app:destination="@id/demodulatorGeneratorFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_qpskDemodulatorFragment_to_firFilterFragment"
-            app:destination="@id/firFilterFragment" />
+            app:destination="@id/firFilterFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorProcessFragment"
-            app:destination="@id/demodulatorProcessFragment" />
+            app:destination="@id/demodulatorProcessFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_qpskDemodulatorFragment_to_demodulatorOutputFragment"
-            app:destination="@id/demodulatorOutputFragment" />
+            app:destination="@id/demodulatorOutputFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
     </fragment>
     <fragment
         android:id="@+id/decoderFragment"
@@ -66,7 +110,11 @@
         tools:layout="@layout/statistic_fragment" >
         <action
             android:id="@+id/action_statisticFragment_to_characteristicsFragment"
-            app:destination="@id/characteristicsFragment" />
+            app:destination="@id/characteristicsFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
     </fragment>
     <fragment
         android:id="@+id/fileDataSourceFragment"
@@ -78,10 +126,18 @@
         android:label="Симуляция" >
         <action
             android:id="@+id/action_simulationDataSourceFragment_to_etherSettingsFragment"
-            app:destination="@id/etherSettingsFragment" />
+            app:destination="@id/etherSettingsFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_simulationDataSourceFragment_to_channelsSettingsFragment"
-            app:destination="@id/channelsSettingsFragment" />
+            app:destination="@id/channelsSettingsFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
     </fragment>
     <fragment
         android:id="@+id/demodulatorInputFragment"
@@ -108,10 +164,18 @@
         android:label="@string/filter" >
         <action
             android:id="@+id/action_firFilterFragment_to_IChannelFragment"
-            app:destination="@id/IChannelFragment" />
+            app:destination="@id/IChannelFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
         <action
             android:id="@+id/action_firFilterFragment_to_QChannelFragment"
-            app:destination="@id/QChannelFragment" />
+            app:destination="@id/QChannelFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"  />
     </fragment>
     <fragment
         android:id="@+id/characteristicsFragment"
