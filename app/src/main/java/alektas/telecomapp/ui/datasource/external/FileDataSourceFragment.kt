@@ -23,13 +23,13 @@ import kotlinx.android.synthetic.main.file_data_source_fragment.*
 
 private const val DEFAULT_ADC_RESOLUTION = 8
 
-class FileDataSourceFragment(private val data: String) : Fragment() {
+class FileDataSourceFragment : Fragment() {
     private lateinit var viewModel: FileDataSourceViewModel
     private lateinit var prefs: SharedPreferences
     private val graphPoints = LineGraphSeries<DataPoint>()
 
     companion object {
-        fun newInstance(data: String) = FileDataSourceFragment(data)
+        fun newInstance() = FileDataSourceFragment()
     }
 
     override fun onCreateView(
@@ -53,7 +53,7 @@ class FileDataSourceFragment(private val data: String) : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(FileDataSourceViewModel::class.java)
+        viewModel = ViewModelProviders.of(requireActivity()).get(FileDataSourceViewModel::class.java)
         prefs = requireContext().getSharedPreferences(
             getString(R.string.settings_source_key),
             MODE_PRIVATE
@@ -129,11 +129,22 @@ class FileDataSourceFragment(private val data: String) : Fragment() {
         if (adc_frequency_layout.error != null ||
             adc_resolution_layout.error != null
         ) {
-            Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.enter_valid_data),
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
-        viewModel.processData(data, adcResolution, adcFrequency)
+        val success = viewModel.processData(adcResolution, adcFrequency)
+        if (!success) {
+            Toast.makeText(
+                requireContext(),
+                "Ошибка чтения файла. Убедитесь, что файл содержит корректные данные.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
 }
