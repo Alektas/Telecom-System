@@ -28,7 +28,7 @@ class FileDataSourceViewModel : ViewModel() {
         App.component.inject(this)
 
         disposable.addAll(
-            storage.observeEther()
+            storage.observeFileSignal()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
                 .map { it.toDataPoints() }

@@ -66,6 +66,7 @@ class SystemStorage : Repository {
     private val disposable = CompositeDisposable()
     private val simulatedChannelsSource = BehaviorSubject.create<List<Channel>>()
     private val channelsFrameSignalSource = BehaviorSubject.create<Signal>()
+    private val fileSignalSource = BehaviorSubject.create<Signal>()
     private val channelISource = BehaviorSubject.create<Signal>()
     private val channelQSource = BehaviorSubject.create<Signal>()
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
@@ -187,6 +188,7 @@ class SystemStorage : Repository {
             Function3<Signal, Signal, Signal, Signal> { signal, noise, interf ->
                 signal + noise + interf
             })
+            .mergeWith(fileSignalSource)
     }
 
     override fun getCurrentDemodulatorConfig(): DemodulatorConfig {
@@ -261,6 +263,14 @@ class SystemStorage : Repository {
 
     override fun observeSimulatedChannels(): Observable<List<Channel>> {
         return simulatedChannelsSource
+    }
+
+    override fun setFileSignal(signal: Signal) {
+        fileSignalSource.onNext(signal)
+    }
+
+    override fun observeFileSignal(): Observable<Signal> {
+        return fileSignalSource
     }
 
     override fun setNoise(signal: Noise) {

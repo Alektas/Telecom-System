@@ -163,7 +163,7 @@ class SystemProcessor {
             .doOnSubscribe { storage.startCountingStatistics() }
             .subscribeOn(Schedulers.io())
             .subscribe {
-                storage.setEther(it)
+                storage.setFileSignal(it)
             }
     }
 

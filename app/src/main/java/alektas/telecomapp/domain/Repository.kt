@@ -33,6 +33,9 @@ interface Repository {
     fun setChannelsFrameSignal(signal: Signal)
     fun observeChannelsSignal(): Observable<Signal>
 
+    fun setFileSignal(signal: Signal)
+    fun observeFileSignal(): Observable<Signal>
+
     fun setNoise(signal: Noise)
     fun enableNoise(fromCache: Boolean)
     fun disableNoise()
