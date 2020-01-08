@@ -1,11 +1,13 @@
 package alektas.telecomapp.domain.processes
 
 import alektas.telecomapp.App
+import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
 import alektas.telecomapp.domain.entities.coders.toBipolar
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
@@ -27,7 +29,7 @@ class CalculateCharacteristicsProcess(
     private val transmittingChannels: List<Channel>,
     private val decodingChannels: List<Channel>,
     private val demodulatorConfig: DemodulatorConfig,
-    private val threshold: Float
+    private val decoderConfig: DecoderConfig
 ) {
     @Inject
     lateinit var storage: Repository
@@ -55,8 +57,14 @@ class CalculateCharacteristicsProcess(
         disposable.add(
             snrs.toFlowable()
                 .map { snr ->
-                    val ber = calculateBer(transmittingChannels, snr, demodulatorConfig, decodingChannels, threshold)
-                    val capacity = calculateCapacity(snr, decodingChannels.first().bitTime)
+                    val ber = calculateBer(
+                        transmittingChannels,
+                        snr,
+                        demodulatorConfig,
+                        decodingChannels,
+                        decoderConfig
+                    )
+                    val capacity = calculateCapacity(snr, transmittingChannels.first().bitTime)
                     Triple(snr, ber, capacity)
                 }
                 .subscribeOn(Schedulers.computation())
@@ -71,6 +79,7 @@ class CalculateCharacteristicsProcess(
                     storage.setBerByNoise(it.first to it.second)
                     storage.setCapacityByNoise(it.first to it.third)
                 }, {
+                    it.printStackTrace()
                     progress(100)
                 }, {
                     progress(100)
@@ -121,6 +130,46 @@ class CalculateCharacteristicsProcess(
         return QpskDemodulator(config).demodulateFrame(ether).dataValues
     }
 
+    private fun detectChannels(
+        decoderConfig: DecoderConfig,
+        groupData: DoubleArray,
+        threshold: Float
+    ): List<Channel> {
+        val codeGen = CodeGenerator()
+        val codes = when (decoderConfig.codeType) {
+            CodeGenerator.WALSH -> codeGen.generateWalshMatrix(
+                decoderConfig.codeLength ?: 0
+            )
+            else -> codeGen.generateWalshMatrix(decoderConfig.codeLength ?: 0)
+        }
+        val channels = mutableListOf<Channel>()
+        for (i in codes.indices) {
+            val decoder = CdmaDecimalCoder(threshold)
+            val code = codes[i].toBipolar()
+            if (decoder.detectChannel(code, groupData)) {
+                channels.add(Channel(code = codes[i]))
+            }
+        }
+        return channels
+    }
+
+    private fun bitsAndErrors(
+        channels: List<Channel>,
+        decoderConfig: DecoderConfig,
+        groupData: DoubleArray
+    ): Pair<Int, Int> {
+        return channels.fold(0 to 0) { acc, channel ->
+            val data = decode(
+                groupData,
+                channel.code,
+                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+            )
+            val bits = data.size
+            val errors = countErrors(data)
+            (acc.first + bits) to (acc.second + errors)
+        }
+    }
+
     private fun decode(groupData: DoubleArray, code: BooleanArray, threshold: Float): DoubleArray {
         return CdmaDecimalCoder(threshold).decode(code.toBipolar(), groupData)
     }
@@ -138,19 +187,23 @@ class CalculateCharacteristicsProcess(
         transmittingChannels: List<Channel>,
         snr: Double,
         demodulatorConfig: DemodulatorConfig,
-        decodingChannels: List<Channel>,
-        threshold: Float
+        decoderChannels: List<Channel>,
+        decoderConfig: DecoderConfig
     ): Double {
         val signal = createSignal(transmittingChannels)
         val noise = createNoise(snr)
         val ether = createEther(signal, noise)
         val groupData = demodulate(ether, demodulatorConfig)
-        val bitsWithErrors = decodingChannels.fold(0 to 0) { acc, channel ->
-            val data = decode(groupData, channel.code, threshold)
-            val bits = data.size
-            val errors = countErrors(data)
-            (acc.first + bits) to (acc.second + errors)
+        val channels = if (decoderConfig.isAutoDetection) {
+            detectChannels(
+                decoderConfig,
+                groupData,
+                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+            )
+        } else {
+            decoderChannels
         }
+        val bitsWithErrors = bitsAndErrors(channels, decoderConfig, groupData)
         // вероятность битовой ошибки в процентах
         val ber = bitsWithErrors.second / bitsWithErrors.first.toDouble() * 100.0
         L.d(

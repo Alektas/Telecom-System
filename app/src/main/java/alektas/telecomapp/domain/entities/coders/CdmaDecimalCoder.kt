@@ -2,6 +2,8 @@ package alektas.telecomapp.domain.entities.coders
 
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 
+private const val CHANNEL_DETECTION_BITS_COUNT = 5
+
 class CdmaDecimalCoder(private val threshold: Float = QpskContract.DEFAULT_SIGNAL_THRESHOLD) : Coder<DoubleArray> {
 
     /**
@@ -41,6 +43,22 @@ class CdmaDecimalCoder(private val threshold: Float = QpskContract.DEFAULT_SIGNA
             }
             .map { normalize(it, threshold) }
             .toDoubleArray()
+    }
+
+    /**
+     * Определение наличия информационной посылки канала с кодом [code] в групповой смеси [codedData].
+     *
+     * @param code биполярный код (массив из -1 и 1)
+     * @param codedData групповой сигнал - массив кодированных данных (любые значения)
+     * @return true если сигнал канала присутствует в смеси, false в противном случае, а также
+     * при отсутствии кода или группового сигнала.
+     */
+    fun detectChannel(code: DoubleArray, codedData: DoubleArray): Boolean {
+        if (code.isEmpty() || codedData.isEmpty()) return false
+
+        val slice = codedData.sliceArray(0 until code.size * CHANNEL_DETECTION_BITS_COUNT)
+        val decodedBits = decode(code, slice)
+        return decodedBits.all { it != 0.0 }
     }
 
     private fun normalize(value: Double, threshold: Float): Double {
