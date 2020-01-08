@@ -22,6 +22,7 @@ interface Repository {
         bitTime: Double,
         codeLength: Int
     )
+    fun getDecoderConfiguration(): DecoderConfig
     fun observeDecoderConfig(): Observable<DecoderConfig>
     fun updateDecoderConfig(config: DecoderConfig)
 
@@ -31,6 +32,7 @@ interface Repository {
 
     fun setChannels(channels: List<Channel>)
     fun removeChannel(channel: Channel)
+    fun getSimulatedChannels(): List<Channel>
     fun observeSimulatedChannels(): Observable<List<Channel>>
 
     fun setChannelsFrameSignal(signal: Signal)

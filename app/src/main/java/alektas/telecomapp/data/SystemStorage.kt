@@ -59,7 +59,7 @@ class SystemStorage : Repository {
      */
     private var isSavedToFile = false
     private var adcBitDepth = 8
-    private var channelList = mutableListOf<Channel>()
+    private var simulatedChannelList = mutableListOf<Channel>()
     private var decoderChannelList = mutableListOf<Channel>()
     private val disposable = CompositeDisposable()
     private val simulatedChannelsSource = BehaviorSubject.create<List<Channel>>()
@@ -236,6 +236,10 @@ class SystemStorage : Repository {
         decoderConfigSource.onNext(decoderConfig)
     }
 
+    override fun getDecoderConfiguration(): DecoderConfig {
+        return decoderConfig
+    }
+
     override fun observeDecoderConfig(): Observable<DecoderConfig> {
         return decoderConfigSource
     }
@@ -263,12 +267,16 @@ class SystemStorage : Repository {
     }
 
     override fun setChannels(channels: List<Channel>) {
-        channelList = channels.toMutableList()
-        simulatedChannelsSource.onNext(channelList)
+        simulatedChannelList = channels.toMutableList()
+        simulatedChannelsSource.onNext(simulatedChannelList)
     }
 
     override fun removeChannel(channel: Channel) {
-        if (channelList.remove(channel)) simulatedChannelsSource.onNext(channelList)
+        if (simulatedChannelList.remove(channel)) simulatedChannelsSource.onNext(simulatedChannelList)
+    }
+
+    override fun getSimulatedChannels(): List<Channel> {
+        return simulatedChannelList
     }
 
     override fun observeSimulatedChannels(): Observable<List<Channel>> {

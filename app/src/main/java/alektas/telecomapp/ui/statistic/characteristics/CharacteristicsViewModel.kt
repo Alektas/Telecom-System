@@ -4,13 +4,14 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.BiFunction
+import io.reactivex.functions.Function3
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
@@ -73,7 +74,8 @@ class CharacteristicsViewModel : ViewModel() {
             Observable.combineLatest(
                 storage.observeSimulatedChannels().startWith(listOf<Channel>()),
                 storage.observeDecoderChannels().startWith(listOf<Channel>()),
-                BiFunction { sim: List<Channel>, dec: List<Channel> -> sim.isEmpty() || dec.isEmpty() }
+                storage.observeDecoderConfig(),
+                Function3 { sim: List<Channel>, dec: List<Channel>, dc: DecoderConfig -> sim.isEmpty() || (!dc.isAutoDetection && dec.isEmpty()) }
             )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

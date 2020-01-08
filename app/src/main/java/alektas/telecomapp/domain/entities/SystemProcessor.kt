@@ -543,17 +543,17 @@ class SystemProcessor {
     }
 
     fun calculateCharacteristics(fromSnr: Double, toSnr: Double, pointsCount: Int) {
-        val transmittingChannels = storage.observeSimulatedChannels().blockingFirst(listOf())
+        val transmittingChannels = storage.getSimulatedChannels()
         val demodConfig = storage.getCurrentDemodulatorConfig()
-        val decodingChannels = storage.observeDecoderChannels().blockingFirst(listOf())
-        val decoderConfig = storage.observeDecoderConfig().blockingFirst()
+        val decoderConfig = storage.getDecoderConfiguration()
+        val decodingChannels = storage.getDecoderChannels()
 
         characteristicsProcess?.cancel()
         characteristicsProcess = CalculateCharacteristicsProcess(
             transmittingChannels,
             decodingChannels,
             demodConfig,
-            decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+            decoderConfig
         )
         characteristicsProcess?.execute(fromSnr, toSnr, pointsCount) {
             characteristicsProgress.onNext(it)
