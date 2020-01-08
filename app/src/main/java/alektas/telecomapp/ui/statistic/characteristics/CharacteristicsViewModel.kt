@@ -72,7 +72,7 @@ class CharacteristicsViewModel : ViewModel() {
 
             Observable.combineLatest(
                 storage.observeSimulatedChannels().startWith(listOf<Channel>()),
-                storage.observeDecodedChannels().startWith(listOf<Channel>()),
+                storage.observeDecoderChannels().startWith(listOf<Channel>()),
                 BiFunction { sim: List<Channel>, dec: List<Channel> -> sim.isEmpty() || dec.isEmpty() }
             )
                 .subscribeOn(Schedulers.io())

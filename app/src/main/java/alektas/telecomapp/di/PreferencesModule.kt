@@ -202,6 +202,11 @@ class PreferencesModule {
         context: Context,
         @Named("decoderPrefs") prefs: SharedPreferences
     ): DecoderConfig {
+        val isAuto = prefs.getBoolean(
+            context.getString(R.string.decoder_channels_autodetection_key),
+            true
+        )
+
         val codeType = prefs.getInt(
             context.getString(R.string.decoder_channels_codetype_key),
             CdmaContract.DEFAULT_CODE_TYPE
@@ -209,7 +214,7 @@ class PreferencesModule {
 
         val threshold = prefs.getFloat(
             context.getString(R.string.decoder_threshold_key),
-            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
+            QpskContract.DEFAULT_SIGNAL_THRESHOLD
         )
 
         val channelCount = prefs.getInt(
@@ -223,6 +228,7 @@ class PreferencesModule {
         )
 
         return DecoderConfig(
+            isAuto,
             channelCount,
             codeLength,
             codeType,
