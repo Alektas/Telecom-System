@@ -3,6 +3,7 @@ package alektas.telecomapp.ui
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Simulator
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
+import alektas.telecomapp.ui.dialogs.AboutDialog
 import alektas.telecomapp.utils.FileWorker
 import android.app.Activity
 import android.content.Context
@@ -10,6 +11,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -59,6 +62,21 @@ class MainActivity : AppCompatActivity() {
         super.onRestoreInstanceState(savedInstanceState)
         externalFileUri = savedInstanceState.getParcelable(EXTERNAL_FILE_URI_KEY)
         externalData = externalFileUri?.let { FileWorker(this).readFile(it) }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.toolbar_main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_about -> {
+                showAboutDialog()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -151,6 +169,10 @@ class MainActivity : AppCompatActivity() {
             (Simulator.DEFAULT_SAMPLING_RATE * 1.0e-6).toFloat()
         ).let { it * 1.0e6 } // МГц -> Гц
         Simulator.samplingRate = samplingRate
+    }
+
+    private fun showAboutDialog() {
+        AboutDialog().show(supportFragmentManager, "about")
     }
 
 }

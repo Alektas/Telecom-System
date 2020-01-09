@@ -130,4 +130,9 @@
     <string name="capacity">Пропускная способность, кБит/с</string>
     <string name="channels_autodetection">Автоопределение каналов</string>
     <string name="decoder_channels_autodetection_key">decoder_channels_autodetection_key</string>
+    <string name="menu_about">О приложении</string>
+    <string name="about_app_body">Данное приложение предназначено для моделирования радиоприемника с QPSK модуляцией и кодовым разделением каналов (CDMA) в радиоканале с помехами</string>
+    <string name="developer_label">Разработчик:</string>
+    <string name="developer_name">Тотилас А.А.</string>
+    <string name="cancel">Закрыть</string>
 </resources>
