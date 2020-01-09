@@ -17,5 +17,6 @@
     <dimen name="margin_top_text">8dp</dimen>
     <dimen name="height_characteristics_graph">160dp</dimen>
     <dimen name="margin_horiz_divider">32dp</dimen>
+    <dimen name="margin_bottom_page_text">16dp</dimen>
 
 </resources>
