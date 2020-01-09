@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private var externalFileUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.AppTheme) // Убираем сплэш
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
         val navController = findNavController(R.id.nav_host)
