@@ -16,12 +16,27 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "0.1.0"
+        project.ext.set("archivesBaseName", "TelecomSystems-" + defaultConfig.versionName)
+        resConfigs "en", "ru"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            aaptOptions.cruncherEnabled = false
+            minifyEnabled false
+            shrinkResources false
+            ext.alwaysUpdateBuildId = false
+            ext.enableCrashlytics = false
+            splits.abi.enable = false
+            splits.density.enable = false
+
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
     compileOptions {
