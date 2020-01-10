@@ -153,6 +153,9 @@ class SystemProcessor {
         storage.setDemodulatorFilterConfig(filterConfig)
     }
 
+    /**
+     * Обработка данных сигнала, записанных в строковом виде.
+     */
     fun processData(
         dataString: String,
         adcResolution: Int,
@@ -173,6 +176,9 @@ class SystemProcessor {
             }
     }
 
+    /**
+     * Создание источника сигналов фреймов из массива данных.
+     */
     private fun generateFrames(samplingRate: Double, data: DoubleArray): Observable<Signal> {
         return Observable.create<Signal> { subscriber ->
             val dc = storage.getCurrentDemodulatorConfig()
