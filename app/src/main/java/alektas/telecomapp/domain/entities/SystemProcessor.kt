@@ -558,6 +558,9 @@ class SystemProcessor {
         val decoderConfig = storage.getDecoderConfiguration()
         val decodingChannels = storage.getDecoderChannels()
 
+        storage.clearBerByNoiseList()
+        storage.clearCapacityByNoiseList()
+
         characteristicsProcess?.cancel()
         characteristicsProcess = CalculateCharacteristicsProcess(
             transmittingChannels,
@@ -568,6 +571,12 @@ class SystemProcessor {
         characteristicsProcess?.execute(fromSnr, toSnr, pointsCount) {
             characteristicsProgress.onNext(it)
         }
+    }
+
+    fun getCharacteristicsProcessRange(): Pair<Double, Double> {
+        val fromSnr = characteristicsProcess?.currentStartSnr ?: 0.0
+        val toSnr = characteristicsProcess?.currentFinishSnr ?: 5.0
+        return fromSnr to toSnr
     }
 
     /**
