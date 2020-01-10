@@ -28,6 +28,9 @@ class CharacteristicsViewModel : ViewModel() {
     val isChannelsInvalid = MutableLiveData<Boolean>()
     val berList = mutableListOf<DataPoint>()
     val capacityList = mutableListOf<DataPoint>()
+    val pointsCount = MutableLiveData<Int>()
+    val fromSnr = MutableLiveData<Float>()
+    val toSnr = MutableLiveData<Float>()
 
     companion object {
         const val INVALID_SNR = -1000.0
@@ -102,6 +105,10 @@ class CharacteristicsViewModel : ViewModel() {
             berList.clear()
             capacityList.clear()
             processor.calculateCharacteristics(fromSnr, toSnr, pointsCount)
+
+            this.pointsCount.value = pointsCount
+            this.fromSnr.value = fromSnr.toFloat()
+            this.toSnr.value = toSnr.toFloat()
             return true
         }
 
