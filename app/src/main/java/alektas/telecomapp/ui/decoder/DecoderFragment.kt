@@ -84,6 +84,11 @@ class DecoderFragment : Fragment(), ChannelController {
         viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
             graphPoints.resetData(it)
         })
+
+        viewModel.isDecodingAvailable.observe(viewLifecycleOwner, Observer {
+            channels_autodetection_checkbox.isEnabled = it
+            generate_channels_btn.isEnabled = it
+        })
     }
 
     override fun removeChannel(channel: Channel) {
