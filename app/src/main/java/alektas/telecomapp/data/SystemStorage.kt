@@ -122,7 +122,9 @@ class SystemStorage : Repository {
             berSource.onNext(value)
         }
     private val berSource = BehaviorSubject.create<Double>()
+    private val berByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
+    private val capacityByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val capacityByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val transmitProcess = BehaviorSubject.create<Int>()
 
@@ -467,7 +469,16 @@ class SystemStorage : Repository {
     }
 
     override fun setBerByNoise(berByNoise: Pair<Double, Double>) {
+        berByNoiseList.add(berByNoise)
         berByNoiseSource.onNext(berByNoise)
+    }
+
+    override fun getBerByNoiseList(): List<Pair<Double, Double>> {
+        return berByNoiseList
+    }
+
+    override fun clearBerByNoiseList() {
+        berByNoiseList.clear()
     }
 
     override fun observeBerByNoise(): Observable<Pair<Double, Double>> {
@@ -475,7 +486,16 @@ class SystemStorage : Repository {
     }
 
     override fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>) {
+        capacityByNoiseList.add(capacityByNoise)
         capacityByNoiseSource.onNext(capacityByNoise)
+    }
+
+    override fun getCapacityByNoiseList(): List<Pair<Double, Double>> {
+        return capacityByNoiseList
+    }
+
+    override fun clearCapacityByNoiseList() {
+        capacityByNoiseList.clear()
     }
 
     override fun observeCapacityByNoise(): Observable<Pair<Double, Double>> {

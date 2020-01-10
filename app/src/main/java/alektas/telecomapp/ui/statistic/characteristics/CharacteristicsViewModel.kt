@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
+import alektas.telecomapp.utils.toSortedPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
@@ -26,8 +27,11 @@ class CharacteristicsViewModel : ViewModel() {
     val berData = MutableLiveData<Array<DataPoint>>()
     val capacityData = MutableLiveData<Array<DataPoint>>()
     val isChannelsInvalid = MutableLiveData<Boolean>()
-    val berList = mutableListOf<DataPoint>()
-    val capacityList = mutableListOf<DataPoint>()
+    val pointsCount = MutableLiveData<Int>()
+    val fromSnr = MutableLiveData<Float>()
+    val toSnr = MutableLiveData<Float>()
+    var berList = mutableListOf<DataPoint>()
+    var capacityList = mutableListOf<DataPoint>()
 
     companion object {
         const val INVALID_SNR = -1000.0
@@ -35,6 +39,13 @@ class CharacteristicsViewModel : ViewModel() {
 
     init {
         App.component.inject(this)
+
+        viewportData.value = processor.getCharacteristicsProcessRange()
+
+        berList = storage.getBerByNoiseList().toSortedPoints()
+        berData.value = berList.toTypedArray()
+        capacityList = storage.getCapacityByNoiseList().toSortedPoints()
+        capacityData.value = capacityList.toTypedArray()
 
         disposable.addAll(
             storage.observeBerByNoise()
@@ -75,7 +86,9 @@ class CharacteristicsViewModel : ViewModel() {
                 storage.observeSimulatedChannels().startWith(listOf<Channel>()),
                 storage.observeDecoderChannels().startWith(listOf<Channel>()),
                 storage.observeDecoderConfig(),
-                Function3 { sim: List<Channel>, dec: List<Channel>, dc: DecoderConfig -> sim.isEmpty() || (!dc.isAutoDetection && dec.isEmpty()) }
+                Function3 { sim: List<Channel>, dec: List<Channel>, dc: DecoderConfig ->
+                    sim.isEmpty() || (!dc.isAutoDetection && dec.isEmpty())
+                }
             )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -102,6 +115,10 @@ class CharacteristicsViewModel : ViewModel() {
             berList.clear()
             capacityList.clear()
             processor.calculateCharacteristics(fromSnr, toSnr, pointsCount)
+
+            this.pointsCount.value = pointsCount
+            this.fromSnr.value = fromSnr.toFloat()
+            this.toSnr.value = toSnr.toFloat()
             return true
         }
 

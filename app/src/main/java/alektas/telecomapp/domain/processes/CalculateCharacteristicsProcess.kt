@@ -34,6 +34,8 @@ class CalculateCharacteristicsProcess(
     @Inject
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
+    var currentStartSnr: Double? = null
+    var currentFinishSnr: Double? = null
 
     init {
         App.component.inject(this)
@@ -50,6 +52,9 @@ class CalculateCharacteristicsProcess(
         pointsCount: Int,
         progress: (Int) -> Unit = {}
     ) {
+        currentStartSnr = fromSnr
+        currentFinishSnr = toSnr
+
         val step = (toSnr - fromSnr) / pointsCount
         val snrs = DoubleArray(pointsCount) { fromSnr + it * step }
         var pointsCalculated = 0

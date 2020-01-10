@@ -86,7 +86,11 @@ interface Repository {
     fun observeBer(): Observable<Double>
 
     fun setBerByNoise(berByNoise: Pair<Double, Double>)
+    fun getBerByNoiseList(): List<Pair<Double, Double>>
+    fun clearBerByNoiseList()
     fun observeBerByNoise(): Observable<Pair<Double, Double>>
     fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>)
+    fun getCapacityByNoiseList(): List<Pair<Double, Double>>
+    fun clearCapacityByNoiseList()
     fun observeCapacityByNoise(): Observable<Pair<Double, Double>>
 }

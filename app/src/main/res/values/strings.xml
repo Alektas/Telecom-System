@@ -135,4 +135,8 @@
     <string name="developer_label">Разработчик:</string>
     <string name="developer_name">Тотилас А.А.</string>
     <string name="cancel">Закрыть</string>
+    <string name="settings_characteristics_key">settings_characteristics_key</string>
+    <string name="characteristics_start_snr_key">characteristics_from_snr_key</string>
+    <string name="characteristics_finish_snr_key">characteristics_finish_snr_key</string>
+    <string name="characteristics_points_count_key">characteristics_points_count_key</string>
 </resources>
