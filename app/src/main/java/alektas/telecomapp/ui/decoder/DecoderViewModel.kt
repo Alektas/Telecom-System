@@ -23,6 +23,7 @@ class DecoderViewModel : ViewModel() {
     @Inject
     lateinit var processor: SystemProcessor
     private val disposable = CompositeDisposable()
+    val isDecodingAvailable = MutableLiveData<Boolean>(true)
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val channels = MutableLiveData<List<Channel>>()
     val codeType = MutableLiveData<Int>()
@@ -60,6 +61,23 @@ class DecoderViewModel : ViewModel() {
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeTransmitProcess()
+                .map { (it < 0 || it >= 100) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Boolean>() {
+                    override fun onNext(b: Boolean) {
+                        isDecodingAvailable.value = b
+                    }
+
+                    override fun onComplete() {
+                        isDecodingAvailable.value = true
+                    }
+
+                    override fun onError(e: Throwable) {
+                        isDecodingAvailable.value = true
+                    }
                 })
         )
     }
