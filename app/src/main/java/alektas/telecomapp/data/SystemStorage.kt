@@ -124,7 +124,6 @@ class SystemStorage : Repository {
     private val berSource = BehaviorSubject.create<Double>()
     private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val capacityByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
-    private val berProcess = BehaviorSubject.create<Int>()
     private val transmitProcess = BehaviorSubject.create<Int>()
 
     init {
@@ -439,7 +438,11 @@ class SystemStorage : Repository {
         return channelsErrorsSource
     }
 
-    override fun observeTransmitProcess(): Observable<Int> {
+    override fun setTransmitProgress(progress: Int) {
+        return transmitProcess.onNext(progress)
+    }
+
+    override fun observeTransmitProgress(): Observable<Int> {
         return transmitProcess
     }
 
@@ -461,10 +464,6 @@ class SystemStorage : Repository {
 
     override fun observeBer(): Observable<Double> {
         return berSource
-    }
-
-    override fun observeBerProcess(): Observable<Int> {
-        return berProcess
     }
 
     override fun setBerByNoise(berByNoise: Pair<Double, Double>) {

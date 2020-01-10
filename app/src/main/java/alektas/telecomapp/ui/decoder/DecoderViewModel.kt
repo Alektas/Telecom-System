@@ -6,7 +6,6 @@ import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
-import alektas.telecomapp.utils.L
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -63,7 +62,7 @@ class DecoderViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            storage.observeTransmitProcess()
+            storage.observeTransmitProgress()
                 .map { (it < 0 || it >= 100) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {

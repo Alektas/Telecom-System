@@ -77,13 +77,13 @@ interface Repository {
     fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
-    fun observeTransmitProcess(): Observable<Int>
+    fun setTransmitProgress(progress: Int)
+    fun observeTransmitProgress(): Observable<Int>
     fun observeTransmittingChannelsCount(): Observable<Int>
     fun observeTransmittedBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>
     fun observeReceivedErrorsCount(): Observable<Int>
     fun observeBer(): Observable<Double>
-    fun observeBerProcess(): Observable<Int>
 
     fun setBerByNoise(berByNoise: Pair<Double, Double>)
     fun observeBerByNoise(): Observable<Pair<Double, Double>>

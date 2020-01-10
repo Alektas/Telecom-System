@@ -69,7 +69,7 @@ class SimulationDataSourceViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            storage.observeTransmitProcess()
+            storage.observeTransmitProgress()
                 .map { (it < 0 || it >= 100) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {
