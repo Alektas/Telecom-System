@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:context=".ui.datasource.simulation.EtherSettingsFragment">
+
+        <TextView
+            android:id="@+id/ether_label"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_title"
+            android:layout_marginTop="@dimen/margin_top_title"
+            android:text="@string/ether"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/ether_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            android:layout_marginTop="@dimen/margin_top_text"
+            app:layout_constraintTop_toBottomOf="@id/ether_label" />
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/noise_checkbox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
+            android:checked="true"
+            android:text="@string/ether_noise_enable"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/ether_chart" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/noise_rate_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/SNR"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/noise_checkbox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/noise_rate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/interference_checkbox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
+            android:checked="true"
+            android:text="@string/ether_interference_enable"
+            app:layout_constraintEnd_toEndOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/noise_rate_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/interference_rate_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/SIR"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/interference_checkbox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/interference_rate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionNext"
+                android:inputType="numberSigned|numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/interference_sparseness_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/sparseness"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/interference_rate_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/interference_sparseness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_right_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

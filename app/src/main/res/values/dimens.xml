@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="size_graph_constellation">200dp</dimen>
+    <dimen name="size_scheme_block">40dp</dimen>
+    <dimen name="length_scheme_line_short">32dp</dimen>
+    <dimen name="height_graph_signal">120dp</dimen>
+    <dimen name="height_demodulation_process_channel">380dp</dimen>
+    <dimen name="width_scheme_lines">4dp</dimen>
+    <dimen name="margin_start_graph_label">32dp</dimen>
+    <dimen name="margin_start_field">16dp</dimen>
+    <dimen name="margin_start_title">32dp</dimen>
+    <dimen name="margin_top_title">16dp</dimen>
+    <dimen name="margin_start_body">8dp</dimen>
+    <dimen name="padding_top_page">16dp</dimen>
+    <dimen name="padding_horiz_page">32dp</dimen>
+    <dimen name="textsize_graph_view_label">16sp</dimen>
+    <dimen name="margin_top_text">8dp</dimen>
+    <dimen name="height_characteristics_graph">160dp</dimen>
+    <dimen name="margin_horiz_divider">32dp</dimen>
+    <dimen name="margin_bottom_page_text">16dp</dimen>
+    <dimen name="margin_bottom_logo">32dp</dimen>
+
+</resources>

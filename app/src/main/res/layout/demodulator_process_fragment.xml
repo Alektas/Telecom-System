@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        tools:context=".ui.demodulator.processing.DemodulatorProcessFragment">
+
+        <TextView
+            android:id="@+id/signal_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/sum_data"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"/>
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/sum_data_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            app:layout_constraintTop_toBottomOf="@id/signal_label"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_delay_compensation_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_title"
+            app:errorEnabled="true"
+            android:hint="@string/filters_delay_compensation"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintTop_toBottomOf="@id/sum_data_chart">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_delay_compensation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/process_code_length"
+                android:ems="10"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_frame_length_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:errorEnabled="true"
+            android:hint="@string/frame_length"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintTop_toBottomOf="@id/process_delay_compensation_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_frame_length"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/process_code_length"
+                android:ems="10"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_code_length_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:errorEnabled="true"
+            android:hint="@string/code_length"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintTop_toBottomOf="@id/process_frame_length_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_code_length"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/process_data_speed"
+                android:ems="10"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/process_data_speed_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:errorEnabled="true"
+            android:hint="@string/data_speed"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintTop_toBottomOf="@id/process_code_length_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/process_data_speed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:ems="10"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/process_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_top_title"
+            android:text="@string/process_data"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintTop_toBottomOf="@id/process_data_speed_layout"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_right_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

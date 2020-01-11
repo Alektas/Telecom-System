@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/padding_horiz_page"
+    tools:context=".ui.main.MainFragment">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_file_data_source_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/file_data_source"
+        app:layout_constraintBottom_toTopOf="@id/to_simulation_data_source_btn"
+        app:layout_constraintEnd_toStartOf="@id/to_file_explorer_btn"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.4"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <ImageButton
+        android:id="@+id/to_file_explorer_btn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="@dimen/margin_start_body"
+        android:backgroundTint="?attr/colorPrimary"
+        android:tint="?attr/colorOnPrimary"
+        android:src="@drawable/ic_search_black_24dp"
+        android:onClick="onNavigateBtnClick"
+        app:layout_constraintBottom_toBottomOf="@id/to_file_data_source_btn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/to_file_data_source_btn"
+        app:layout_constraintTop_toTopOf="@id/to_file_data_source_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_simulation_data_source_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/simulation_data_source"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/to_file_data_source_btn"
+        app:layout_constraintVertical_bias="0.4" />
+</androidx.constraintlayout.widget.ConstraintLayout>

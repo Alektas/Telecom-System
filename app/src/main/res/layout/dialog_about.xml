@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/about_app"
+        style="@style/TextAppearance.MaterialComponents.Body1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_title"
+        android:layout_marginBottom="@dimen/margin_top_title"
+        android:text="@string/about_app_body"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"/>
+
+    <TextView
+        android:id="@+id/developer_label"
+        style="@style/TextAppearance.MaterialComponents.Body1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/developer_label"
+        app:layout_constraintBaseline_toBaselineOf="@id/developer_name"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"/>
+
+    <TextView
+        android:id="@+id/developer_name"
+        style="@style/TextAppearance.MaterialComponents.Body1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_title"
+        android:layout_marginBottom="@dimen/margin_top_title"
+        android:layout_marginStart="@dimen/margin_start_body"
+        android:text="@string/developer_name"
+        app:layout_constraintTop_toBottomOf="@id/about_app"
+        app:layout_constraintBottom_toTopOf="@id/app_version"
+        app:layout_constraintStart_toEndOf="@id/developer_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"/>
+
+    <TextView
+        android:id="@+id/app_version_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/margin_start_body"
+        android:text="Версия:"
+        app:layout_constraintBaseline_toBaselineOf="@id/app_version"
+        app:layout_constraintEnd_toStartOf="@id/app_version"/>
+
+    <TextView
+        android:id="@+id/app_version"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="0.0.0"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_left_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_right_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

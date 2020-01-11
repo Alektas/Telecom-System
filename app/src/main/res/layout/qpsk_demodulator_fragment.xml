@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/padding_horiz_page"
+    tools:context=".ui.demodulator.QpskDemodulatorFragment">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_demodulator_input_btn"
+        style="@style/SchemeBlockBtn.Enabled"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/input_signal"
+        app:layout_constraintBottom_toTopOf="@id/arrow_from_input"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.4"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <ImageView
+        android:id="@+id/arrow_from_input"
+        android:layout_width="@dimen/width_scheme_lines"
+        android:layout_height="@dimen/length_scheme_line_short"
+        android:src="@android:color/black"
+        app:layout_constraintBottom_toTopOf="@id/horiz_line_from_input"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/to_demodulator_input_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/horiz_line_from_input"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/width_scheme_lines"
+        android:src="@android:color/black"
+        app:layout_constraintBottom_toTopOf="@id/arrow_from_input_i_channel"
+        app:layout_constraintEnd_toEndOf="@id/guideline_right_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_arrows"
+        app:layout_constraintTop_toBottomOf="@id/arrow_from_input"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/arrow_from_input_i_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/multiplier_i_channel"
+        app:layout_constraintEnd_toEndOf="@id/guideline_left_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_arrows"
+        app:layout_constraintTop_toBottomOf="@+id/horiz_line_from_input"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/multiplier_i_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/multiplier"
+        app:layout_constraintBottom_toTopOf="@id/arrow_from_multiplier_i_channel"
+        app:layout_constraintEnd_toEndOf="@id/guideline_left_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_arrows"
+        app:layout_constraintTop_toBottomOf="@+id/arrow_from_input_i_channel"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/arrow_from_multiplier_i_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/to_demodulator_filter_btn"
+        app:layout_constraintEnd_toEndOf="@id/guideline_left_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_arrows"
+        app:layout_constraintTop_toBottomOf="@+id/multiplier_i_channel"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/arrow_from_generator_i_channel"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_left"
+        app:layout_constraintBottom_toBottomOf="@+id/multiplier_i_channel"
+        app:layout_constraintEnd_toStartOf="@id/to_demodulator_generator_btn"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/multiplier_i_channel"
+        app:layout_constraintTop_toTopOf="@+id/multiplier_i_channel"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_demodulator_generator_btn"
+        style="@style/SchemeBlockBtn.Enabled"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="Г"
+        app:layout_constraintBottom_toBottomOf="@+id/arrow_from_generator_i_channel"
+        app:layout_constraintEnd_toStartOf="@id/arrow_from_generator_q_channel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/arrow_from_generator_i_channel"
+        app:layout_constraintTop_toTopOf="@+id/arrow_from_generator_i_channel"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <ImageView
+        android:id="@+id/arrow_from_generator_q_channel"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_right"
+        app:layout_constraintBottom_toBottomOf="@+id/to_demodulator_generator_btn"
+        app:layout_constraintEnd_toStartOf="@id/phase_shifter_q_channel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/to_demodulator_generator_btn"
+        app:layout_constraintTop_toTopOf="@+id/to_demodulator_generator_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/phase_shifter_q_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/phase_shifter"
+        app:layout_constraintBottom_toBottomOf="@+id/arrow_from_generator_q_channel"
+        app:layout_constraintEnd_toStartOf="@id/arrow_from_phase_shifter_q_channel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/arrow_from_generator_q_channel"
+        app:layout_constraintTop_toTopOf="@+id/arrow_from_generator_q_channel"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/arrow_from_phase_shifter_q_channel"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/size_scheme_block"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/arrow_right"
+        app:layout_constraintBottom_toBottomOf="@+id/phase_shifter_q_channel"
+        app:layout_constraintEnd_toStartOf="@id/multiplier_q_channel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/phase_shifter_q_channel"
+        app:layout_constraintTop_toTopOf="@+id/phase_shifter_q_channel"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/arrow_from_input_q_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/multiplier_q_channel"
+        app:layout_constraintEnd_toEndOf="@id/guideline_right_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_right_arrows"
+        app:layout_constraintTop_toBottomOf="@+id/horiz_line_from_input"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/multiplier_q_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/multiplier"
+        app:layout_constraintBottom_toBottomOf="@+id/arrow_from_phase_shifter_q_channel"
+        app:layout_constraintEnd_toEndOf="@id/guideline_right_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_right_arrows"
+        app:layout_constraintTop_toTopOf="@+id/arrow_from_phase_shifter_q_channel"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/arrow_from_multiplier_q_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/to_demodulator_filter_btn"
+        app:layout_constraintEnd_toEndOf="@id/guideline_right_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_right_arrows"
+        app:layout_constraintTop_toBottomOf="@+id/multiplier_q_channel"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_demodulator_filter_btn"
+        style="@style/SchemeBlockBtn.Enabled"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/filter"
+        app:layout_constraintBottom_toTopOf="@id/arrow_to_process"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/arrow_from_multiplier_i_channel"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <ImageView
+        android:id="@+id/arrow_to_process_i_channel"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/to_demodulator_process_btn"
+        app:layout_constraintEnd_toEndOf="@id/guideline_left_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_arrows"
+        app:layout_constraintTop_toBottomOf="@+id/to_demodulator_filter_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <ImageView
+        android:id="@+id/arrow_to_process"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/to_demodulator_process_btn"
+        app:layout_constraintEnd_toEndOf="@id/guideline_right_arrows"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/guideline_right_arrows"
+        app:layout_constraintTop_toBottomOf="@+id/to_demodulator_filter_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_demodulator_process_btn"
+        style="@style/SchemeBlockBtn.Enabled"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/processing"
+        app:layout_constraintBottom_toTopOf="@id/arrow_to_output"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/arrow_to_process"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <ImageView
+        android:id="@+id/arrow_to_output"
+        android:layout_width="@dimen/size_scheme_block"
+        android:layout_height="@dimen/size_scheme_block"
+        android:src="@drawable/arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/to_demodulator_output_btn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/to_demodulator_process_btn"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_demodulator_output_btn"
+        style="@style/SchemeBlockBtn.Enabled"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/output_signal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/arrow_to_output"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_left_arrows"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.15" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_right_arrows"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.85" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

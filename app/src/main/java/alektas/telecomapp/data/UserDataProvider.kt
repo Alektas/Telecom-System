@@ -6,9 +6,9 @@ class UserDataProvider {
 
     companion object {
 
-        fun generateData(length: Int): Array<Boolean> {
+        fun generateData(length: Int): BooleanArray {
             val r = Random.Default
-            return Array(length) { r.nextBoolean() }
+            return BooleanArray(length) { r.nextBoolean() }
         }
     }
 }

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/padding_top_page"
+        tools:context=".ui.datasource.simulation.SimulationDataSourceFragment">
+
+        <TextView
+            android:id="@+id/ether_label"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_title"
+            android:layout_marginTop="@dimen/margin_top_title"
+            android:text="@string/ether"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/ether_chart"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_graph_signal"
+            android:layout_marginTop="@dimen/margin_top_text"
+            app:layout_constraintTop_toBottomOf="@id/ether_label" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/to_ether_settings_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
+            android:onClick="onNavigateBtnClick"
+            android:text="@string/ether_settings"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/ether_chart" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/to_channels_settings_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:onClick="onNavigateBtnClick"
+            android:text="@string/channels_settings"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/to_ether_settings_btn" />
+
+        <View
+            android:id="@+id/divider1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="@dimen/margin_horiz_divider"
+            android:layout_marginEnd="@dimen/margin_horiz_divider"
+            android:background="?android:attr/listDivider"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/to_channels_settings_btn" />
+
+        <TextView
+            android:id="@+id/adc_label"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_start_title"
+            android:layout_marginTop="@dimen/margin_top_title"
+            android:text="@string/simulation"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/divider1" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/adc_frequency_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
+            android:hint="@string/simulation_frequency_in_megaherz"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/adc_label">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/adc_frequency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/source_frame_count_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/frame_count"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/adc_frequency_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/source_frame_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionDone"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/transmit_frames_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/start_transmitting"
+            android:enabled="false"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/source_frame_count_layout" />
+
+        <TextView
+            style="@style/TextAppearance.MaterialComponents.Caption"
+            android:id="@+id/setup_channels_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hint_setup_channels"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/transmit_frames_btn"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/channel_list"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_text"
+            android:nestedScrollingEnabled="true"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/setup_channels_hint"
+            tools:itemCount="4"
+            tools:listitem="@layout/item_channel" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_right_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/padding_top_page"
+    tools:context=".ui.demodulator.QpskDemodulatorFragment">
+
+    <TextView
+        android:id="@+id/filter_pulse_response_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_graph_label"
+        android:layout_marginTop="16dp"
+        android:text="@string/impulse_response"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"/>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/filter_impulse_response_chart"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_graph_signal"
+        app:layout_constraintTop_toBottomOf="@id/filter_pulse_response_label" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/filter_order_input_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_title"
+            android:hint="@string/filter_order"
+            app:errorEnabled="true"
+            app:layout_constraintTop_toBottomOf="@id/filter_impulse_response_chart"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/filter_order_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@id/filter_cutoff_freq_input"
+                android:inputType="number"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/filter_cutoff_freq_input_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/filter_cutoff_freq"
+            app:errorEnabled="true"
+            app:layout_constraintTop_toBottomOf="@id/filter_order_input_layout"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/filter_cutoff_freq_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:ems="10"
+                android:inputType="numberDecimal"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/filter_window_input_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/weight_func"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+        app:layout_constraintTop_toBottomOf="@id/filter_cutoff_freq_input_layout">
+
+        <AutoCompleteTextView
+            android:id="@+id/filter_window_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:editable="false"
+            android:ems="10"
+            android:imeOptions="actionDone" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_i_channel_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_title"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/i_channel"
+        app:layout_constraintEnd_toStartOf="@id/to_q_channel_btn"
+        app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+        app:layout_constraintTop_toBottomOf="@id/filter_window_input_layout"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_q_channel_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_body"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/q_channel"
+        app:layout_constraintBaseline_toBaselineOf="@id/to_i_channel_btn"
+        app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+        app:layout_constraintStart_toEndOf="@id/to_i_channel_btn"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_left_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/padding_horiz_page" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_right_border"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/padding_horiz_page" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/padding_horiz_page"
+    android:paddingTop="@dimen/padding_top_page"
+    android:paddingEnd="@dimen/padding_horiz_page"
+    tools:context=".ui.statistic.StatisticFragment">
+
+    <TextView
+        android:id="@+id/statistic_label"
+        style="@style/TextAppearance.MaterialComponents.Headline6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_title"
+        android:layout_marginTop="@dimen/margin_top_title"
+        android:text="@string/last_transmitting"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/statistic_channel_count_label"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:text="@string/channel_generated"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statistic_label" />
+
+    <TextView
+        android:id="@+id/statistic_channel_count"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/default_channel_count"
+        android:textAlignment="viewEnd"
+        app:layout_constraintBaseline_toBaselineOf="@id/statistic_channel_count_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_units"
+        app:layout_constraintStart_toEndOf="@id/statistic_channel_count_label" />
+
+    <TextView
+        android:id="@+id/statistic_bits_transmitted_label"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:text="@string/bits_transmitted"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statistic_channel_count_label" />
+
+    <TextView
+        android:id="@+id/statistic_bits_transmitted"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/default_channel_count"
+        android:textAlignment="viewEnd"
+        app:layout_constraintBaseline_toBaselineOf="@id/statistic_bits_transmitted_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_units"
+        app:layout_constraintStart_toEndOf="@id/statistic_bits_transmitted_label" />
+
+    <TextView
+        android:id="@+id/statistic_bits_received_label"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:text="@string/bits_received"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statistic_bits_transmitted_label" />
+
+    <TextView
+        android:id="@+id/statistic_bits_received"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/default_channel_count"
+        android:textAlignment="viewEnd"
+        app:layout_constraintBaseline_toBaselineOf="@id/statistic_bits_received_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_units"
+        app:layout_constraintStart_toEndOf="@id/statistic_bits_received_label" />
+
+    <TextView
+        android:id="@+id/statistic_error_bits_count_label"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:text="@string/error_bits"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statistic_bits_received_label" />
+
+    <TextView
+        android:id="@+id/statistic_error_bits_count"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/default_channel_count"
+        android:textAlignment="viewEnd"
+        app:layout_constraintBaseline_toBaselineOf="@id/statistic_error_bits_count_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_units"
+        app:layout_constraintStart_toEndOf="@id/statistic_error_bits_count_label" />
+
+    <TextView
+        android:id="@+id/statistic_ber_label"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:text="@string/error_probability"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statistic_error_bits_count_label" />
+
+    <TextView
+        android:id="@+id/statistic_ber"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/default_channel_count"
+        android:textAlignment="viewEnd"
+        app:layout_constraintBaseline_toBaselineOf="@id/statistic_ber_label"
+        app:layout_constraintEnd_toStartOf="@id/guideline_units"
+        app:layout_constraintStart_toEndOf="@id/statistic_ber_label" />
+
+    <TextView
+        android:id="@+id/statistic_ber_units"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_body"
+        android:text="@string/percent"
+        android:textAlignment="viewStart"
+        app:layout_constraintBaseline_toBaselineOf="@id/statistic_ber_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/guideline_units" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_units"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.9" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/to_ber_calculation_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_text"
+        android:onClick="onNavigateBtnClick"
+        android:text="@string/characteristics_calculation"
+        app:layout_constraintTop_toBottomOf="@id/statistic_ber_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.demodulator.filter.ichannel.IChannelFragment">
+
+    <TextView
+        android:id="@+id/i_signal_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_graph_label"
+        android:layout_marginTop="16dp"
+        android:text="@string/i_signal"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/i_signal_chart"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_graph_signal"
+        app:layout_constraintTop_toBottomOf="@id/i_signal_label" />
+
+    <TextView
+        android:id="@+id/filtered_i_signal_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_graph_label"
+        android:layout_marginTop="16dp"
+        android:text="@string/filtered_i_signal"
+        app:layout_constraintTop_toBottomOf="@id/i_signal_chart" />
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/filtered_i_signal_chart"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_graph_signal"
+        app:layout_constraintTop_toBottomOf="@id/filtered_i_signal_label" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
