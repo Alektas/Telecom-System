@@ -39,7 +39,6 @@ import kotlin.math.max
 class SystemProcessor {
     @Inject
     lateinit var storage: Repository
-    private var simulatedChannels: List<Channel>? = null
     @JvmField
     @field:[Inject Named("sourceSnr")]
     var noiseSnr: Double? = null
@@ -84,7 +83,6 @@ class SystemProcessor {
             storage.observeSimulatedChannels()
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    simulatedChannels = it
                     generateChannelsFrameSignal(it)
                 },
 
@@ -146,6 +144,10 @@ class SystemProcessor {
         )
     }
 
+    /**
+     * Установка частоты дискретизации АЦП системы.
+     * Все сигналы после установки обрабатываются и генерируются с указанной частотой.
+     */
     fun setAdcFrequency(frequency: Double) {
         val freq = frequency * 1.0e6 // МГц -> Гц
         Simulator.samplingRate = freq
@@ -154,7 +156,12 @@ class SystemProcessor {
     }
 
     /**
-     * Обработка данных сигнала, записанных в строковом виде.
+     * Обработка данных сигнала, записанных в строковом виде. Единицы и нули из строки
+     * преобразуются в последовательность сигналов [Signal] с длительностями одного фрейма.
+     *
+     * @param dataString строка данных из нулей и единиц
+     * @param adcResolution разрядность АЦП, оцифровавшего данные
+     * @param adcSamplingRate частота дискретизации АЦП, оцифровавшего данные
      */
     fun processData(
         dataString: String,
@@ -204,6 +211,17 @@ class SystemProcessor {
         }
     }
 
+    /**
+     * Создание и установка каналов связи, которые затем можно использовать для хранения
+     * и передачи фреймов.
+     *
+     * @param count количество создаваемых каналов
+     * @param carrierFrequency частота несущей гармоники каналов, МГц
+     * @param dataSpeed скорость передачи данных, кБит/с
+     * @param codeLength длина генерируемого уникального кода канала
+     * @param frameLength длина фреймов (массивов данных)
+     * @param codesType семейство кодов каналов, см. [CodeGenerator]
+     */
     @SuppressLint("CheckResult")
     fun createChannels(
         count: Int,
@@ -273,6 +291,12 @@ class SystemProcessor {
         } // генерируем новые помехи с обновленной продолжительностью
     }
 
+    /**
+     * Генерация и передача фреймов в выделенных каналах.
+     *
+     * @param channels каналы связи, в которых будут передаваться фреймы
+     * @param frameCount количество фреймов, которые нужно передать
+     */
     fun transmitFrames(channels: List<Channel>, frameCount: Int) {
         var framesTransmitted = 0
         val frameSize = if (channels.isEmpty()) 0 else channels.first().frameLength
@@ -322,7 +346,7 @@ class SystemProcessor {
     }
 
     @SuppressLint("CheckResult")
-    fun generateChannelsFrameSignal(channels: List<Channel>) {
+    private fun generateChannelsFrameSignal(channels: List<Channel>) {
         if (channels.isEmpty()) {
             storage.setChannelsFrameSignal(BaseSignal())
             return
@@ -552,6 +576,15 @@ class SystemProcessor {
             }
     }
 
+    /**
+     * Запуск процесса расчета характеристик системы (BER, пропускная способность)
+     * в зависимости от величины шумов (SNR).
+     *
+     * @param fromSnr начальное значение SNR для расчетов, в дБ
+     * @param toSnr конечное значение SNR для расчетов, в дБ
+     * @param pointsCount количество отсчётов измерений - при скольких значения SNR
+     * рассчитывать характеристики
+     */
     fun calculateCharacteristics(fromSnr: Double, toSnr: Double, pointsCount: Int) {
         val transmittingChannels = storage.getSimulatedChannels()
         val demodConfig = storage.getCurrentDemodulatorConfig()
