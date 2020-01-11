@@ -19,7 +19,8 @@
     <dimen name="margin_horiz_divider">32dp</dimen>
     <dimen name="margin_bottom_page_text">16dp</dimen>
     <dimen name="margin_bottom_logo">32dp</dimen>
-    <dimen name="size_indicator">32dp</dimen>
+    <dimen name="size_progress_bar_collapsed">32dp</dimen>
     <dimen name="corners_indicators_layout">16dp</dimen>
+    <dimen name="size_progress_indicator">24dp</dimen>
 
 </resources>

@@ -2,8 +2,10 @@ package alektas.telecomapp.ui
 
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Simulator
+import alektas.telecomapp.domain.processes.ProcessState
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.ui.dialogs.AboutDialog
+import alektas.telecomapp.ui.process.ProcessesAdapter
 import alektas.telecomapp.utils.FileWorker
 import android.app.Activity
 import android.content.Context
@@ -22,6 +24,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.process_indicators.*
 
@@ -32,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var appBarConfig: AppBarConfiguration
     private lateinit var indicatorsBehavior: BottomSheetBehavior<View>
+    private lateinit var subProcessesAdapter: ProcessesAdapter
     private var externalData: String? = null
     private var externalFileUri: Uri? = null
 
@@ -49,20 +53,31 @@ class MainActivity : AppCompatActivity() {
 
         indicatorsBehavior = BottomSheetBehavior.from(process_indicators_layout)
         indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-        indicatorsBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                viewModel.processProgress.value
-            }
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) { }
-        })
+        subProcessesAdapter = ProcessesAdapter()
+        sub_processes_list.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = subProcessesAdapter
+        }
 
         loadSettings()
 
         viewModel.processProgress.observe(this, Observer {
+            if (subProcessesAdapter.processes.isNotEmpty()) subProcessesAdapter.processes = listOf()
             progress_bar.progress = it
             if (it in 0..99) {
                 indicatorsBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                indicatorsBehavior.isHideable = false
+            } else {
+                indicatorsBehavior.isHideable = true
+                indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            }
+        })
+
+        viewModel.processState.observe(this, Observer {
+            subProcessesAdapter.processes = it.getSubProcesses()
+            progress_bar.progress = it.progress
+            if (it.state == ProcessState.STARTED) {
+                indicatorsBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                 indicatorsBehavior.isHideable = false
             } else {
                 indicatorsBehavior.isHideable = true

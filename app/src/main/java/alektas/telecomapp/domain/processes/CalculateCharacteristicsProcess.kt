@@ -25,6 +25,13 @@ import javax.inject.Inject
 import kotlin.math.log2
 import kotlin.math.pow
 
+private const val KEY = "CHARACTERISTICS_CALCULATION"
+private const val NAME = "Расчёт характеристик"
+private const val BER_CALC_KEY = "BER_CALCULATION"
+private const val BER_CALC_NAME = "Расчёт BER"
+private const val CAPACITY_CALC_KEY = "CAPACITY_CALCULATION"
+private const val CAPACITY_CALC_NAME = "Расчёт пропускной способности"
+
 class CalculateCharacteristicsProcess(
     private val transmittingChannels: List<Channel>,
     private val decodingChannels: List<Channel>,
@@ -34,6 +41,12 @@ class CalculateCharacteristicsProcess(
     @Inject
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
+    private val state = ProcessState(
+        KEY, NAME, subProcesses = listOf(
+            ProcessState(BER_CALC_KEY, BER_CALC_NAME),
+            ProcessState(CAPACITY_CALC_KEY, CAPACITY_CALC_NAME)
+        )
+    )
     var currentStartSnr: Double? = null
     var currentFinishSnr: Double? = null
 
@@ -50,7 +63,7 @@ class CalculateCharacteristicsProcess(
         fromSnr: Double,
         toSnr: Double,
         pointsCount: Int,
-        progress: (Int) -> Unit = {}
+        progress: (ProcessState) -> Unit = {}
     ) {
         currentStartSnr = fromSnr
         currentFinishSnr = toSnr
@@ -68,29 +81,127 @@ class CalculateCharacteristicsProcess(
                         demodulatorConfig,
                         decodingChannels,
                         decoderConfig
-                    )
-                    val capacity = calculateCapacity(snr, transmittingChannels.first().bitTime)
+                    ) { progress(state.apply { setSubProcess(it) }) }
+                    val capacity = calculateCapacity(
+                        snr,
+                        transmittingChannels.first().bitTime
+                    ) { progress(state.apply { setSubProcess(it) }) }
                     Triple(snr, ber, capacity)
                 }
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
-                .doOnSubscribe { progress(0) }
-                .doFinally { progress(100) }
+                .doOnSubscribe {
+                    progress(state.apply {
+                        state = ProcessState.STARTED
+                    })
+                }
+                .doFinally {
+                    progress(state.apply {
+                        state = ProcessState.FINISHED
+                        this.progress = 100
+                    })
+                }
                 .subscribe({
                     pointsCalculated++
                     val p = (pointsCalculated / snrs.size.toDouble() * 100).toInt()
-                    progress(p)
+                    progress(state.apply {
+                        this.progress = p
+                    })
                     storage.setBerByNoise(it.first to it.second)
                     storage.setCapacityByNoise(it.first to it.third)
                 }, {
                     it.printStackTrace()
-                    progress(100)
+                    progress(state.apply {
+                        state = ProcessState.ERROR
+                        this.progress = 100
+                    })
                 })
         )
     }
 
     fun cancel() {
         disposable.dispose()
+    }
+
+    /**
+     * Расчет вероятности битовой ошибки (BER) при отношении сигнал/шум (С/Ш)
+     *
+     * @return ключ - отношение С/Ш, значение - расчитанная BER в процентах
+     */
+    private fun calculateBer(
+        transmittingChannels: List<Channel>,
+        snr: Double,
+        demodulatorConfig: DemodulatorConfig,
+        decoderChannels: List<Channel>,
+        decoderConfig: DecoderConfig,
+        progress: (ProcessState) -> Unit
+    ): Double {
+        progress(ProcessState(BER_CALC_KEY, BER_CALC_NAME, ProcessState.STARTED))
+
+        val signal = createSignal(transmittingChannels)
+        val noise = createNoise(snr)
+        val ether = createEther(signal, noise)
+        val groupData = demodulate(ether, demodulatorConfig)
+        val channels = if (decoderConfig.isAutoDetection) {
+            detectChannels(
+                decoderConfig,
+                groupData,
+                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+            )
+        } else {
+            decoderChannels
+        }
+        val bitsWithErrors = bitsAndErrors(channels, decoderConfig, groupData)
+        // вероятность битовой ошибки в процентах
+        val ber = bitsWithErrors.second / bitsWithErrors.first.toDouble() * 100.0
+        L.d(
+            "Ber calculation",
+            "Bits=${bitsWithErrors.first}, Errors=${bitsWithErrors.second}, BER=${ber}%, SNR=${snr}дБ"
+        )
+
+        progress(
+            ProcessState(
+                BER_CALC_KEY,
+                BER_CALC_NAME,
+                ProcessState.FINISHED,
+                100
+            )
+        )
+        return ber
+    }
+
+    private fun calculateCapacity(
+        snr: Double,
+        bitTime: Double,
+        progress: (ProcessState) -> Unit
+    ): Double {
+        progress(
+            ProcessState(
+                CAPACITY_CALC_KEY,
+                CAPACITY_CALC_NAME,
+                ProcessState.STARTED
+            )
+        )
+
+        val bandwidth = 1 / bitTime
+        val linearSnr = 10.0.pow(snr / 10)
+        val capacity = bandwidth * log2(1 + linearSnr) * 1.0e-3 // кБит/с
+        L.d(
+            "Capacity calculation",
+            "Bandwidth=${(bandwidth * 1.0e-3).format(3)}кГц, SNR=${snr.format(3)}дБ, linSNR=${linearSnr.format(
+                3
+            )}, Capacity=${capacity.format(3)}кБит/с"
+        )
+
+        progress(
+            ProcessState(
+                CAPACITY_CALC_KEY,
+                CAPACITY_CALC_NAME,
+                ProcessState.FINISHED,
+                100
+            )
+        )
+        return capacity
     }
 
     private fun createSignal(channels: List<Channel>): Signal {
@@ -178,57 +289,6 @@ class CalculateCharacteristicsProcess(
 
     private fun countErrors(data: DoubleArray): Int {
         return data.count { it == 0.0 }
-    }
-
-    /**
-     * Расчет вероятности битовой ошибки (BER) при отношении сигнал/шум (С/Ш)
-     *
-     * @return ключ - отношение С/Ш, значение - расчитанная BER в процентах
-     */
-    private fun calculateBer(
-        transmittingChannels: List<Channel>,
-        snr: Double,
-        demodulatorConfig: DemodulatorConfig,
-        decoderChannels: List<Channel>,
-        decoderConfig: DecoderConfig
-    ): Double {
-        val signal = createSignal(transmittingChannels)
-        val noise = createNoise(snr)
-        val ether = createEther(signal, noise)
-        val groupData = demodulate(ether, demodulatorConfig)
-        val channels = if (decoderConfig.isAutoDetection) {
-            detectChannels(
-                decoderConfig,
-                groupData,
-                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
-            )
-        } else {
-            decoderChannels
-        }
-        val bitsWithErrors = bitsAndErrors(channels, decoderConfig, groupData)
-        // вероятность битовой ошибки в процентах
-        val ber = bitsWithErrors.second / bitsWithErrors.first.toDouble() * 100.0
-        L.d(
-            "Ber calculation",
-            "Bits=${bitsWithErrors.first}, Errors=${bitsWithErrors.second}, BER=${ber}%, SNR=${snr}дБ"
-        )
-        return ber
-    }
-
-    private fun calculateCapacity(
-        snr: Double,
-        bitTime: Double
-    ): Double {
-        val bandwidth = 1 / bitTime
-        val linearSnr = 10.0.pow(snr / 10)
-        val capacity = bandwidth * log2(1 + linearSnr) * 1.0e-3 // кБит/с
-        L.d(
-            "Capacity calculation",
-            "Bandwidth=${(bandwidth * 1.0e-3).format(3)}кГц, SNR=${snr.format(3)}дБ, linSNR=${linearSnr.format(
-                3
-            )}, Capacity=${capacity.format(3)}кБит/с"
-        )
-        return capacity
     }
 
 }

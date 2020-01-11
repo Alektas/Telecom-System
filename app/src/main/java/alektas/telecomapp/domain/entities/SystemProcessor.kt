@@ -22,6 +22,7 @@ import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.PulseNoise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import alektas.telecomapp.domain.processes.CalculateCharacteristicsProcess
+import alektas.telecomapp.domain.processes.ProcessState
 import alektas.telecomapp.utils.L
 import android.annotation.SuppressLint
 import io.reactivex.Observable
@@ -53,7 +54,7 @@ class SystemProcessor {
     private var transmitSubscription: Disposable? = null
     private var decodeSubscription: Disposable? = null
     private var characteristicsProcess: CalculateCharacteristicsProcess? = null
-    val characteristicsProgress = BehaviorSubject.create<Int>()
+    val characteristicsProcessState = BehaviorSubject.create<ProcessState>()
 
     init {
         App.component.inject(this)
@@ -602,7 +603,7 @@ class SystemProcessor {
             decoderConfig
         )
         characteristicsProcess?.execute(fromSnr, toSnr, pointsCount) {
-            characteristicsProgress.onNext(it)
+            characteristicsProcessState.onNext(it)
         }
     }
 
