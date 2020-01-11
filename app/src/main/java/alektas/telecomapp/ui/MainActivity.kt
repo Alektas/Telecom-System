@@ -22,7 +22,8 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import kotlinx.android.synthetic.main.main_activity.*
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.android.synthetic.main.process_indicators.*
 
 private const val OPEN_DOCUMENT_REQUEST_CODE = 1
 private const val EXTERNAL_FILE_URI_KEY = "EXTERNAL_FILE_URI_KEY"
@@ -30,6 +31,7 @@ private const val EXTERNAL_FILE_URI_KEY = "EXTERNAL_FILE_URI_KEY"
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var appBarConfig: AppBarConfiguration
+    private lateinit var indicatorsBehavior: BottomSheetBehavior<View>
     private var externalData: String? = null
     private var externalFileUri: Uri? = null
 
@@ -37,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.AppTheme) // Убираем сплэш
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         val navController = findNavController(R.id.nav_host)
         appBarConfig = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfig)
@@ -44,13 +47,27 @@ class MainActivity : AppCompatActivity() {
             findNavController(R.id.nav_host).navigate(R.id.main_menu)
         }
 
-        loadSettings()
+        indicatorsBehavior = BottomSheetBehavior.from(process_indicators_layout)
+        indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        indicatorsBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                viewModel.processProgress.value
+            }
 
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+            override fun onSlide(bottomSheet: View, slideOffset: Float) { }
+        })
+
+        loadSettings()
 
         viewModel.processProgress.observe(this, Observer {
             progress_bar.progress = it
-            progress_bar.visibility = if (it in 0..99) View.VISIBLE else View.INVISIBLE
+            if (it in 0..99) {
+                indicatorsBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                indicatorsBehavior.isHideable = false
+            } else {
+                indicatorsBehavior.isHideable = true
+                indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            }
         })
     }
 
@@ -154,6 +171,10 @@ class MainActivity : AppCompatActivity() {
         val vm = ViewModelProviders.of(this).get(FileDataSourceViewModel::class.java)
         vm.setDataString(data)
         findNavController(R.id.nav_host).navigate(R.id.action_dataSourceFragment_to_fileDataSourceFragment)
+    }
+
+    fun onProcessCancel(view: View) {
+
     }
 
     private fun loadSettings() {
