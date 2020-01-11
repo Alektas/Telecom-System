@@ -35,6 +35,10 @@ class MainViewModel : ViewModel() {
             )
     }
 
+    fun cancelCurrentProcess() {
+        processor.cancelCurrentProcess()
+    }
+
     override fun onCleared() {
         disposable.dispose()
         super.onCleared()

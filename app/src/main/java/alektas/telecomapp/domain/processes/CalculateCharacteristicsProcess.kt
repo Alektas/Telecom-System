@@ -74,9 +74,8 @@ class CalculateCharacteristicsProcess(
                 }
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
-                .doOnSubscribe {
-                    progress(0)
-                }
+                .doOnSubscribe { progress(0) }
+                .doFinally { progress(100) }
                 .subscribe({
                     pointsCalculated++
                     val p = (pointsCalculated / snrs.size.toDouble() * 100).toInt()
@@ -85,8 +84,6 @@ class CalculateCharacteristicsProcess(
                     storage.setCapacityByNoise(it.first to it.third)
                 }, {
                     it.printStackTrace()
-                    progress(100)
-                }, {
                     progress(100)
                 })
         )

@@ -673,4 +673,12 @@ class SystemProcessor {
         return indices
     }
 
+    fun cancelCurrentProcess() {
+        transmitSubscription?.let {
+            it.dispose()
+            storage.endCountingStatistics()
+        }
+        characteristicsProcess?.cancel()
+    }
+
 }

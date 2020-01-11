@@ -53,7 +53,7 @@ class SystemStorage : Repository {
     @JvmField
     @field:[Inject Named("sourceInterferenceEnabled")]
     var isInterferenceEnabled: Boolean = false
-    private var isStatisticsCounted: Boolean = false
+    private var isStatisticsCounting: Boolean = false
     /**
      * Сохряняется ли эфир в файл в виде битов с разрядностью {@code adcBitDepth}.
      */
@@ -136,7 +136,7 @@ class SystemStorage : Repository {
         disposable.addAll(
             simulatedChannelsSource
                 .subscribe {
-                    if (isStatisticsCounted) {
+                    if (isStatisticsCounting) {
                         transmittedBitsCount += it.sumBy { c -> c.frameData.size }
                         simulatedChannelsCountSource.onNext(it.size)
                     }
@@ -144,7 +144,7 @@ class SystemStorage : Repository {
 
             decoderChannelsSource
                 .subscribe {
-                    if (isStatisticsCounted) {
+                    if (isStatisticsCounting) {
                         if (receivedFramesCount >= expectedFramesCount) {
                             endCountingStatistics()
                             return@subscribe
@@ -169,7 +169,7 @@ class SystemStorage : Repository {
                     }
                 }
                 .subscribe {
-                    if (isStatisticsCounted && isSavedToFile) {
+                    if (isStatisticsCounting && isSavedToFile) {
                         val bitString =
                             ValueConverter(adcBitDepth).convertToBitString(it.getValues())
                         fileWorker.appendToFile(INTERNAL_ETHER_DATA_FILE_NAME, bitString)
@@ -247,7 +247,7 @@ class SystemStorage : Repository {
 
     override fun startCountingStatistics() {
         clearStatistics()
-        isStatisticsCounted = true
+        isStatisticsCounting = true
     }
 
     private fun clearStatistics() {
@@ -260,7 +260,8 @@ class SystemStorage : Repository {
     }
 
     override fun endCountingStatistics() {
-        isStatisticsCounted = false
+        isStatisticsCounting = false
+        transmitProcess.onNext(100)
     }
 
     override fun setExpectedFrameCount(count: Int) {

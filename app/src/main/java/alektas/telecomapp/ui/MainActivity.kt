@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onProcessCancel(view: View) {
-
+        viewModel.cancelCurrentProcess()
     }
 
     private fun loadSettings() {
