@@ -7,20 +7,34 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.item_process.view.*
+import kotlinx.android.synthetic.main.item_process_complex.view.*
 
-class ProcessesAdapter : RecyclerView.Adapter<ProcessesAdapter.ProcessViewHolder>() {
+class ProcessesAdapter(private val maxLevel: Int, private val curLevel: Int = 1) :
+    RecyclerView.Adapter<ProcessesAdapter.ProcessViewHolder>() {
     var processes = listOf<ProcessState>()
         set(value) {
             field = value
             notifyDataSetChanged()
         }
 
+    init {
+        setHasStableIds(true)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProcessViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_process, parent, false)
+            .inflate(
+                if (curLevel < maxLevel) R.layout.item_process_complex else R.layout.item_process_simple,
+                parent,
+                false
+            )
         return ProcessViewHolder(view)
+    }
+
+    override fun getItemId(position: Int): Long {
+        return processes[position].hashCode().toLong()
     }
 
     override fun getItemCount(): Int {
@@ -33,17 +47,31 @@ class ProcessesAdapter : RecyclerView.Adapter<ProcessesAdapter.ProcessViewHolder
     }
 
     inner class ProcessViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var stateIcon: ImageView = view.process_indicator
-        var processName: TextView = view.process_name
+        private val stateIcon: ImageView = view.process_indicator
+        private val processName: TextView = view.process_name
+        private var processesAdapter: ProcessesAdapter? = null
+
+        init {
+            if (curLevel < maxLevel) {
+                processesAdapter = ProcessesAdapter(maxLevel, curLevel + 1)
+                view.sub_processes_list.apply {
+                    layoutManager = LinearLayoutManager(view.context)
+                    adapter = processesAdapter
+                }
+            }
+        }
 
         fun bind(process: ProcessState) {
-            stateIcon.setImageResource(when(process.state) {
-                ProcessState.STARTED -> R.drawable.ic_process_black_24dp
-                ProcessState.FINISHED -> R.drawable.ic_check_black_24dp
-                ProcessState.ERROR -> R.drawable.ic_error_outline_black_24dp
-                else -> R.drawable.ic_launcher_foreground
-            })
-            processName.text = process.displayName
+            stateIcon.setImageResource(
+                when (process.state) {
+                    ProcessState.STARTED -> R.drawable.ic_process_black_24dp
+                    ProcessState.FINISHED -> R.drawable.ic_check_black_24dp
+                    ProcessState.ERROR -> R.drawable.ic_error_outline_black_24dp
+                    else -> R.drawable.ic_awaiting_black_24dp
+                }
+            )
+            processName.text = process.processName
+            processesAdapter?.processes = process.getSubStates()
         }
     }
 }

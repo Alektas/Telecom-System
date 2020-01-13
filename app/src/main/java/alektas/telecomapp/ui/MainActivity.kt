@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         indicatorsBehavior = BottomSheetBehavior.from(process_indicators_layout)
         indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-        subProcessesAdapter = ProcessesAdapter()
+        subProcessesAdapter = ProcessesAdapter(2)
         sub_processes_list.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = subProcessesAdapter
@@ -74,11 +74,14 @@ class MainActivity : AppCompatActivity() {
         })
 
         viewModel.processState.observe(this, Observer {
-            subProcessesAdapter.processes = it.getSubProcesses()
-            progress_bar.progress = it.progress
             if (it.state == ProcessState.STARTED) {
-                indicatorsBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-                indicatorsBehavior.isHideable = false
+                if (indicatorsBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
+                    indicatorsBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                    indicatorsBehavior.isHideable = false
+                }
+                subProcessesAdapter.processes = it.getSubStates()
+                progress_bar.progress = it.progress
+                process_name.text = it.processName
             } else {
                 indicatorsBehavior.isHideable = true
                 indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN

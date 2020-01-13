@@ -139,4 +139,5 @@
     <string name="characteristics_start_snr_key">characteristics_from_snr_key</string>
     <string name="characteristics_finish_snr_key">characteristics_finish_snr_key</string>
     <string name="characteristics_points_count_key">characteristics_points_count_key</string>
+    <string name="process_name_placeholder">Название процесса</string>
 </resources>
