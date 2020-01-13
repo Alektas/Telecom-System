@@ -10,6 +10,8 @@ import android.view.ViewGroup
 import alektas.telecomapp.R
 import alektas.telecomapp.ui.utils.setupLabels
 import alektas.telecomapp.utils.SystemUtils
+import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
@@ -18,6 +20,10 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.characteristics_fragment.*
 
+private const val DEFAULT_START_SNR: Float = -25f
+private const val DEFAULT_FINISH_SNR: Float = -5f
+private const val DEFAULT_POINTS_COUNT: Int = 10
+
 class CharacteristicsFragment : Fragment() {
     private lateinit var viewModel: CharacteristicsViewModel
     private val berGraphPoints = LineGraphSeries<DataPoint>()
@@ -25,7 +31,6 @@ class CharacteristicsFragment : Fragment() {
 
     companion object {
         fun newInstance() = CharacteristicsFragment()
-
     }
 
     override fun onCreateView(
@@ -53,7 +58,13 @@ class CharacteristicsFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        val prefs = requireContext().getSharedPreferences(
+            getString(R.string.settings_characteristics_key),
+            Context.MODE_PRIVATE
+        )
         viewModel = ViewModelProviders.of(this).get(CharacteristicsViewModel::class.java)
+        setInitValues(prefs)
+        observeSettings(viewModel, prefs)
         setFieldsValidation()
 
         points_count.setOnEditorActionListener { _, _, _ ->
@@ -84,6 +95,54 @@ class CharacteristicsFragment : Fragment() {
         viewModel.capacityData.observe(viewLifecycleOwner, Observer {
             capacityGraphPoints.resetData(it)
         })
+
+        viewModel.isChannelsInvalid.observe(viewLifecycleOwner, Observer {
+            if (it) {
+                draw_graphs_btn.isEnabled = false
+                setup_channels_hint.visibility = View.VISIBLE
+            } else {
+                draw_graphs_btn.isEnabled = true
+                setup_channels_hint.visibility = View.INVISIBLE
+            }
+
+        })
+    }
+
+    private fun setInitValues(prefs: SharedPreferences) {
+        prefs.getFloat(
+            getString(R.string.characteristics_start_snr_key),
+            DEFAULT_START_SNR
+        ).let {
+            from_snr.setText(it.toString())
+        }
+
+        prefs.getFloat(
+            getString(R.string.characteristics_finish_snr_key),
+            DEFAULT_FINISH_SNR
+        ).let {
+            to_snr.setText(it.toString())
+        }
+
+        prefs.getInt(
+            getString(R.string.characteristics_points_count_key),
+            DEFAULT_POINTS_COUNT
+        ).let {
+            points_count.setText(it.toString())
+        }
+    }
+
+    private fun observeSettings(viewModel: CharacteristicsViewModel, prefs: SharedPreferences) {
+        viewModel.fromSnr.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.characteristics_start_snr_key), it).apply()
+        })
+
+        viewModel.toSnr.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putFloat(getString(R.string.characteristics_finish_snr_key), it).apply()
+        })
+
+        viewModel.pointsCount.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.characteristics_points_count_key), it).apply()
+        })
     }
 
     private fun calculateCharacteristics() {
@@ -94,7 +153,7 @@ class CharacteristicsFragment : Fragment() {
         if (!isSuccess) {
             Toast.makeText(
                 requireContext(),
-                getString(R.string.error_graphs_invalid_data),
+                getString(R.string.enter_valid_data),
                 Toast.LENGTH_SHORT
             ).show()
         }

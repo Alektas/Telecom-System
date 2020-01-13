@@ -1,13 +1,18 @@
 package alektas.telecomapp.domain.processes
 
 import alektas.telecomapp.App
+import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
 import alektas.telecomapp.domain.entities.coders.toBipolar
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
+import alektas.telecomapp.domain.entities.generators.SignalGenerator
+import alektas.telecomapp.domain.entities.modulators.QpskModulator
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
@@ -21,17 +26,101 @@ import kotlin.math.log2
 import kotlin.math.pow
 
 class CalculateCharacteristicsProcess(
-    private val signal: Signal,
+    private val transmittingChannels: List<Channel>,
+    private val decodingChannels: List<Channel>,
     private val demodulatorConfig: DemodulatorConfig,
-    private val channels: List<Channel>,
-    private val threshold: Float
+    private val decoderConfig: DecoderConfig
 ) {
     @Inject
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
+    var currentStartSnr: Double? = null
+    var currentFinishSnr: Double? = null
 
     init {
         App.component.inject(this)
+    }
+
+    /**
+     * Запуск многопоточной задачи.
+     *
+     * @param progress коллбэк прогресса выполнения задачи (значения прогресса: от 0 до 100)
+     */
+    fun execute(
+        fromSnr: Double,
+        toSnr: Double,
+        pointsCount: Int,
+        progress: (Int) -> Unit = {}
+    ) {
+        currentStartSnr = fromSnr
+        currentFinishSnr = toSnr
+
+        val step = (toSnr - fromSnr) / pointsCount
+        val snrs = DoubleArray(pointsCount) { fromSnr + it * step }
+        var pointsCalculated = 0
+
+        disposable.add(
+            snrs.toFlowable()
+                .map { snr ->
+                    val ber = calculateBer(
+                        transmittingChannels,
+                        snr,
+                        demodulatorConfig,
+                        decodingChannels,
+                        decoderConfig
+                    )
+                    val capacity = calculateCapacity(snr, transmittingChannels.first().bitTime)
+                    Triple(snr, ber, capacity)
+                }
+                .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.io())
+                .doOnSubscribe {
+                    progress(0)
+                }
+                .subscribe({
+                    pointsCalculated++
+                    val p = (pointsCalculated / snrs.size.toDouble() * 100).toInt()
+                    progress(p)
+                    storage.setBerByNoise(it.first to it.second)
+                    storage.setCapacityByNoise(it.first to it.third)
+                }, {
+                    it.printStackTrace()
+                    progress(100)
+                }, {
+                    progress(100)
+                })
+        )
+    }
+
+    fun cancel() {
+        disposable.dispose()
+    }
+
+    private fun createSignal(channels: List<Channel>): Signal {
+        val dataChannels = channels.map { c ->
+            val channel = c.copy()
+            if (channel.frameData.isEmpty()) {
+                channel.apply { frameData = UserDataProvider.generateData(frameLength) }
+            } else {
+                channel
+            }
+        }
+        val groupData = aggregate(dataChannels)
+        val carrier = SignalGenerator().cos(frequency = dataChannels[0].carrierFrequency)
+        return QpskModulator(dataChannels[0].bitTime).modulate(carrier, groupData)
+    }
+
+    private fun aggregate(channels: List<Channel>): DoubleArray {
+        return channels
+            .map { channel ->
+                // Преобразование однополярных двоичных данных в биполярные
+                val code = channel.code.toBipolar()
+                val data = channel.frameData.toBipolar()
+                CdmaDecimalCoder().encode(code, data)
+            }
+            .reduce { acc, data ->
+                data.mapIndexed { i, value -> acc[i] + value }.toDoubleArray()
+            }
     }
 
     private fun createNoise(snr: Double): Noise {
@@ -44,6 +133,46 @@ class CalculateCharacteristicsProcess(
 
     private fun demodulate(ether: Signal, config: DemodulatorConfig): DoubleArray {
         return QpskDemodulator(config).demodulateFrame(ether).dataValues
+    }
+
+    private fun detectChannels(
+        decoderConfig: DecoderConfig,
+        groupData: DoubleArray,
+        threshold: Float
+    ): List<Channel> {
+        val codeGen = CodeGenerator()
+        val codes = when (decoderConfig.codeType) {
+            CodeGenerator.WALSH -> codeGen.generateWalshMatrix(
+                decoderConfig.codeLength ?: 0
+            )
+            else -> codeGen.generateWalshMatrix(decoderConfig.codeLength ?: 0)
+        }
+        val channels = mutableListOf<Channel>()
+        for (i in codes.indices) {
+            val decoder = CdmaDecimalCoder(threshold)
+            val code = codes[i].toBipolar()
+            if (decoder.detectChannel(code, groupData)) {
+                channels.add(Channel(code = codes[i]))
+            }
+        }
+        return channels
+    }
+
+    private fun bitsAndErrors(
+        channels: List<Channel>,
+        decoderConfig: DecoderConfig,
+        groupData: DoubleArray
+    ): Pair<Int, Int> {
+        return channels.fold(0 to 0) { acc, channel ->
+            val data = decode(
+                groupData,
+                channel.code,
+                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+            )
+            val bits = data.size
+            val errors = countErrors(data)
+            (acc.first + bits) to (acc.second + errors)
+        }
     }
 
     private fun decode(groupData: DoubleArray, code: BooleanArray, threshold: Float): DoubleArray {
@@ -60,21 +189,26 @@ class CalculateCharacteristicsProcess(
      * @return ключ - отношение С/Ш, значение - расчитанная BER в процентах
      */
     private fun calculateBer(
+        transmittingChannels: List<Channel>,
         snr: Double,
-        signal: Signal,
         demodulatorConfig: DemodulatorConfig,
-        channels: List<Channel>,
-        threshold: Float
+        decoderChannels: List<Channel>,
+        decoderConfig: DecoderConfig
     ): Double {
+        val signal = createSignal(transmittingChannels)
         val noise = createNoise(snr)
         val ether = createEther(signal, noise)
         val groupData = demodulate(ether, demodulatorConfig)
-        val bitsWithErrors = channels.fold(0 to 0) { acc, channel ->
-            val data = decode(groupData, channel.code, threshold)
-            val bits = data.size
-            val errors = countErrors(data)
-            (acc.first + bits) to (acc.second + errors)
+        val channels = if (decoderConfig.isAutoDetection) {
+            detectChannels(
+                decoderConfig,
+                groupData,
+                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+            )
+        } else {
+            decoderChannels
         }
+        val bitsWithErrors = bitsAndErrors(channels, decoderConfig, groupData)
         // вероятность битовой ошибки в процентах
         val ber = bitsWithErrors.second / bitsWithErrors.first.toDouble() * 100.0
         L.d(
@@ -100,50 +234,4 @@ class CalculateCharacteristicsProcess(
         return capacity
     }
 
-    /**
-     * Запуск многопоточной задачи.
-     *
-     * @param progress коллбэк прогресса выполнения задачи (значения прогресса: от 0 до 100)
-     */
-    fun execute(
-        fromSnr: Double,
-        toSnr: Double,
-        pointsCount: Int,
-        progress: (Int) -> Unit = {}
-    ) {
-        val step = (toSnr - fromSnr) / pointsCount
-        val snrs = DoubleArray(pointsCount) { fromSnr + it * step }
-        var pointsCalculated = 0
-
-        disposable.add(
-            snrs.toFlowable()
-                .map { snr ->
-                    val ber = calculateBer(snr, signal, demodulatorConfig, channels, threshold)
-                    val capacity = calculateCapacity(snr, channels.first().bitTime)
-                    Triple(snr, ber, capacity)
-                }
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.io())
-                .doOnSubscribe {
-                    progress(0)
-                    L.start()
-                }
-                .subscribe({
-                    pointsCalculated++
-                    val p = (pointsCalculated / snrs.size.toDouble() * 100).toInt()
-                    progress(p)
-                    storage.setBerByNoise(it.first to it.second)
-                    storage.setCapacityByNoise(it.first to it.third)
-                },
-                    { progress(100) },
-                    {
-                        L.stop()
-                        progress(100)
-                    })
-        )
-    }
-
-    fun cancel() {
-        disposable.dispose()
-    }
 }

@@ -1,6 +1,7 @@
 package alektas.telecomapp.domain
 
 import alektas.telecomapp.domain.entities.Channel
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
@@ -21,6 +22,9 @@ interface Repository {
         bitTime: Double,
         codeLength: Int
     )
+    fun getDecoderConfiguration(): DecoderConfig
+    fun observeDecoderConfig(): Observable<DecoderConfig>
+    fun updateDecoderConfig(config: DecoderConfig)
 
     fun startCountingStatistics()
     fun endCountingStatistics()
@@ -28,10 +32,14 @@ interface Repository {
 
     fun setChannels(channels: List<Channel>)
     fun removeChannel(channel: Channel)
+    fun getSimulatedChannels(): List<Channel>
     fun observeSimulatedChannels(): Observable<List<Channel>>
 
     fun setChannelsFrameSignal(signal: Signal)
     fun observeChannelsSignal(): Observable<Signal>
+
+    fun setFileSignal(signal: Signal)
+    fun observeFileSignal(): Observable<Signal>
 
     fun setNoise(signal: Noise)
     fun enableNoise(fromCache: Boolean)
@@ -60,24 +68,29 @@ interface Repository {
     fun setFilteredChannelQ(filteredSigQ: Signal)
     fun observeFilteredChannelQ(): Observable<Signal>
 
-    fun addDecodedChannel(channel: Channel)
-    fun removeDecodedChannel(channel: Channel)
-    fun setDecodedChannels(channels: List<Channel>)
-    fun observeDecodedChannels(withLast: Boolean = true): Observable<List<Channel>>
+    fun addDecoderChannel(channel: Channel)
+    fun removeDecoderChannel(channel: Channel)
+    fun setDecoderChannels(channels: List<Channel>)
+    fun getDecoderChannels(): List<Channel>
+    fun observeDecoderChannels(withLast: Boolean = true): Observable<List<Channel>>
 
     fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
-    fun observeTransmitProcess(): Observable<Int>
+    fun setTransmitProgress(progress: Int)
+    fun observeTransmitProgress(): Observable<Int>
     fun observeTransmittingChannelsCount(): Observable<Int>
     fun observeTransmittedBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>
     fun observeReceivedErrorsCount(): Observable<Int>
     fun observeBer(): Observable<Double>
-    fun observeBerProcess(): Observable<Int>
 
     fun setBerByNoise(berByNoise: Pair<Double, Double>)
+    fun getBerByNoiseList(): List<Pair<Double, Double>>
+    fun clearBerByNoiseList()
     fun observeBerByNoise(): Observable<Pair<Double, Double>>
     fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>)
+    fun getCapacityByNoiseList(): List<Pair<Double, Double>>
+    fun clearCapacityByNoiseList()
     fun observeCapacityByNoise(): Observable<Pair<Double, Double>>
 }

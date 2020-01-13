@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/padding_top_page"
@@ -47,8 +48,20 @@
             android:layout_marginTop="@dimen/margin_top_title"
             android:text="@string/channels"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/divider1" />
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/channels_autodetection_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/channels_autodetection"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/channels_label" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/decoder_channel_code_layout"
@@ -58,7 +71,7 @@
             android:hint="@string/channel_code"
             app:layout_constraintEnd_toStartOf="@id/add_channel_btn"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-            app:layout_constraintTop_toBottomOf="@id/channels_label">
+            app:layout_constraintTop_toBottomOf="@id/channels_autodetection_checkbox">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/decoder_channel_code"
@@ -124,25 +137,6 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/decoder_threshold_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/threshold"
-            app:errorEnabled="true"
-            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
-            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-            app:layout_constraintTop_toBottomOf="@id/decoder_code_length_layout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/decoder_threshold"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/decoder_channel_count_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="0dp"
@@ -151,15 +145,34 @@
             app:errorEnabled="true"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-            app:layout_constraintTop_toBottomOf="@id/decoder_threshold_layout">
+            app:layout_constraintTop_toBottomOf="@id/decoder_code_length_layout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/decoder_channel_count"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:imeOptions="actionDone"
                 android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/decoder_threshold_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/threshold"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/decoder_channel_count_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/decoder_threshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -169,7 +182,7 @@
             android:text="@string/decode_channels"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-            app:layout_constraintTop_toBottomOf="@id/decoder_channel_count_layout" />
+            app:layout_constraintTop_toBottomOf="@id/decoder_threshold_layout" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/channel_list"

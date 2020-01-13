@@ -40,6 +40,7 @@ class L {
             startPoints.forEachIndexed { i, p ->
                 d(MEASURING_TIME_TAG, "Time from |Point-$i:${p.first}| |${(endTime - p.second) * 1.0e-9}| seconds")
             }
+            startPoints.clear()
         }
     }
 }

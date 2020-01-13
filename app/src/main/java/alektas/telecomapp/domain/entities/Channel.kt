@@ -5,7 +5,7 @@ import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 
 data class Channel(
-    val name: String = "${channelsCount + 1}",
+    var name: String = "${channelsCount + 1}",
     val carrierFrequency: Double = QpskContract.DEFAULT_CARRIER_FREQUENCY,
     val frameLength: Int = CdmaContract.DEFAULT_FRAME_SIZE,
     var frameData: BooleanArray = booleanArrayOf(),
@@ -13,7 +13,7 @@ data class Channel(
     val code: BooleanArray = booleanArrayOf(),
     val codeType: Int = CodeGenerator.WALSH
 ) {
-    private val id: Int
+    val id: Int
     var errors: List<Int>? = null
 
     init {

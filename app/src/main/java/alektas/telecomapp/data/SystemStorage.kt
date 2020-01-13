@@ -3,6 +3,7 @@ package alektas.telecomapp.data
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.converters.ValueConverter
 import alektas.telecomapp.domain.entities.filters.FilterConfig
@@ -12,19 +13,14 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.utils.FileWorker
-import alektas.telecomapp.utils.L
-import alektas.telecomapp.utils.format
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Function3
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.math.log2
-import kotlin.math.pow
 
 private const val INTERNAL_ETHER_DATA_FILE_NAME = "ether_data.txt"
 
@@ -35,6 +31,8 @@ class SystemStorage : Repository {
     lateinit var demodulatorConfig: DemodulatorConfig
     @Inject
     lateinit var filterConfig: FilterConfig
+    @Inject
+    lateinit var decoderConfig: DecoderConfig
     /**
      * Шум источника.
      * Если шум отключен с помощью метода {@see #disableNoise}, то этот объект сохраняется,
@@ -61,11 +59,12 @@ class SystemStorage : Repository {
      */
     private var isSavedToFile = false
     private var adcBitDepth = 8
-    private var channelList = mutableListOf<Channel>()
-    private var decodedChannelList = mutableListOf<Channel>()
+    private var simulatedChannelList = mutableListOf<Channel>()
+    private var decoderChannelList = mutableListOf<Channel>()
     private val disposable = CompositeDisposable()
     private val simulatedChannelsSource = BehaviorSubject.create<List<Channel>>()
     private val channelsFrameSignalSource = BehaviorSubject.create<Signal>()
+    private val fileSignalSource = BehaviorSubject.create<Signal>()
     private val channelISource = BehaviorSubject.create<Signal>()
     private val channelQSource = BehaviorSubject.create<Signal>()
     private val filteredChannelISource = BehaviorSubject.create<Signal>()
@@ -74,9 +73,9 @@ class SystemStorage : Repository {
     private val interferenceSource = BehaviorSubject.create<Noise>()
     private val demodulatedSignalSource =
         BehaviorSubject.create<DigitalSignal>()
-    private val decodedChannelsSource =
+    private val decoderChannelsSource =
         BehaviorSubject.create<List<Channel>>()
-    private val decodedChannelsLiveSource =
+    private val decoderChannelsLiveSource =
         PublishSubject.create<List<Channel>>()
     private val channelsErrorsSource =
         BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
@@ -84,6 +83,8 @@ class SystemStorage : Repository {
     private val filterConfigSource = BehaviorSubject.create<FilterConfig>()
     private val demodulatorConfigSource =
         BehaviorSubject.create<DemodulatorConfig>()
+    private val decoderConfigSource =
+        BehaviorSubject.create<DecoderConfig>()
     private val simulatedChannelsCountSource = BehaviorSubject.create<Int>()
     private var transmittedBitsCount = 0
         set(value) {
@@ -121,14 +122,16 @@ class SystemStorage : Repository {
             berSource.onNext(value)
         }
     private val berSource = BehaviorSubject.create<Double>()
+    private val berByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
+    private val capacityByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val capacityByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
-    private val berProcess = BehaviorSubject.create<Int>()
     private val transmitProcess = BehaviorSubject.create<Int>()
 
     init {
         App.component.inject(this)
         demodulatorConfigSource.onNext(demodulatorConfig)
+        decoderConfigSource.onNext(decoderConfig)
 
         disposable.addAll(
             simulatedChannelsSource
@@ -139,7 +142,7 @@ class SystemStorage : Repository {
                     }
                 },
 
-            decodedChannelsSource
+            decoderChannelsSource
                 .subscribe {
                     if (isStatisticsCounted) {
                         if (receivedFramesCount >= expectedFramesCount) {
@@ -187,6 +190,7 @@ class SystemStorage : Repository {
             Function3<Signal, Signal, Signal, Signal> { signal, noise, interf ->
                 signal + noise + interf
             })
+            .mergeWith(fileSignalSource)
     }
 
     override fun getCurrentDemodulatorConfig(): DemodulatorConfig {
@@ -228,6 +232,19 @@ class SystemStorage : Repository {
         filterConfigSource.onNext(filterConfig)
     }
 
+    override fun updateDecoderConfig(config: DecoderConfig) {
+        decoderConfig.update(config)
+        decoderConfigSource.onNext(decoderConfig)
+    }
+
+    override fun getDecoderConfiguration(): DecoderConfig {
+        return decoderConfig
+    }
+
+    override fun observeDecoderConfig(): Observable<DecoderConfig> {
+        return decoderConfigSource
+    }
+
     override fun startCountingStatistics() {
         clearStatistics()
         isStatisticsCounted = true
@@ -251,16 +268,28 @@ class SystemStorage : Repository {
     }
 
     override fun setChannels(channels: List<Channel>) {
-        channelList = channels.toMutableList()
-        simulatedChannelsSource.onNext(channelList)
+        simulatedChannelList = channels.toMutableList()
+        simulatedChannelsSource.onNext(simulatedChannelList)
     }
 
     override fun removeChannel(channel: Channel) {
-        if (channelList.remove(channel)) simulatedChannelsSource.onNext(channelList)
+        if (simulatedChannelList.remove(channel)) simulatedChannelsSource.onNext(simulatedChannelList)
+    }
+
+    override fun getSimulatedChannels(): List<Channel> {
+        return simulatedChannelList
     }
 
     override fun observeSimulatedChannels(): Observable<List<Channel>> {
         return simulatedChannelsSource
+    }
+
+    override fun setFileSignal(signal: Signal) {
+        fileSignalSource.onNext(signal)
+    }
+
+    override fun observeFileSignal(): Observable<Signal> {
+        return fileSignalSource
     }
 
     override fun setNoise(signal: Noise) {
@@ -373,31 +402,34 @@ class SystemStorage : Repository {
         return filteredChannelQSource
     }
 
-
-    override fun addDecodedChannel(channel: Channel) {
-        decodedChannelList.add(channel)
-        decodedChannelsSource.onNext(decodedChannelList)
-        decodedChannelsLiveSource.onNext(decodedChannelList)
+    override fun addDecoderChannel(channel: Channel) {
+        decoderChannelList.add(channel)
+        decoderChannelsSource.onNext(decoderChannelList)
+        decoderChannelsLiveSource.onNext(decoderChannelList)
     }
 
-    override fun removeDecodedChannel(channel: Channel) {
-        if (decodedChannelList.remove(channel)) {
-            decodedChannelsSource.onNext(decodedChannelList)
-            decodedChannelsLiveSource.onNext(decodedChannelList)
+    override fun removeDecoderChannel(channel: Channel) {
+        if (decoderChannelList.remove(channel)) {
+            decoderChannelsSource.onNext(decoderChannelList)
+            decoderChannelsLiveSource.onNext(decoderChannelList)
         }
     }
 
-    override fun setDecodedChannels(channels: List<Channel>) {
-        decodedChannelList = channels.toMutableList()
-        decodedChannelsSource.onNext(decodedChannelList)
-        decodedChannelsLiveSource.onNext(decodedChannelList)
+    override fun setDecoderChannels(channels: List<Channel>) {
+        decoderChannelList = channels.toMutableList()
+        decoderChannelsSource.onNext(decoderChannelList)
+        decoderChannelsLiveSource.onNext(decoderChannelList)
+    }
+
+    override fun getDecoderChannels(): List<Channel> {
+        return decoderChannelList
     }
 
     /**
      * @param withLast true - источник при подписке выдает последний список декодированных каналов
      */
-    override fun observeDecodedChannels(withLast: Boolean): Observable<List<Channel>> {
-        return if (withLast) decodedChannelsSource else decodedChannelsLiveSource
+    override fun observeDecoderChannels(withLast: Boolean): Observable<List<Channel>> {
+        return if (withLast) decoderChannelsSource else decoderChannelsLiveSource
     }
 
     override fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>) {
@@ -408,7 +440,11 @@ class SystemStorage : Repository {
         return channelsErrorsSource
     }
 
-    override fun observeTransmitProcess(): Observable<Int> {
+    override fun setTransmitProgress(progress: Int) {
+        return transmitProcess.onNext(progress)
+    }
+
+    override fun observeTransmitProgress(): Observable<Int> {
         return transmitProcess
     }
 
@@ -432,12 +468,17 @@ class SystemStorage : Repository {
         return berSource
     }
 
-    override fun observeBerProcess(): Observable<Int> {
-        return berProcess
+    override fun setBerByNoise(berByNoise: Pair<Double, Double>) {
+        berByNoiseList.add(berByNoise)
+        berByNoiseSource.onNext(berByNoise)
     }
 
-    override fun setBerByNoise(berByNoise: Pair<Double, Double>) {
-        berByNoiseSource.onNext(berByNoise)
+    override fun getBerByNoiseList(): List<Pair<Double, Double>> {
+        return berByNoiseList
+    }
+
+    override fun clearBerByNoiseList() {
+        berByNoiseList.clear()
     }
 
     override fun observeBerByNoise(): Observable<Pair<Double, Double>> {
@@ -445,7 +486,16 @@ class SystemStorage : Repository {
     }
 
     override fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>) {
+        capacityByNoiseList.add(capacityByNoise)
         capacityByNoiseSource.onNext(capacityByNoise)
+    }
+
+    override fun getCapacityByNoiseList(): List<Pair<Double, Double>> {
+        return capacityByNoiseList
+    }
+
+    override fun clearCapacityByNoiseList() {
+        capacityByNoiseList.clear()
     }
 
     override fun observeCapacityByNoise(): Observable<Pair<Double, Double>> {

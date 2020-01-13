@@ -27,7 +27,7 @@ class MainViewModel : ViewModel() {
                     processProgress.value = it
                 },
 
-            storage.observeTransmitProcess()
+            storage.observeTransmitProgress()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     processProgress.value = it

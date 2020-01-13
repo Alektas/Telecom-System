@@ -10,9 +10,14 @@ import org.apache.commons.math3.transform.TransformType
 
 fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
+fun List<Pair<Double, Double>>.toSortedPoints(): MutableList<DataPoint> = this
+    .map { DataPoint(it.first, it.second) }
+    .sortedBy { it.x }
+    .toMutableList()
+
 fun Signal.toDataPoints(): Array<DataPoint> = this.getPoints()
-        .map { DataPoint(it.key, it.value) }
-        .toTypedArray()
+    .map { DataPoint(it.key, it.value) }
+    .toTypedArray()
 
 fun List<Pair<Double, Double>>.toFloat(): List<Pair<Float, Float>> =
     this.map { Pair(it.first.toFloat(), it.second.toFloat()) }

@@ -6,25 +6,57 @@ apply plugin: 'kotlin-kapt'
 
 apply plugin: 'kotlin-android-extensions'
 
+apply from: "$rootDir/release.gradle"
+
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
     compileSdkVersion 29
     defaultConfig {
         applicationId "alektas.telecomapp"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 1
+        versionCode 2
         versionName "0.1.0"
+        project.ext.set("archivesBaseName", "TelecomSystems-" + defaultConfig.versionName)
+        resConfigs "en", "ru"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            aaptOptions.cruncherEnabled = false
+            minifyEnabled false
+            shrinkResources false
+            ext.alwaysUpdateBuildId = false
+            ext.enableCrashlytics = false
+            splits.abi.enable = false
+            splits.density.enable = false
+
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
     compileOptions {
         sourceCompatibility = "1.8"
         targetCompatibility = "1.8"
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
     buildToolsVersion = '29.0.2'
 }
@@ -38,6 +70,9 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.1.0'
     implementation 'com.google.android.material:material:1.2.0-alpha02'
+
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
 
     implementation 'com.jjoe64:graphview:4.2.2'
 

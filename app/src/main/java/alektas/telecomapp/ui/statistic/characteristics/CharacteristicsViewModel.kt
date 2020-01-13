@@ -4,11 +4,15 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
+import alektas.telecomapp.utils.toSortedPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jjoe64.graphview.series.DataPoint
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Function3
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
@@ -22,9 +26,12 @@ class CharacteristicsViewModel : ViewModel() {
     val viewportData = MutableLiveData<Pair<Double, Double>>()
     val berData = MutableLiveData<Array<DataPoint>>()
     val capacityData = MutableLiveData<Array<DataPoint>>()
-    val berList = mutableListOf<DataPoint>()
-    val capacityList = mutableListOf<DataPoint>()
-    var channels = listOf<Channel>()
+    val isChannelsInvalid = MutableLiveData<Boolean>()
+    val pointsCount = MutableLiveData<Int>()
+    val fromSnr = MutableLiveData<Float>()
+    val toSnr = MutableLiveData<Float>()
+    var berList = mutableListOf<DataPoint>()
+    var capacityList = mutableListOf<DataPoint>()
 
     companion object {
         const val INVALID_SNR = -1000.0
@@ -32,6 +39,13 @@ class CharacteristicsViewModel : ViewModel() {
 
     init {
         App.component.inject(this)
+
+        viewportData.value = processor.getCharacteristicsProcessRange()
+
+        berList = storage.getBerByNoiseList().toSortedPoints()
+        berData.value = berList.toTypedArray()
+        capacityList = storage.getCapacityByNoiseList().toSortedPoints()
+        capacityData.value = capacityList.toTypedArray()
 
         disposable.addAll(
             storage.observeBerByNoise()
@@ -68,12 +82,19 @@ class CharacteristicsViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            storage.observeDecodedChannels()
+            Observable.combineLatest(
+                storage.observeSimulatedChannels().startWith(listOf<Channel>()),
+                storage.observeDecoderChannels().startWith(listOf<Channel>()),
+                storage.observeDecoderConfig(),
+                Function3 { sim: List<Channel>, dec: List<Channel>, dc: DecoderConfig ->
+                    sim.isEmpty() || (!dc.isAutoDetection && dec.isEmpty())
+                }
+            )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<List<Channel>>() {
-                    override fun onNext(t: List<Channel>) {
-                        channels = t
+                .subscribeWith(object : DisposableObserver<Boolean>() {
+                    override fun onNext(t: Boolean) {
+                        isChannelsInvalid.value = t
                     }
 
                     override fun onComplete() {}
@@ -89,11 +110,15 @@ class CharacteristicsViewModel : ViewModel() {
         val pointsCount = parseCount(count)
 
         if (fromSnr != INVALID_SNR && toSnr != INVALID_SNR && fromSnr < toSnr &&
-            pointsCount > 0 && channels.isNotEmpty()) {
+            pointsCount > 0 && isChannelsInvalid.value != true) {
             viewportData.value = Pair(fromSnr, toSnr)
             berList.clear()
             capacityList.clear()
             processor.calculateCharacteristics(fromSnr, toSnr, pointsCount)
+
+            this.pointsCount.value = pointsCount
+            this.fromSnr.value = fromSnr.toFloat()
+            this.toSnr.value = toSnr.toFloat()
             return true
         }
 

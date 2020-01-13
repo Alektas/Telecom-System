@@ -35,6 +35,7 @@ class DecoderFragment : Fragment(), ChannelController {
     private lateinit var viewModel: DecoderViewModel
     private lateinit var prefs: SharedPreferences
     private val graphPoints = LineGraphSeries<DataPoint>()
+    private var isAutoDetection = true
 
     companion object {
         fun newInstance() = DecoderFragment()
@@ -69,39 +70,24 @@ class DecoderFragment : Fragment(), ChannelController {
         setupCodeTypesDropdown()
         setFieldsValidation()
         setInitValues(prefs)
+        setupControls()
         observeSettings(viewModel, prefs)
 
         val channelAdapter = ChannelAdapter(this)
         channel_list.adapter = channelAdapter
         channel_list.layoutManager = LinearLayoutManager(requireContext())
 
-        decoder_channel_code.setOnEditorActionListener { _, _, _ ->
-            add_channel_btn.performClick()
-            false
-        }
-
-        decoder_channel_count.setOnEditorActionListener { _, _, _ ->
-            generate_channels_btn.performClick()
-            false
-        }
-
-        add_channel_btn.setOnClickListener {
-            SystemUtils.hideKeyboard(this)
-            decodeCustomChannel()
-        }
-
-        generate_channels_btn.setOnClickListener {
-            SystemUtils.hideKeyboard(this)
-            decodeChannels()
-        }
-
         viewModel.channels.observe(viewLifecycleOwner, Observer {
             channelAdapter.channels = it
         })
 
-
         viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
             graphPoints.resetData(it)
+        })
+
+        viewModel.isDecodingAvailable.observe(viewLifecycleOwner, Observer {
+            channels_autodetection_checkbox.isEnabled = it
+            generate_channels_btn.isEnabled = it
         })
     }
 
@@ -115,7 +101,7 @@ class DecoderFragment : Fragment(), ChannelController {
         val adapter = SimpleArrayAdapter(
             requireContext(),
             R.layout.support_simple_spinner_dropdown_item,
-            CodeGenerator.codeNames.values.toList()
+            listOf(CodeGenerator.codeNames[CodeGenerator.WALSH] ?: "")
         )
         decoder_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
@@ -129,7 +115,39 @@ class DecoderFragment : Fragment(), ChannelController {
         }
     }
 
+    private fun setupControls() {
+        decoder_channel_code.setOnEditorActionListener { _, _, _ ->
+            add_channel_btn.performClick()
+            false
+        }
+
+        decoder_threshold.setOnEditorActionListener { _, _, _ ->
+            generate_channels_btn.performClick()
+            false
+        }
+
+        add_channel_btn.setOnClickListener {
+            SystemUtils.hideKeyboard(this)
+            decodeCustomChannel()
+        }
+
+        generate_channels_btn.setOnClickListener {
+            SystemUtils.hideKeyboard(this)
+            decodeChannels(isAutoDetection)
+        }
+
+        channels_autodetection_checkbox.setOnCheckedChangeListener { _, isAuto ->
+            setupViewByMode(isAuto)
+            decodeChannels(isAuto)
+            prefs.edit().putBoolean(getString(R.string.decoder_channels_autodetection_key), isAuto).apply()
+        }
+    }
+
     private fun setInitValues(prefs: SharedPreferences) {
+        val isAutoDetection = prefs.getBoolean(getString(R.string.decoder_channels_autodetection_key), true)
+        channels_autodetection_checkbox.isChecked = isAutoDetection
+        setupViewByMode(isAutoDetection)
+
         prefs.getInt(
             getString(R.string.decoder_channels_codetype_key),
             CdmaContract.DEFAULT_CODE_TYPE
@@ -146,7 +164,7 @@ class DecoderFragment : Fragment(), ChannelController {
 
         prefs.getFloat(
             getString(R.string.decoder_threshold_key),
-            QpskContract.DEFAULT_SIGNAL_THRESHOLD.toFloat()
+            QpskContract.DEFAULT_SIGNAL_THRESHOLD
         ).let {
             decoder_threshold.setText(it.toString())
         }
@@ -203,48 +221,49 @@ class DecoderFragment : Fragment(), ChannelController {
         }
     }
 
-    private fun decodeChannels() {
+    private fun decodeChannels(isAuto: Boolean = false) {
         val channelCount = decoder_channel_count.text.toString()
         val codeLength = decoder_code_length.text.toString()
         val codeType = decoder_channel_code_type.text.toString()
         val threshold = decoder_threshold.text.toString()
 
-        if (decoder_channel_count_layout.error != null ||
-            decoder_code_length_layout.error != null ||
-            decoder_threshold_layout.error != null ||
-            channelCount.isEmpty() ||
-            codeLength.isEmpty() ||
-            codeType.isEmpty() ||
-            threshold.isEmpty()
-        ) {
-            Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
-            return
+        val isSuccess = if (isAuto) {
+            viewModel.setupAutoDecoding(codeLength, codeType, threshold)
+        } else {
+            viewModel.setupDecoding(channelCount, codeLength, codeType, threshold)
         }
-
-        viewModel.createChannels(channelCount, codeLength, codeType, threshold)
+        if (!isSuccess) {
+            Toast.makeText(requireContext(), getString(R.string.enter_valid_data), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun decodeCustomChannel() {
-        val codeString = decoder_channel_code.text.toString()
-        if (codeString.isEmpty()) {
+        val code = decoder_channel_code.text.toString()
+        val isSuccess = viewModel.addCustomChannel(code)
+        if (!isSuccess) {
             Toast.makeText(
                 requireContext(),
-                "Введите код из нулей и единиц",
+                "Введите код из нулей и единиц и укажите порог",
                 Toast.LENGTH_SHORT
             ).show()
-            return
         }
-        val thresholdString = decoder_threshold.text.toString()
-        val threshold = viewModel.parseThreshold(thresholdString)
-        if (threshold < 0) {
-            Toast.makeText(
-                requireContext(),
-                "Введите неотрицательное пороговое значение",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
+    }
+
+    private fun setupViewByMode(auto: Boolean) {
+        isAutoDetection = auto
+        if (auto) {
+            View.GONE.let {
+                decoder_channel_code_layout.visibility = it
+                add_channel_btn.visibility = it
+                decoder_channel_count_layout.visibility = it
+            }
+        } else {
+            View.VISIBLE.let {
+                decoder_channel_code_layout.visibility = it
+                add_channel_btn.visibility = it
+                decoder_channel_count_layout.visibility = it
+            }
         }
-        viewModel.createCustomChannel(codeString, threshold)
     }
 
 }

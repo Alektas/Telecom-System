@@ -19,11 +19,22 @@ class SimulationDataSourceViewModel : ViewModel() {
     lateinit var storage: Repository
     @Inject
     lateinit var processor: SystemProcessor
-    private val disposable = CompositeDisposable()
     val channels = MutableLiveData<List<Channel>>()
     val ether = MutableLiveData<Array<DataPoint>>()
     val adcFrequency = MutableLiveData<Double>()
     val frameCount = MutableLiveData<Int>()
+    val isTransmitAvailable = MutableLiveData<Boolean>(true)
+    private val disposable = CompositeDisposable()
+    private var isTransmitCompleted = true
+        set(value) {
+            field = value
+            isTransmitAvailable.value = isChannelsExist && value
+        }
+    private var isChannelsExist = false
+        set(value) {
+            field = value
+            isTransmitAvailable.value = value && isTransmitCompleted
+        }
 
     init {
         App.component.inject(this)
@@ -35,6 +46,7 @@ class SimulationDataSourceViewModel : ViewModel() {
                 .subscribeWith(object : DisposableObserver<List<Channel>>() {
                     override fun onNext(it: List<Channel>) {
                         channels.value = it
+                        isChannelsExist = it.isNotEmpty()
                     }
 
                     override fun onComplete() {}
@@ -55,6 +67,23 @@ class SimulationDataSourceViewModel : ViewModel() {
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeTransmitProgress()
+                .map { (it < 0 || it >= 100) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Boolean>() {
+                    override fun onNext(b: Boolean) {
+                        isTransmitCompleted = b
+                    }
+
+                    override fun onComplete() {
+                        isTransmitCompleted = true
+                    }
+
+                    override fun onError(e: Throwable) {
+                        isTransmitCompleted = true
+                    }
                 })
         )
     }
@@ -78,7 +107,10 @@ class SimulationDataSourceViewModel : ViewModel() {
 
         saveChannelsSettings(frameCount)
 
-        channels.value?.let { processor.transmitFrames(it, frameCount) }
+        channels.value?.let {
+            isTransmitCompleted = false
+            processor.transmitFrames(it, frameCount)
+        }
     }
 
     private fun saveChannelsSettings(frameCount: Int) {
@@ -102,26 +134,6 @@ class SimulationDataSourceViewModel : ViewModel() {
             c
         } catch (e: NumberFormatException) {
             -1.0
-        }
-    }
-
-    fun parseDataspeed(speed: String): Double {
-        return try {
-            val c = speed.toDouble()
-            if (c <= 0) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1.0
-        }
-    }
-
-    fun parseFrameLength(length: String): Int {
-        return try {
-            val c = length.toInt()
-            if (c <= 0) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1
         }
     }
 

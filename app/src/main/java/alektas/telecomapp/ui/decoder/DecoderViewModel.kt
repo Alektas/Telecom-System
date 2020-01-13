@@ -5,6 +5,7 @@ import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -21,6 +22,7 @@ class DecoderViewModel : ViewModel() {
     @Inject
     lateinit var processor: SystemProcessor
     private val disposable = CompositeDisposable()
+    val isDecodingAvailable = MutableLiveData<Boolean>(true)
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
     val channels = MutableLiveData<List<Channel>>()
     val codeType = MutableLiveData<Int>()
@@ -47,7 +49,7 @@ class DecoderViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            storage.observeDecodedChannels()
+            storage.observeDecoderChannels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<Channel>>() {
@@ -58,38 +60,94 @@ class DecoderViewModel : ViewModel() {
                     override fun onComplete() {}
 
                     override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeTransmitProgress()
+                .map { (it < 0 || it >= 100) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Boolean>() {
+                    override fun onNext(b: Boolean) {
+                        isDecodingAvailable.value = b
+                    }
+
+                    override fun onComplete() {
+                        isDecodingAvailable.value = true
+                    }
+
+                    override fun onError(e: Throwable) {
+                        isDecodingAvailable.value = true
+                    }
                 })
         )
     }
 
-    fun createCustomChannel(codeString: String, threshold: Float) {
+    fun addCustomChannel(codeString: String): Boolean {
+        if (codeString.isEmpty()) return false
         val code = parseChannelCode(codeString)
-        processor.addDecodedChannel(code, threshold)
+        if (code.isEmpty()) return false
+
+        processor.addCustomDecoderChannel(code)
+        return true
     }
 
-    fun createChannels(
+    fun setupDecoding(
         countString: String,
         codeLengthString: String,
         codeTypeString: String,
         thresholdString: String
-    ) {
+    ): Boolean {
         val channelCount = parseChannelCount(countString)
         val codeLength = parseChannelCount(codeLengthString)
         val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
         val threshold = parseThreshold(thresholdString)
 
-        if (channelCount <= 0 || codeLength <= 0 || codeType < 0 || threshold < 0) return
+        if (channelCount <= 0 || codeLength <= 0 || codeType < 0 || threshold < 0) return false
 
         this.codeType.value = codeType
         this.channelCount.value = channelCount
         this.codeLength.value = codeLength
         this.threshold.value = threshold
 
-        processor.createDecodedChannels(channelCount, codeLength, codeType, threshold)
+        val config = DecoderConfig(
+            isAutoDetection = false,
+            channelCount = channelCount,
+            codeLength = codeLength,
+            codeType = codeType,
+            threshold = threshold
+        )
+
+        processor.applyConfig(config)
+        return true
+    }
+
+    fun setupAutoDecoding(
+        codeLengthString: String,
+        codeTypeString: String,
+        thresholdString: String
+    ): Boolean {
+        val codeLength = parseChannelCount(codeLengthString)
+        val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+        val threshold = parseThreshold(thresholdString)
+
+        if (codeLength <= 0 || codeType < 0 || threshold < 0) return false
+
+        this.codeType.value = codeType
+        this.codeLength.value = codeLength
+        this.threshold.value = threshold
+
+        val config = DecoderConfig(
+            isAutoDetection = true,
+            codeLength = codeLength,
+            codeType = codeType,
+            threshold = threshold
+        )
+
+        processor.applyConfig(config)
+        return true
     }
 
     fun removeChannel(channel: Channel) {
-        storage.removeDecodedChannel(channel)
+        storage.removeDecoderChannel(channel)
     }
 
     fun parseChannelCount(count: String): Int {
@@ -105,7 +163,6 @@ class DecoderViewModel : ViewModel() {
     fun parseChannelCode(codeString: String): BooleanArray {
         return codeString.filter { it == '1' || it == '0' }.map { it == '1' }.toBooleanArray()
     }
-
 
     fun parseThreshold(threshold: String): Float {
         return try {
