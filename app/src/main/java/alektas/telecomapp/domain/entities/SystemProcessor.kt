@@ -178,7 +178,6 @@ class SystemProcessor {
             }
             .flatMapObservable { generateFrames(adcSamplingRate * 1.0e6, it) }
             .doOnSubscribe {
-                storage.setTransmitProgress(0)
                 storage.startCountingStatistics()
             }
             .subscribeOn(Schedulers.io())
@@ -331,7 +330,6 @@ class SystemProcessor {
             }) // первый фрейм запускает цикл передачи (нужно для срабатывания zipWith)
             .subscribeOn(Schedulers.io())
             .doOnSubscribe {
-                storage.setTransmitProgress(0)
                 storage.startCountingStatistics()
                 storage.setExpectedFrameCount(frameCount)
             }

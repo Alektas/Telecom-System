@@ -12,6 +12,7 @@ import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.domain.processes.ProcessState
 import alektas.telecomapp.utils.FileWorker
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
@@ -23,6 +24,8 @@ import javax.inject.Inject
 import javax.inject.Named
 
 private const val INTERNAL_ETHER_DATA_FILE_NAME = "ether_data.txt"
+const val TRANSMITTING_PROCESS_KEY = "FRAMES_TRANSMITTING"
+const val TRANSMITTING_PROCESS_NAME = "Передача фреймов"
 
 class SystemStorage : Repository {
     @Inject
@@ -126,7 +129,8 @@ class SystemStorage : Repository {
     private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val capacityByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val capacityByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
-    private val transmitProcess = BehaviorSubject.create<Int>()
+    private val transmittingStateSource = BehaviorSubject.create<ProcessState>()
+    private val transmittingState = ProcessState(TRANSMITTING_PROCESS_KEY, TRANSMITTING_PROCESS_NAME)
 
     init {
         App.component.inject(this)
@@ -157,7 +161,10 @@ class SystemStorage : Repository {
                         receivedFramesCount++
                         val progress =
                             (receivedFramesCount / expectedFramesCount.toDouble() * 100).toInt()
-                        transmitProcess.onNext(progress)
+                        transmittingStateSource.onNext(transmittingState.apply {
+                            this.state = ProcessState.STARTED
+                            this.progress = progress
+                        })
                     }
                 },
 
@@ -248,6 +255,7 @@ class SystemStorage : Repository {
     override fun startCountingStatistics() {
         clearStatistics()
         isStatisticsCounting = true
+        setTransmittingState(ProcessState.STARTED, 0)
     }
 
     private fun clearStatistics() {
@@ -261,7 +269,7 @@ class SystemStorage : Repository {
 
     override fun endCountingStatistics() {
         isStatisticsCounting = false
-        transmitProcess.onNext(100)
+        setTransmittingState(ProcessState.FINISHED, 100)
     }
 
     override fun setExpectedFrameCount(count: Int) {
@@ -441,12 +449,16 @@ class SystemStorage : Repository {
         return channelsErrorsSource
     }
 
-    override fun setTransmitProgress(progress: Int) {
-        return transmitProcess.onNext(progress)
+    override fun setTransmittingState(state: Int, progress: Int) {
+        transmittingState.apply {
+            this.state = state
+            this.progress = progress
+        }
+        return transmittingStateSource.onNext(transmittingState)
     }
 
-    override fun observeTransmitProgress(): Observable<Int> {
-        return transmitProcess
+    override fun observeTransmittingState(): Observable<ProcessState> {
+        return transmittingStateSource
     }
 
     override fun observeTransmittingChannelsCount(): Observable<Int> {

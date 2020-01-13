@@ -4,6 +4,7 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
+import alektas.telecomapp.domain.processes.ProcessState
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -69,8 +70,8 @@ class SimulationDataSourceViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
-            storage.observeTransmitProgress()
-                .map { (it < 0 || it >= 100) }
+            storage.observeTransmittingState()
+                .map { it.state == ProcessState.FINISHED || it.state == ProcessState.ERROR }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {
                     override fun onNext(b: Boolean) {

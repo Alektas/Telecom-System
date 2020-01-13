@@ -16,7 +16,6 @@ class MainViewModel : ViewModel() {
     @Inject
     lateinit var processor: SystemProcessor
     val processState = MutableLiveData<ProcessState>()
-    val processProgress = MutableLiveData<Int>()
     val disposable = CompositeDisposable()
 
     init {
@@ -29,10 +28,10 @@ class MainViewModel : ViewModel() {
                     processState.value = it
                 },
 
-            storage.observeTransmitProgress()
+            storage.observeTransmittingState()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    processProgress.value = it
+                    processState.value = it
                 }
             )
     }

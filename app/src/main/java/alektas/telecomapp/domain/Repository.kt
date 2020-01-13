@@ -7,6 +7,7 @@ import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.domain.processes.ProcessState
 import io.reactivex.Observable
 
 interface Repository {
@@ -77,8 +78,8 @@ interface Repository {
     fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
-    fun setTransmitProgress(progress: Int)
-    fun observeTransmitProgress(): Observable<Int>
+    fun setTransmittingState(state: Int, progress: Int)
+    fun observeTransmittingState(): Observable<ProcessState>
     fun observeTransmittingChannelsCount(): Observable<Int>
     fun observeTransmittedBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>

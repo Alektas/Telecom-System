@@ -61,22 +61,14 @@ class MainActivity : AppCompatActivity() {
 
         loadSettings()
 
-        viewModel.processProgress.observe(this, Observer {
-            if (subProcessesAdapter.processes.isNotEmpty()) subProcessesAdapter.processes = listOf()
-            progress_bar.progress = it
-            if (it in 0..99) {
-                indicatorsBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                indicatorsBehavior.isHideable = false
-            } else {
-                indicatorsBehavior.isHideable = true
-                indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-            }
-        })
-
         viewModel.processState.observe(this, Observer {
             if (it.state == ProcessState.STARTED) {
                 if (indicatorsBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
-                    indicatorsBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                    indicatorsBehavior.state = if (it.getSubStates().isEmpty()) {
+                        BottomSheetBehavior.STATE_COLLAPSED
+                    } else {
+                        BottomSheetBehavior.STATE_EXPANDED
+                    }
                     indicatorsBehavior.isHideable = false
                 }
                 subProcessesAdapter.processes = it.getSubStates()
