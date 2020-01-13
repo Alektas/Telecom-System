@@ -169,7 +169,7 @@ class SystemProcessor {
         adcResolution: Int,
         adcSamplingRate: Double // МГц
     ) {
-        transmitSubscription?.dispose()
+        cancelCurrentProcess()
         transmitSubscription = Single
             .create<DoubleArray> {
                 val data =
@@ -299,10 +299,10 @@ class SystemProcessor {
      * @param frameCount количество фреймов, которые нужно передать
      */
     fun transmitFrames(channels: List<Channel>, frameCount: Int) {
+        cancelCurrentProcess()
         var framesTransmitted = 0
         val frameSize = if (channels.isEmpty()) 0 else channels.first().frameLength
 
-        transmitSubscription?.dispose()
         transmitSubscription = Observable
             .create<List<Channel>> {
                 // генерировать на 1 фрейм меньше, так как первый фрейм отправляется в startWith
@@ -587,6 +587,8 @@ class SystemProcessor {
      * рассчитывать характеристики
      */
     fun calculateCharacteristics(fromSnr: Double, toSnr: Double, pointsCount: Int) {
+        cancelCurrentProcess()
+
         val transmittingChannels = storage.getSimulatedChannels()
         val demodConfig = storage.getCurrentDemodulatorConfig()
         val decoderConfig = storage.getDecoderConfiguration()
@@ -595,7 +597,6 @@ class SystemProcessor {
         storage.clearBerByNoiseList()
         storage.clearCapacityByNoiseList()
 
-        characteristicsProcess?.cancel()
         characteristicsProcess = CalculateCharacteristicsProcess(
             transmittingChannels,
             decodingChannels,
