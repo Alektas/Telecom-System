@@ -21,8 +21,7 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.PulseNoise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
-import alektas.telecomapp.domain.processes.CalculateCharacteristicsProcess
-import alektas.telecomapp.domain.processes.ProcessState
+import alektas.telecomapp.domain.processes.*
 import alektas.telecomapp.utils.L
 import android.annotation.SuppressLint
 import io.reactivex.Observable
@@ -361,7 +360,27 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
-            .subscribe { signal: Signal -> storage.setChannelsFrameSignal(signal) }
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        CREATE_SIGNAL_KEY,
+                        CREATE_SIGNAL_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        CREATE_SIGNAL_KEY,
+                        CREATE_SIGNAL_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
+            .subscribe { signal: Signal ->
+                storage.setChannelsFrameSignal(signal)
+            }
     }
 
     private fun aggregate(channels: List<Channel>): DoubleArray {
@@ -459,6 +478,24 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DEMODULATE_KEY,
+                        DEMODULATE_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DEMODULATE_KEY,
+                        DEMODULATE_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
             .subscribe { s: DigitalSignal ->
                 storage.setDemodulatedSignal(s)
                 storage.setChannelI(demodulator.sigI)
@@ -520,6 +557,24 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
             .subscribe { c: List<Channel> ->
                 L.d(this, "Decoding: decode channels")
                 storage.setDecoderChannels(c)
@@ -569,6 +624,24 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
             .subscribe { channels: List<Channel> ->
                 L.d(this, "Decoding: auto decode")
                 storage.setDecoderChannels(channels)

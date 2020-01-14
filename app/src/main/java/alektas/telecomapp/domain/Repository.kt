@@ -79,7 +79,10 @@ interface Repository {
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
     fun setTransmittingState(state: Int, progress: Int)
+    fun setTransmittingSubProcess(state: ProcessState)
+    fun removeTransmittingSubProcesses()
     fun observeTransmittingState(): Observable<ProcessState>
+
     fun observeTransmittingChannelsCount(): Observable<Int>
     fun observeTransmittedBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>

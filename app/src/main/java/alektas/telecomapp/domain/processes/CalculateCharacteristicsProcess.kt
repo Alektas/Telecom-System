@@ -25,25 +25,6 @@ import javax.inject.Inject
 import kotlin.math.log2
 import kotlin.math.pow
 
-private const val KEY = "CHARACTERISTICS_CALCULATION"
-private const val NAME = "Расчёт характеристик"
-private const val BER_CALC_KEY = "BER_CALCULATION"
-private const val BER_CALC_NAME = "Расчёт BER"
-private const val CAPACITY_CALC_KEY = "CAPACITY_CALCULATION"
-private const val CAPACITY_CALC_NAME = "Расчёт пропускной способности"
-private const val CREATE_SIGNAL_KEY = "SIGNAL_CREATION"
-private const val CREATE_SIGNAL_NAME = "Генерация сигнала"
-private const val CREATE_NOISE_KEY = "NOISE_CREATION"
-private const val CREATE_NOISE_NAME = "Генерация шума"
-private const val CREATE_ETHER_KEY = "ETHER_CREATION"
-private const val CREATE_ETHER_NAME = "Генерация эфира"
-private const val DEMODULATE_KEY = "DEMODULATION"
-private const val DEMODULATE_NAME = "Демодулирование"
-private const val DECODE_KEY = "DECODING"
-private const val DECODE_NAME = "Декодирование"
-private const val DETECT_CHANNELS_KEY = "DETECTING_CHANNELS"
-private const val DETECT_CHANNELS_NAME = "Определение каналов"
-
 class CalculateCharacteristicsProcess(
     private val transmittingChannels: List<Channel>,
     private val decodingChannels: List<Channel>,
@@ -53,7 +34,7 @@ class CalculateCharacteristicsProcess(
     @Inject
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
-    private val state = ProcessState(KEY, NAME)
+    private val state = ProcessState(CHARACTERISTICS_KEY, CHARACTERISTICS_NAME)
     var currentStartSnr: Double? = null
     var currentFinishSnr: Double? = null
 

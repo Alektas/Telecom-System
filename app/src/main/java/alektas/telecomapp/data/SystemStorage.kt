@@ -13,6 +13,8 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.processes.ProcessState
+import alektas.telecomapp.domain.processes.TRANSMITTING_PROCESS_KEY
+import alektas.telecomapp.domain.processes.TRANSMITTING_PROCESS_NAME
 import alektas.telecomapp.utils.FileWorker
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
@@ -24,8 +26,6 @@ import javax.inject.Inject
 import javax.inject.Named
 
 private const val INTERNAL_ETHER_DATA_FILE_NAME = "ether_data.txt"
-const val TRANSMITTING_PROCESS_KEY = "FRAMES_TRANSMITTING"
-const val TRANSMITTING_PROCESS_NAME = "Передача фреймов"
 
 class SystemStorage : Repository {
     @Inject
@@ -455,6 +455,16 @@ class SystemStorage : Repository {
             this.progress = progress
         }
         return transmittingStateSource.onNext(transmittingState)
+    }
+
+    override fun setTransmittingSubProcess(state: ProcessState) {
+        transmittingState.setSubState(state)
+        transmittingStateSource.onNext(transmittingState)
+    }
+
+    override fun removeTransmittingSubProcesses() {
+        transmittingState.removeSubStates()
+        transmittingStateSource.onNext(transmittingState)
     }
 
     override fun observeTransmittingState(): Observable<ProcessState> {
