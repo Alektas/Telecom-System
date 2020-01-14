@@ -1,5 +1,7 @@
 package alektas.telecomapp.domain.processes
 
+const val READ_FILE_KEY = "FILE_READING"
+const val READ_FILE_NAME = "Чтение файла"
 const val CHARACTERISTICS_KEY = "CHARACTERISTICS_CALCULATION"
 const val CHARACTERISTICS_NAME = "Расчёт характеристик"
 const val BER_CALC_KEY = "BER_CALCULATION"

@@ -171,18 +171,23 @@ class SystemProcessor {
         cancelCurrentProcess()
         transmitSubscription = Single
             .create<DoubleArray> {
+                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME, state = ProcessState.STARTED))
                 val data =
                     ValueConverter(adcResolution).convertToBipolarNormalizedValues(dataString)
+                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME, state = ProcessState.FINISHED))
                 it.onSuccess(data)
             }
             .flatMapObservable { generateFrames(adcSamplingRate * 1.0e6, it) }
+            .subscribeOn(Schedulers.io())
             .doOnSubscribe {
+                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME))
                 storage.startCountingStatistics()
             }
-            .subscribeOn(Schedulers.io())
-            .subscribe {
+            .subscribe({
                 storage.setFileSignal(it)
-            }
+            }, {
+                it.printStackTrace()
+            })
     }
 
     /**
@@ -208,6 +213,12 @@ class SystemProcessor {
 
             subscriber.onComplete()
         }
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, state = ProcessState.STARTED))
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, state = ProcessState.FINISHED))
+            }
     }
 
     /**

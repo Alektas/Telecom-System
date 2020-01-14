@@ -162,7 +162,7 @@ class SystemStorage : Repository {
                         val progress =
                             (receivedFramesCount / expectedFramesCount.toDouble() * 100).toInt()
                         transmittingStateSource.onNext(transmittingState.apply {
-                            this.state = ProcessState.STARTED
+                            if (receivedFramesCount == expectedFramesCount) endCountingStatistics()
                             this.progress = progress
                         })
                     }
@@ -269,6 +269,7 @@ class SystemStorage : Repository {
 
     override fun endCountingStatistics() {
         isStatisticsCounting = false
+        removeTransmittingSubProcesses()
         setTransmittingState(ProcessState.FINISHED, 100)
     }
 
