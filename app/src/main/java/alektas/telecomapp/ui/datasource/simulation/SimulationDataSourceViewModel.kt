@@ -71,7 +71,7 @@ class SimulationDataSourceViewModel : ViewModel() {
                 }),
 
             storage.observeTransmittingState()
-                .map { it.state == ProcessState.FINISHED || it.state == ProcessState.ERROR }
+                .map { it.state == ProcessState.AWAITING || it.state == ProcessState.FINISHED || it.state == ProcessState.ERROR }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<Boolean>() {
                     override fun onNext(b: Boolean) {
