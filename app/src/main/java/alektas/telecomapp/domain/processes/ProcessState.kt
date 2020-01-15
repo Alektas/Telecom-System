@@ -22,6 +22,17 @@ class ProcessState(
         setSubStates(subStates)
     }
 
+    fun withState(state: Int): ProcessState = apply { this.state = state }
+
+    fun withProgress(progress: Int): ProcessState = apply { this.progress = progress }
+
+    fun with(state: Int, progress: Int): ProcessState = apply {
+        this.state = state
+        this.progress = progress
+    }
+
+    fun withSubState(state: ProcessState): ProcessState = apply { setSubState(state) }
+
     /**
      * Обновление состояния подпроцесса, либо его добавление при отсутствии такового
      */
@@ -29,19 +40,23 @@ class ProcessState(
         subStates[state.key] = state
     }
 
-    fun removeSubState(key: String) {
-        subStates.remove(key)
-    }
+    fun withSubStates(states: List<ProcessState>): ProcessState = apply { setSubStates(states) }
 
     fun setSubStates(states: List<ProcessState>) {
         subStates = states.associateBy { it.key }.toMutableMap()
     }
 
-    fun removeSubStates() {
-        subStates.clear()
-    }
+    fun withoutSubState(key: String): ProcessState = apply { removeSubState(key) }
+
+    fun removeSubState(key: String) = subStates.remove(key)
+
+    fun withoutSubStates(): ProcessState = apply { removeSubStates() }
+
+    fun removeSubStates() = subStates.clear()
 
     fun getSubStates(): List<ProcessState> = subStates.values.toList()
+
+    fun withResetedSubStates(): ProcessState = apply { resetSubStates() }
 
     /**
      * Сброс всех внутренних состояний до [AWAITING] с нулевым прогрессом.
@@ -56,6 +71,8 @@ class ProcessState(
             }
             .toMutableMap()
     }
+
+    fun reseted(): ProcessState = apply { reset() }
 
     /**
      * Сброс состояния до [AWAITING] с нулевым прогрессом.
