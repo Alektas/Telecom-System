@@ -48,7 +48,14 @@ class ProcessState(
      * Сброс всех внутренних состояний до [AWAITING] с нулевым прогрессом.
      */
     fun resetSubStates() {
-        subStates = subStates.mapValues { it.value.apply { reset() } }.toMutableMap()
+        subStates = subStates
+            .mapValues {
+                it.value.apply {
+                    reset()
+                    resetSubStates()
+                }
+            }
+            .toMutableMap()
     }
 
     /**
