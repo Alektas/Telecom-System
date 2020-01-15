@@ -5,8 +5,10 @@ import alektas.telecomapp.data.CodeGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
+import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
 import alektas.telecomapp.domain.entities.coders.toBipolar
+import alektas.telecomapp.domain.entities.coders.toUnipolar
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.contracts.QpskContract
@@ -33,10 +35,13 @@ class CalculateCharacteristicsProcess(
 ) {
     @Inject
     lateinit var storage: Repository
+    @Inject
+    lateinit var processor: SystemProcessor
     private val disposable = CompositeDisposable()
     private val state = ProcessState(CHARACTERISTICS_KEY, CHARACTERISTICS_NAME)
     private val berState = ProcessState(BER_CALC_KEY, BER_CALC_NAME)
     private val capacityState = ProcessState(CAPACITY_CALC_KEY, CAPACITY_CALC_NAME)
+    private val threshold = decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
     var currentStartSnr: Double? = null
     var currentFinishSnr: Double? = null
 
@@ -129,7 +134,11 @@ class CalculateCharacteristicsProcess(
     ): Double {
         progress(berState.apply { state = ProcessState.STARTED })
 
-        val signal = createSignal(transmittingChannels) {
+        val dataChannels = generateData(transmittingChannels) {
+            progress(berState.apply { setSubState(it) })
+        }
+
+        val signal = createSignal(dataChannels) {
             progress(berState.apply { setSubState(it) })
         }
 
@@ -149,19 +158,31 @@ class CalculateCharacteristicsProcess(
             detectChannels(
                 decoderConfig,
                 groupData,
-                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+                threshold
             ) { progress(berState.apply { setSubState(it) }) }
         } else {
             decoderChannels
         }
-        val bitsWithErrors = bitsAndErrors(channels, decoderConfig, groupData) {
-            progress(berState.apply { setSubState(it) })
+
+        val decodeState = ProcessState(DECODE_KEY, DECODE_NAME, ProcessState.STARTED)
+        progress(berState.apply { setSubState(decodeState) })
+        val decodedChannels = decodeChannels(channels, groupData, threshold)
+        progress(berState.apply { setSubState(decodeState.apply { state = ProcessState.FINISHED }) })
+
+        val errorsState = ProcessState(FIND_ERRORS_KEY, FIND_ERRORS_NAME, ProcessState.STARTED)
+        progress(berState.apply { setSubState(errorsState) })
+        val bitCount = decodedChannels.fold(0) { acc, c ->
+            acc + c.frameData.size
         }
+        val errorMap = processor.diffChannels(dataChannels, decodedChannels)
+        val errorCount = errorMap.values.flatten().size
+        progress(berState.apply { setSubState(errorsState.apply { state = ProcessState.STARTED }) })
+
         // вероятность битовой ошибки в процентах
-        val ber = bitsWithErrors.second / bitsWithErrors.first.toDouble() * 100.0
+        val ber = errorCount / bitCount.toDouble() * 100.0
         L.d(
             "Ber calculation",
-            "Bits=${bitsWithErrors.first}, Errors=${bitsWithErrors.second}, BER=${ber}%, SNR=${snr}дБ"
+            "Bits=${bitCount}, Errors=${errorCount}, BER=${ber}%, SNR=${snr}дБ"
         )
 
         progress(berState.apply { state = ProcessState.FINISHED })
@@ -189,9 +210,8 @@ class CalculateCharacteristicsProcess(
         return capacity
     }
 
-    private fun createSignal(channels: List<Channel>, progress: (ProcessState) -> Unit): Signal {
-        progress(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, ProcessState.STARTED))
-
+    private fun generateData(channels: List<Channel>, progress: (ProcessState) -> Unit): List<Channel> {
+        progress(ProcessState(GENERATE_DATA_KEY, GENERATE_DATA_NAME, ProcessState.STARTED))
         val dataChannels = channels.map { c ->
             val channel = c.copy()
             if (channel.frameData.isEmpty()) {
@@ -200,9 +220,15 @@ class CalculateCharacteristicsProcess(
                 channel
             }
         }
-        val groupData = aggregate(dataChannels)
-        val carrier = SignalGenerator().cos(frequency = dataChannels[0].carrierFrequency)
-        val signal = QpskModulator(dataChannels[0].bitTime).modulate(carrier, groupData)
+        progress(ProcessState(GENERATE_DATA_KEY, GENERATE_DATA_NAME, ProcessState.FINISHED))
+        return dataChannels
+    }
+
+    private fun createSignal(channels: List<Channel>, progress: (ProcessState) -> Unit): Signal {
+        progress(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, ProcessState.STARTED))
+        val groupData = aggregate(channels)
+        val carrier = SignalGenerator().cos(frequency = channels[0].carrierFrequency)
+        val signal = QpskModulator(channels[0].bitTime).modulate(carrier, groupData)
 
         progress(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, ProcessState.FINISHED))
         return signal
@@ -278,39 +304,18 @@ class CalculateCharacteristicsProcess(
         return channels
     }
 
-    private fun bitsAndErrors(
-        channels: List<Channel>,
-        decoderConfig: DecoderConfig,
-        groupData: DoubleArray,
-        progress: (ProcessState) -> Unit
-    ): Pair<Int, Int> {
-        progress(ProcessState(DECODE_KEY, DECODE_NAME, ProcessState.STARTED))
-
-        val bitsAndErrors = channels.fold(0 to 0) { acc, channel ->
-            val data = decode(
-                groupData,
-                channel.code,
-                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
-            )
-            val bits = data.size
-            val errors = countErrors(data)
-            (acc.first + bits) to (acc.second + errors)
+    private fun decodeChannels(channels: List<Channel>, groupData: DoubleArray, threshold: Float): List<Channel> {
+        return channels.map {
+            it.apply { frameData = decode(groupData, it.code, threshold) }
         }
-
-        progress(ProcessState(DECODE_KEY, DECODE_NAME, ProcessState.FINISHED))
-        return bitsAndErrors
     }
 
     private fun decode(
         groupData: DoubleArray,
         code: BooleanArray,
         threshold: Float
-    ): DoubleArray {
-        return CdmaDecimalCoder(threshold).decode(code.toBipolar(), groupData)
-    }
-
-    private fun countErrors(data: DoubleArray): Int {
-        return data.count { it == 0.0 }
+    ): BooleanArray {
+        return CdmaDecimalCoder(threshold).decode(code.toBipolar(), groupData).toUnipolar()
     }
 
 }
