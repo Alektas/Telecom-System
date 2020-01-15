@@ -468,6 +468,11 @@ class SystemStorage : Repository {
         transmittingStateSource.onNext(transmittingState)
     }
 
+    override fun resetTransmittingSubProcesses() {
+        transmittingState.resetSubStates()
+        transmittingStateSource.onNext(transmittingState)
+    }
+
     override fun observeTransmittingState(): Observable<ProcessState> {
         return transmittingStateSource
     }

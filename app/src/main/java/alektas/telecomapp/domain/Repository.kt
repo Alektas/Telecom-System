@@ -81,6 +81,7 @@ interface Repository {
     fun setTransmittingState(state: Int, progress: Int)
     fun setTransmittingSubProcess(state: ProcessState)
     fun removeTransmittingSubProcesses()
+    fun resetTransmittingSubProcesses()
     fun observeTransmittingState(): Observable<ProcessState>
 
     fun observeTransmittingChannelsCount(): Observable<Int>

@@ -332,6 +332,7 @@ class SystemProcessor {
                 it.onComplete()
             }
             .zipWith(storage.observeDecoderChannels(false)) { next, prev ->
+                storage.resetTransmittingSubProcesses()
                 framesTransmitted++
                 next
             } // дожидаться декодирования
