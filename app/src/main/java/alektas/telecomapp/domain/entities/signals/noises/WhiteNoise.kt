@@ -8,11 +8,11 @@ import kotlin.math.pow
  * Аддитивный белый гауссовский шум (АБГШ).
  *
  * @param snr отношение сигнал/шум (signal/noise rate) в дБ.
- * @param signalMagnitude среднеквадратическая амплитуда полезного сигнала
+ * @param signalPower мощность полезного сигнала, Вт
  */
-class WhiteNoise(private val snr: Double, signalMagnitude: Double): BaseNoise(snr) {
+class WhiteNoise(private val snr: Double, signalPower: Double): BaseNoise(snr) {
     init {
-        val deviation = if (signalMagnitude <= 0) 0.0 else signalMagnitude / 10.0.pow(snr / 20)
+        val deviation = if (signalPower <= 0) 0.0 else signalPower / 10.0.pow(snr / 10)
         data = Simulator.simulate { deviation * Random().nextGaussian() }
     }
 }
