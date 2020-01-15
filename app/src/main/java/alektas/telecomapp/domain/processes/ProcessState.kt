@@ -16,7 +16,6 @@ class ProcessState(
         const val STARTED = 1
         const val FINISHED = 2
         const val ERROR = 3
-
     }
 
     init {
@@ -79,5 +78,14 @@ class ProcessState(
         return key.hashCode()
     }
 
+    override fun toString(): String {
+        return "[${key}] name=$processName, state=${when (state) {
+            0 -> "AWAITING"
+            1 -> "STARTED"
+            2 -> "FINISHED"
+            3 -> "ERROR"
+            else -> "UNKNOWN"
+        }}, progress=$progress, subprocesses=${subStates.size}"
+    }
 
 }

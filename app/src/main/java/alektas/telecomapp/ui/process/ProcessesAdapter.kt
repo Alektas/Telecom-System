@@ -11,6 +11,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.item_process_complex.view.*
 
+/**
+ * Адаптер для отображения списка выполняемых процессов.
+ * Любой процесс может содержать подпроцессы, поэтому получается иерархия процессов из уровней.
+ *
+ * @param maxLevel максимальное количество отображаемых уровней подпроцессов.
+ * @param curLevel текущий уровень подпроцессов
+ */
 class ProcessesAdapter(private val maxLevel: Int, private val curLevel: Int = 1) :
     RecyclerView.Adapter<ProcessesAdapter.ProcessViewHolder>() {
     var processes = listOf<ProcessState>()

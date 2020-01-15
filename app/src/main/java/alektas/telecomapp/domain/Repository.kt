@@ -88,8 +88,8 @@ interface Repository {
     fun observeTransmittedBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>
     fun observeReceivedErrorsCount(): Observable<Int>
-    fun observeBer(): Observable<Double>
 
+    fun observeBer(): Observable<Double>
     fun setBerByNoise(berByNoise: Pair<Double, Double>)
     fun getBerByNoiseList(): List<Pair<Double, Double>>
     fun clearBerByNoiseList()
