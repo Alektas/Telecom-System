@@ -22,6 +22,6 @@
     <dimen name="height_progress_indicator_collapsed">32dp</dimen>
     <dimen name="corners_indicators_layout">16dp</dimen>
     <dimen name="size_progress_indicator">24dp</dimen>
-    <dimen name="height_progress_indicator_expanded">260dp</dimen>
+    <dimen name="height_progress_indicator_expanded">280dp</dimen>
 
 </resources>

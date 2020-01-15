@@ -130,17 +130,7 @@ class SystemProcessor {
                         interferenceRate = it.rate()
                         interferenceSparseness = it.sparseness
                     }
-                },
-
-            Observable.combineLatest(
-                storage.observeSimulatedChannels(),
-                storage.observeDecoderChannels(),
-                BiFunction<List<Channel>, List<Channel>, Map<BooleanArray, List<Int>>> { origin, decoded ->
-                    diffChannels(origin, decoded)
-                })
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.io())
-                .subscribe { storage.setSimulatedChannelsErrors(it) }
+                }
         )
     }
 
@@ -706,7 +696,7 @@ class SystemProcessor {
      * @return словарь, где ключ - код канала, значение - список индексов несовпадающих битов канала
      */
     @SuppressLint("CheckResult")
-    private fun diffChannels(
+    fun diffChannels(
         transmitted: List<Channel>,
         received: List<Channel>
     ): Map<BooleanArray, List<Int>> {
