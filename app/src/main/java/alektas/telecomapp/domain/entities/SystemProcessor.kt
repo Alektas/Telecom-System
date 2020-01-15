@@ -21,7 +21,7 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.PulseNoise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
-import alektas.telecomapp.domain.processes.CalculateCharacteristicsProcess
+import alektas.telecomapp.domain.processes.*
 import alektas.telecomapp.utils.L
 import android.annotation.SuppressLint
 import io.reactivex.Observable
@@ -53,7 +53,7 @@ class SystemProcessor {
     private var transmitSubscription: Disposable? = null
     private var decodeSubscription: Disposable? = null
     private var characteristicsProcess: CalculateCharacteristicsProcess? = null
-    val characteristicsProgress = BehaviorSubject.create<Int>()
+    val characteristicsProcessState = BehaviorSubject.create<ProcessState>()
 
     init {
         App.component.inject(this)
@@ -168,22 +168,26 @@ class SystemProcessor {
         adcResolution: Int,
         adcSamplingRate: Double // МГц
     ) {
-        transmitSubscription?.dispose()
+        cancelCurrentProcess()
         transmitSubscription = Single
             .create<DoubleArray> {
+                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME, state = ProcessState.STARTED))
                 val data =
                     ValueConverter(adcResolution).convertToBipolarNormalizedValues(dataString)
+                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME, state = ProcessState.FINISHED))
                 it.onSuccess(data)
             }
             .flatMapObservable { generateFrames(adcSamplingRate * 1.0e6, it) }
+            .subscribeOn(Schedulers.io())
             .doOnSubscribe {
-                storage.setTransmitProgress(0)
+                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME))
                 storage.startCountingStatistics()
             }
-            .subscribeOn(Schedulers.io())
-            .subscribe {
+            .subscribe({
                 storage.setFileSignal(it)
-            }
+            }, {
+                it.printStackTrace()
+            })
     }
 
     /**
@@ -209,6 +213,12 @@ class SystemProcessor {
 
             subscriber.onComplete()
         }
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, state = ProcessState.STARTED))
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, state = ProcessState.FINISHED))
+            }
     }
 
     /**
@@ -298,10 +308,10 @@ class SystemProcessor {
      * @param frameCount количество фреймов, которые нужно передать
      */
     fun transmitFrames(channels: List<Channel>, frameCount: Int) {
+        cancelCurrentProcess()
         var framesTransmitted = 0
         val frameSize = if (channels.isEmpty()) 0 else channels.first().frameLength
 
-        transmitSubscription?.dispose()
         transmitSubscription = Observable
             .create<List<Channel>> {
                 // генерировать на 1 фрейм меньше, так как первый фрейм отправляется в startWith
@@ -322,6 +332,7 @@ class SystemProcessor {
                 it.onComplete()
             }
             .zipWith(storage.observeDecoderChannels(false)) { next, prev ->
+                storage.resetTransmittingSubProcesses()
                 framesTransmitted++
                 next
             } // дожидаться декодирования
@@ -330,7 +341,6 @@ class SystemProcessor {
             }) // первый фрейм запускает цикл передачи (нужно для срабатывания zipWith)
             .subscribeOn(Schedulers.io())
             .doOnSubscribe {
-                storage.setTransmitProgress(0)
                 storage.startCountingStatistics()
                 storage.setExpectedFrameCount(frameCount)
             }
@@ -362,7 +372,27 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
-            .subscribe { signal: Signal -> storage.setChannelsFrameSignal(signal) }
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        CREATE_SIGNAL_KEY,
+                        CREATE_SIGNAL_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        CREATE_SIGNAL_KEY,
+                        CREATE_SIGNAL_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
+            .subscribe { signal: Signal ->
+                storage.setChannelsFrameSignal(signal)
+            }
     }
 
     private fun aggregate(channels: List<Channel>): DoubleArray {
@@ -460,6 +490,24 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DEMODULATE_KEY,
+                        DEMODULATE_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DEMODULATE_KEY,
+                        DEMODULATE_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
             .subscribe { s: DigitalSignal ->
                 storage.setDemodulatedSignal(s)
                 storage.setChannelI(demodulator.sigI)
@@ -521,6 +569,24 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
             .subscribe { c: List<Channel> ->
                 L.d(this, "Decoding: decode channels")
                 storage.setDecoderChannels(c)
@@ -570,6 +636,24 @@ class SystemProcessor {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(Schedulers.io())
+            .doOnSubscribe {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
+            }
+            .doFinally {
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        DECODE_KEY,
+                        DECODE_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
+            }
             .subscribe { channels: List<Channel> ->
                 L.d(this, "Decoding: auto decode")
                 storage.setDecoderChannels(channels)
@@ -586,6 +670,8 @@ class SystemProcessor {
      * рассчитывать характеристики
      */
     fun calculateCharacteristics(fromSnr: Double, toSnr: Double, pointsCount: Int) {
+        cancelCurrentProcess()
+
         val transmittingChannels = storage.getSimulatedChannels()
         val demodConfig = storage.getCurrentDemodulatorConfig()
         val decoderConfig = storage.getDecoderConfiguration()
@@ -594,7 +680,6 @@ class SystemProcessor {
         storage.clearBerByNoiseList()
         storage.clearCapacityByNoiseList()
 
-        characteristicsProcess?.cancel()
         characteristicsProcess = CalculateCharacteristicsProcess(
             transmittingChannels,
             decodingChannels,
@@ -602,7 +687,7 @@ class SystemProcessor {
             decoderConfig
         )
         characteristicsProcess?.execute(fromSnr, toSnr, pointsCount) {
-            characteristicsProgress.onNext(it)
+            characteristicsProcessState.onNext(it)
         }
     }
 
@@ -671,6 +756,14 @@ class SystemProcessor {
         }
 
         return indices
+    }
+
+    fun cancelCurrentProcess() {
+        transmitSubscription?.let {
+            it.dispose()
+            storage.endCountingStatistics()
+        }
+        characteristicsProcess?.cancel()
     }
 
 }

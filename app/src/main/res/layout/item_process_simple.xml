@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/margin_start_body"
+    android:paddingEnd="@dimen/margin_start_body"
+    android:background="@color/colorPrimary">
+
+    <ImageView
+        android:id="@+id/process_indicator"
+        android:layout_width="@dimen/size_progress_indicator"
+        android:layout_height="@dimen/size_progress_indicator"
+        android:src="@drawable/ic_launcher_foreground"
+        android:tint="@color/colorAccentOnPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/process_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_start_body"
+        android:layout_gravity="center_vertical"
+        android:text="@string/process_name_placeholder"
+        android:textColor="@color/colorAccentOnPrimary"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        app:layout_constraintStart_toEndOf="@id/process_indicator"
+        app:layout_constraintTop_toTopOf="@id/process_indicator"
+        app:layout_constraintBottom_toBottomOf="@id/process_indicator"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

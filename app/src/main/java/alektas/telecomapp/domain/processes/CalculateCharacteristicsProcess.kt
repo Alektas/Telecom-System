@@ -34,6 +34,9 @@ class CalculateCharacteristicsProcess(
     @Inject
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
+    private val state = ProcessState(CHARACTERISTICS_KEY, CHARACTERISTICS_NAME)
+    private val berState = ProcessState(BER_CALC_KEY, BER_CALC_NAME)
+    private val capacityState = ProcessState(CAPACITY_CALC_KEY, CAPACITY_CALC_NAME)
     var currentStartSnr: Double? = null
     var currentFinishSnr: Double? = null
 
@@ -50,7 +53,7 @@ class CalculateCharacteristicsProcess(
         fromSnr: Double,
         toSnr: Double,
         pointsCount: Int,
-        progress: (Int) -> Unit = {}
+        progress: (ProcessState) -> Unit = {}
     ) {
         currentStartSnr = fromSnr
         currentFinishSnr = toSnr
@@ -62,32 +65,47 @@ class CalculateCharacteristicsProcess(
         disposable.add(
             snrs.toFlowable()
                 .map { snr ->
+                    progress(state.apply { resetSubStates() })
                     val ber = calculateBer(
                         transmittingChannels,
                         snr,
                         demodulatorConfig,
                         decodingChannels,
                         decoderConfig
-                    )
-                    val capacity = calculateCapacity(snr, transmittingChannels.first().bitTime)
+                    ) { progress(state.apply { setSubState(it) }) }
+                    val capacity = calculateCapacity(
+                        snr,
+                        transmittingChannels.first().bitTime
+                    ) { progress(state.apply { setSubState(it) }) }
                     Triple(snr, ber, capacity)
                 }
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
                 .doOnSubscribe {
-                    progress(0)
+                    progress(state.apply {
+                        state = ProcessState.STARTED
+                    })
+                }
+                .doFinally {
+                    progress(state.apply {
+                        state = ProcessState.FINISHED
+                        this.progress = 100
+                    })
                 }
                 .subscribe({
                     pointsCalculated++
                     val p = (pointsCalculated / snrs.size.toDouble() * 100).toInt()
-                    progress(p)
+                    progress(state.apply {
+                        this.progress = p
+                    })
                     storage.setBerByNoise(it.first to it.second)
                     storage.setCapacityByNoise(it.first to it.third)
                 }, {
                     it.printStackTrace()
-                    progress(100)
-                }, {
-                    progress(100)
+                    progress(state.apply {
+                        state = ProcessState.ERROR
+                        this.progress = 100
+                    })
                 })
         )
     }
@@ -96,7 +114,84 @@ class CalculateCharacteristicsProcess(
         disposable.dispose()
     }
 
-    private fun createSignal(channels: List<Channel>): Signal {
+    /**
+     * Расчет вероятности битовой ошибки (BER) при отношении сигнал/шум (С/Ш)
+     *
+     * @return ключ - отношение С/Ш, значение - расчитанная BER в процентах
+     */
+    private fun calculateBer(
+        transmittingChannels: List<Channel>,
+        snr: Double,
+        demodulatorConfig: DemodulatorConfig,
+        decoderChannels: List<Channel>,
+        decoderConfig: DecoderConfig,
+        progress: (ProcessState) -> Unit
+    ): Double {
+        progress(berState.apply { state = ProcessState.STARTED })
+
+        val signal = createSignal(transmittingChannels) {
+            progress(berState.apply { setSubState(it) })
+        }
+
+        val noise = createNoise(snr) {
+            progress(berState.apply { setSubState(it) })
+        }
+
+        val ether = createEther(signal, noise) {
+            progress(berState.apply { setSubState(it) })
+        }
+
+        val groupData = demodulate(ether, demodulatorConfig) {
+            progress(berState.apply { setSubState(it) })
+        }
+
+        val channels = if (decoderConfig.isAutoDetection) {
+            detectChannels(
+                decoderConfig,
+                groupData,
+                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+            ) { progress(berState.apply { setSubState(it) }) }
+        } else {
+            decoderChannels
+        }
+        val bitsWithErrors = bitsAndErrors(channels, decoderConfig, groupData) {
+            progress(berState.apply { setSubState(it) })
+        }
+        // вероятность битовой ошибки в процентах
+        val ber = bitsWithErrors.second / bitsWithErrors.first.toDouble() * 100.0
+        L.d(
+            "Ber calculation",
+            "Bits=${bitsWithErrors.first}, Errors=${bitsWithErrors.second}, BER=${ber}%, SNR=${snr}дБ"
+        )
+
+        progress(berState.apply { state = ProcessState.FINISHED })
+        return ber
+    }
+
+    private fun calculateCapacity(
+        snr: Double,
+        bitTime: Double,
+        progress: (ProcessState) -> Unit
+    ): Double {
+        progress(capacityState.apply { state = ProcessState.STARTED })
+
+        val bandwidth = 1 / bitTime
+        val linearSnr = 10.0.pow(snr / 10)
+        val capacity = bandwidth * log2(1 + linearSnr) * 1.0e-3 // кБит/с
+        L.d(
+            "Capacity calculation",
+            "Bandwidth=${(bandwidth * 1.0e-3).format(3)}кГц, SNR=${snr.format(3)}дБ, linSNR=${linearSnr.format(
+                3
+            )}, Capacity=${capacity.format(3)}кБит/с"
+        )
+
+        progress(capacityState.apply { state = ProcessState.FINISHED })
+        return capacity
+    }
+
+    private fun createSignal(channels: List<Channel>, progress: (ProcessState) -> Unit): Signal {
+        progress(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, ProcessState.STARTED))
+
         val dataChannels = channels.map { c ->
             val channel = c.copy()
             if (channel.frameData.isEmpty()) {
@@ -107,7 +202,10 @@ class CalculateCharacteristicsProcess(
         }
         val groupData = aggregate(dataChannels)
         val carrier = SignalGenerator().cos(frequency = dataChannels[0].carrierFrequency)
-        return QpskModulator(dataChannels[0].bitTime).modulate(carrier, groupData)
+        val signal = QpskModulator(dataChannels[0].bitTime).modulate(carrier, groupData)
+
+        progress(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, ProcessState.FINISHED))
+        return signal
     }
 
     private fun aggregate(channels: List<Channel>): DoubleArray {
@@ -123,23 +221,43 @@ class CalculateCharacteristicsProcess(
             }
     }
 
-    private fun createNoise(snr: Double): Noise {
-        return WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_POWER)
+    private fun createNoise(snr: Double, progress: (ProcessState) -> Unit): Noise {
+        progress(ProcessState(CREATE_NOISE_KEY, CREATE_NOISE_NAME, ProcessState.STARTED))
+        val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_POWER)
+        progress(ProcessState(CREATE_NOISE_KEY, CREATE_NOISE_NAME, ProcessState.FINISHED))
+        return noise
     }
 
-    private fun createEther(signal: Signal, noise: Noise): Signal {
-        return signal + noise
+    private fun createEther(
+        signal: Signal,
+        noise: Noise,
+        progress: (ProcessState) -> Unit
+    ): Signal {
+        progress(ProcessState(CREATE_ETHER_KEY, CREATE_ETHER_NAME, ProcessState.STARTED))
+        val ether = signal + noise
+        progress(ProcessState(CREATE_ETHER_KEY, CREATE_ETHER_NAME, ProcessState.FINISHED))
+        return ether
     }
 
-    private fun demodulate(ether: Signal, config: DemodulatorConfig): DoubleArray {
-        return QpskDemodulator(config).demodulateFrame(ether).dataValues
+    private fun demodulate(
+        ether: Signal,
+        config: DemodulatorConfig,
+        progress: (ProcessState) -> Unit
+    ): DoubleArray {
+        progress(ProcessState(DEMODULATE_KEY, DEMODULATE_NAME, ProcessState.STARTED))
+        val demod = QpskDemodulator(config).demodulateFrame(ether).dataValues
+        progress(ProcessState(DEMODULATE_KEY, DEMODULATE_NAME, ProcessState.FINISHED))
+        return demod
     }
 
     private fun detectChannels(
         decoderConfig: DecoderConfig,
         groupData: DoubleArray,
-        threshold: Float
+        threshold: Float,
+        progress: (ProcessState) -> Unit
     ): List<Channel> {
+        progress(ProcessState(DETECT_CHANNELS_KEY, DETECT_CHANNELS_NAME, ProcessState.STARTED))
+
         val codeGen = CodeGenerator()
         val codes = when (decoderConfig.codeType) {
             CodeGenerator.WALSH -> codeGen.generateWalshMatrix(
@@ -155,15 +273,20 @@ class CalculateCharacteristicsProcess(
                 channels.add(Channel(code = codes[i]))
             }
         }
+
+        progress(ProcessState(DETECT_CHANNELS_KEY, DETECT_CHANNELS_NAME, ProcessState.FINISHED))
         return channels
     }
 
     private fun bitsAndErrors(
         channels: List<Channel>,
         decoderConfig: DecoderConfig,
-        groupData: DoubleArray
+        groupData: DoubleArray,
+        progress: (ProcessState) -> Unit
     ): Pair<Int, Int> {
-        return channels.fold(0 to 0) { acc, channel ->
+        progress(ProcessState(DECODE_KEY, DECODE_NAME, ProcessState.STARTED))
+
+        val bitsAndErrors = channels.fold(0 to 0) { acc, channel ->
             val data = decode(
                 groupData,
                 channel.code,
@@ -173,65 +296,21 @@ class CalculateCharacteristicsProcess(
             val errors = countErrors(data)
             (acc.first + bits) to (acc.second + errors)
         }
+
+        progress(ProcessState(DECODE_KEY, DECODE_NAME, ProcessState.FINISHED))
+        return bitsAndErrors
     }
 
-    private fun decode(groupData: DoubleArray, code: BooleanArray, threshold: Float): DoubleArray {
+    private fun decode(
+        groupData: DoubleArray,
+        code: BooleanArray,
+        threshold: Float
+    ): DoubleArray {
         return CdmaDecimalCoder(threshold).decode(code.toBipolar(), groupData)
     }
 
     private fun countErrors(data: DoubleArray): Int {
         return data.count { it == 0.0 }
-    }
-
-    /**
-     * Расчет вероятности битовой ошибки (BER) при отношении сигнал/шум (С/Ш)
-     *
-     * @return ключ - отношение С/Ш, значение - расчитанная BER в процентах
-     */
-    private fun calculateBer(
-        transmittingChannels: List<Channel>,
-        snr: Double,
-        demodulatorConfig: DemodulatorConfig,
-        decoderChannels: List<Channel>,
-        decoderConfig: DecoderConfig
-    ): Double {
-        val signal = createSignal(transmittingChannels)
-        val noise = createNoise(snr)
-        val ether = createEther(signal, noise)
-        val groupData = demodulate(ether, demodulatorConfig)
-        val channels = if (decoderConfig.isAutoDetection) {
-            detectChannels(
-                decoderConfig,
-                groupData,
-                decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
-            )
-        } else {
-            decoderChannels
-        }
-        val bitsWithErrors = bitsAndErrors(channels, decoderConfig, groupData)
-        // вероятность битовой ошибки в процентах
-        val ber = bitsWithErrors.second / bitsWithErrors.first.toDouble() * 100.0
-        L.d(
-            "Ber calculation",
-            "Bits=${bitsWithErrors.first}, Errors=${bitsWithErrors.second}, BER=${ber}%, SNR=${snr}дБ"
-        )
-        return ber
-    }
-
-    private fun calculateCapacity(
-        snr: Double,
-        bitTime: Double
-    ): Double {
-        val bandwidth = 1 / bitTime
-        val linearSnr = 10.0.pow(snr / 10)
-        val capacity = bandwidth * log2(1 + linearSnr) * 1.0e-3 // кБит/с
-        L.d(
-            "Capacity calculation",
-            "Bandwidth=${(bandwidth * 1.0e-3).format(3)}кГц, SNR=${snr.format(3)}дБ, linSNR=${linearSnr.format(
-                3
-            )}, Capacity=${capacity.format(3)}кБит/с"
-        )
-        return capacity
     }
 
 }

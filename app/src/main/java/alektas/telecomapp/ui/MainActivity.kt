@@ -2,8 +2,10 @@ package alektas.telecomapp.ui
 
 import alektas.telecomapp.R
 import alektas.telecomapp.domain.entities.Simulator
+import alektas.telecomapp.domain.processes.ProcessState
 import alektas.telecomapp.ui.datasource.external.FileDataSourceViewModel
 import alektas.telecomapp.ui.dialogs.AboutDialog
+import alektas.telecomapp.ui.process.ProcessesAdapter
 import alektas.telecomapp.utils.FileWorker
 import android.app.Activity
 import android.content.Context
@@ -22,7 +24,9 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import kotlinx.android.synthetic.main.main_activity.*
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.android.synthetic.main.process_indicators.*
 
 private const val OPEN_DOCUMENT_REQUEST_CODE = 1
 private const val EXTERNAL_FILE_URI_KEY = "EXTERNAL_FILE_URI_KEY"
@@ -30,6 +34,8 @@ private const val EXTERNAL_FILE_URI_KEY = "EXTERNAL_FILE_URI_KEY"
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var appBarConfig: AppBarConfiguration
+    private lateinit var indicatorsBehavior: BottomSheetBehavior<View>
+    private lateinit var subProcessesAdapter: ProcessesAdapter
     private var externalData: String? = null
     private var externalFileUri: Uri? = null
 
@@ -37,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.AppTheme) // Убираем сплэш
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         val navController = findNavController(R.id.nav_host)
         appBarConfig = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfig)
@@ -44,13 +51,33 @@ class MainActivity : AppCompatActivity() {
             findNavController(R.id.nav_host).navigate(R.id.main_menu)
         }
 
+        indicatorsBehavior = BottomSheetBehavior.from(process_indicators_layout)
+        indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        subProcessesAdapter = ProcessesAdapter(2)
+        sub_processes_list.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = subProcessesAdapter
+        }
+
         loadSettings()
 
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-
-        viewModel.processProgress.observe(this, Observer {
-            progress_bar.progress = it
-            progress_bar.visibility = if (it in 0..99) View.VISIBLE else View.INVISIBLE
+        viewModel.processState.observe(this, Observer {
+            if (it.state == ProcessState.STARTED) {
+                if (indicatorsBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
+                    indicatorsBehavior.state = if (it.getSubStates().isEmpty()) {
+                        BottomSheetBehavior.STATE_COLLAPSED
+                    } else {
+                        BottomSheetBehavior.STATE_EXPANDED
+                    }
+                    indicatorsBehavior.isHideable = false
+                }
+                subProcessesAdapter.processes = it.getSubStates()
+                progress_bar.progress = it.progress
+                process_name.text = it.processName
+            } else {
+                indicatorsBehavior.isHideable = true
+                indicatorsBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            }
         })
     }
 
@@ -154,6 +181,10 @@ class MainActivity : AppCompatActivity() {
         val vm = ViewModelProviders.of(this).get(FileDataSourceViewModel::class.java)
         vm.setDataString(data)
         findNavController(R.id.nav_host).navigate(R.id.action_dataSourceFragment_to_fileDataSourceFragment)
+    }
+
+    fun onProcessCancel(view: View) {
+        viewModel.cancelCurrentProcess()
     }
 
     private fun loadSettings() {
