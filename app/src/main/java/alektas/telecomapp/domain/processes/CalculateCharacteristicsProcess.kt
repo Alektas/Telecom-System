@@ -266,7 +266,7 @@ class CalculateCharacteristicsProcess(
     ): DoubleArray {
         val state = ProcessState(DEMODULATE_KEY, DEMODULATE_NAME, ProcessState.STARTED)
         progress(state)
-        val demod = QpskDemodulator(config).demodulateFrame(ether).dataValues
+        val demod = QpskDemodulator(config).demodulate(ether).dataValues
         progress(state.withState(ProcessState.FINISHED))
         return demod
     }

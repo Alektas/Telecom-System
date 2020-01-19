@@ -475,7 +475,7 @@ class SystemProcessor {
         val demodulator = QpskDemodulator(config)
 
         Single.create<DigitalSignal> {
-            val demodSignal = demodulator.demodulateFrame(signal)
+            val demodSignal = demodulator.demodulate(signal)
             it.onSuccess(demodSignal)
         }
             .subscribeOn(Schedulers.computation())
