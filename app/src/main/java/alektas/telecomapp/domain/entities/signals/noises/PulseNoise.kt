@@ -4,6 +4,7 @@ import alektas.telecomapp.domain.entities.Simulator
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Хаотичные импульсные помехи (ХИП).
@@ -20,7 +21,8 @@ class PulseNoise(
 ) : BaseNoise(rate) {
 
     init {
-        val deviation = signalPower / 10.0.pow(rate / 10)
+        val linSnr = 10.0.pow(rate / 10)
+        val deviation = if (signalPower <= 0) 0.0 else sqrt(0.5 * signalPower / linSnr)
         data = Simulator.simulate {
             val rand = deviation * Random().nextGaussian()
             if (abs(rand) > sparseness * deviation) rand else 0.0

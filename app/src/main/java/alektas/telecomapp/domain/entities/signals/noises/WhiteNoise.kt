@@ -3,6 +3,7 @@ package alektas.telecomapp.domain.entities.signals.noises
 import alektas.telecomapp.domain.entities.Simulator
 import java.util.*
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Аддитивный белый гауссовский шум (АБГШ).
@@ -12,7 +13,8 @@ import kotlin.math.pow
  */
 class WhiteNoise(private val snr: Double, signalPower: Double): BaseNoise(snr) {
     init {
-        val deviation = if (signalPower <= 0) 0.0 else signalPower / 10.0.pow(snr / 10)
+        val linSnr = 10.0.pow(snr / 10)
+        val deviation = if (signalPower <= 0) 0.0 else sqrt(0.5 * signalPower / linSnr)
         data = Simulator.simulate { deviation * Random().nextGaussian() }
     }
 }
