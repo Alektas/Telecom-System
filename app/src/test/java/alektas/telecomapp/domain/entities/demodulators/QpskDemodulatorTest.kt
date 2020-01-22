@@ -18,14 +18,14 @@ class QpskDemodulatorTest {
     private val inSig = QpskModulator(QpskContract.DEFAULT_DATA_BIT_TIME).modulate(carrier, inData)
     private val config =
         DemodulatorConfig(
-            carrier.frequency, 4, 2,
+            0.1f, carrier.frequency, 4, 2,
             filterConfig = dummyFilterConfig
         )
     private val demodulator = QpskDemodulator(config)
 
     @Test
     fun demodulate_size_isCorrect() {
-        val outSig = demodulator.demodulateFrame(inSig)
+        val outSig = demodulator.demodulate(inSig)
 
         println("expected: ${inData.size}")
         println("actual: ${outSig.dataValues.size}")
@@ -34,31 +34,10 @@ class QpskDemodulatorTest {
 
     @Test
     fun demodulate_isCorrect() {
-        val outSig = demodulator.demodulateFrame(inSig)
+        val outSig = demodulator.demodulate(inSig)
         val actual = outSig.dataValues.map { if (it > 0.0) 1.0 else -1.0 }
 
         assertArrayEquals(inData.toTypedArray(), actual.toTypedArray())
-    }
-
-    @Test
-    fun getConstellation_size_isCorrect() {
-        val points = demodulator.getConstellation(inSig)
-
-        println("expected: ${inData.size / 2}")
-        println("actual: ${points.size}")
-        assertEquals(points.size, inData.size / 2)
-    }
-
-    @Test
-    fun getConstellation_isCorrect() {
-        val points = demodulator.getConstellation(inSig)
-        val data = DoubleArray(inData.size)
-        points.forEachIndexed { i, it ->
-            data[i * 2] = if (it.first > 0) 1.0 else -1.0
-            data[i * 2 + 1] = if (it.second > 0) 1.0 else -1.0
-        }
-
-        assertArrayEquals(inData.toTypedArray(), data.toTypedArray())
     }
 
 }
