@@ -405,7 +405,13 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setNoise(snr: Double, singleThread: Boolean = false) {
         Single.create<Noise> {
-            val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_POWER)
+            val bitTime = try {
+                storage.getSimulatedChannels().first().bitTime
+            } catch (e: NoSuchElementException) {
+                QpskContract.DEFAULT_DATA_BIT_TIME
+            }
+            val bitEnergy = QpskContract.DEFAULT_SIGNAL_POWER * bitTime
+            val noise = WhiteNoise(snr, bitEnergy)
             it.onSuccess(noise)
         }
             .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
@@ -424,7 +430,13 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setInterference(sparseness: Double, snr: Double, singleThread: Boolean = false) {
         Single.create<Noise> {
-            val noise = PulseNoise(sparseness, snr, QpskContract.DEFAULT_SIGNAL_POWER)
+            val bitTime = try {
+                storage.getSimulatedChannels().first().bitTime
+            } catch (e: NoSuchElementException) {
+                QpskContract.DEFAULT_DATA_BIT_TIME
+            }
+            val bitEnergy = QpskContract.DEFAULT_SIGNAL_POWER * bitTime
+            val noise = PulseNoise(sparseness, snr, bitEnergy)
             it.onSuccess(noise)
         }
             .subscribeOn(if (singleThread) Schedulers.single() else Schedulers.computation())
@@ -435,10 +447,16 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setInterferenceSparseness(sparseness: Double) {
         Single.create<Noise> {
+            val bitTime = try {
+                storage.getSimulatedChannels().first().bitTime
+            } catch (e: NoSuchElementException) {
+                QpskContract.DEFAULT_DATA_BIT_TIME
+            }
+            val bitEnergy = QpskContract.DEFAULT_SIGNAL_POWER * bitTime
             val noise = PulseNoise(
                 sparseness,
                 interferenceRate ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE,
-                QpskContract.DEFAULT_SIGNAL_POWER
+                bitEnergy
             )
             it.onSuccess(noise)
         }
@@ -450,10 +468,16 @@ class SystemProcessor {
     @SuppressLint("CheckResult")
     fun setInterferenceRate(rate: Double) {
         Single.create<Noise> {
+            val bitTime = try {
+                storage.getSimulatedChannels().first().bitTime
+            } catch (e: NoSuchElementException) {
+                QpskContract.DEFAULT_DATA_BIT_TIME
+            }
+            val bitEnergy = QpskContract.DEFAULT_SIGNAL_POWER * bitTime
             val noise = PulseNoise(
                 interferenceSparseness ?: QpskContract.DEFAULT_INTERFERENCE_SPARSENESS,
                 rate,
-                QpskContract.DEFAULT_SIGNAL_POWER
+                bitEnergy
             )
             it.onSuccess(noise)
         }
