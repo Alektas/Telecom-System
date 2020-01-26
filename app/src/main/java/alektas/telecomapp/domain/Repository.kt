@@ -88,12 +88,16 @@ interface Repository {
     fun observeTransmittedBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>
     fun observeReceivedErrorsCount(): Observable<Int>
-
     fun observeBer(): Observable<Double>
+
     fun setBerByNoise(berByNoise: Pair<Double, Double>)
     fun getBerByNoiseList(): List<Pair<Double, Double>>
     fun clearBerByNoiseList()
     fun observeBerByNoise(): Observable<Pair<Double, Double>>
+    fun setTheoreticBerByNoise(berByNoise: Pair<Double, Double>)
+    fun getTheoreticBerByNoiseList(): List<Pair<Double, Double>>
+    fun clearTheoreticBerByNoiseList()
+    fun observeTheoreticBerByNoise(): Observable<Pair<Double, Double>>
     fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>)
     fun getCapacityByNoiseList(): List<Pair<Double, Double>>
     fun clearCapacityByNoiseList()

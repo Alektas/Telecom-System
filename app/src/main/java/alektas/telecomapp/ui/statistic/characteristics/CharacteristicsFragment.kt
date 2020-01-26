@@ -12,6 +12,7 @@ import alektas.telecomapp.ui.utils.setupLabels
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
@@ -27,7 +28,11 @@ private const val DEFAULT_POINTS_COUNT: Int = 10
 class CharacteristicsFragment : Fragment() {
     private lateinit var viewModel: CharacteristicsViewModel
     private val berGraphPoints = LineGraphSeries<DataPoint>()
+        .apply { color = Color.BLUE }
+    private val theoreticBerGraphPoints = LineGraphSeries<DataPoint>()
+        .apply { color = Color.RED }
     private val capacityGraphPoints = LineGraphSeries<DataPoint>()
+        .apply { color = Color.RED }
 
     companion object {
         fun newInstance() = CharacteristicsFragment()
@@ -45,6 +50,7 @@ class CharacteristicsFragment : Fragment() {
             gridLabelRenderer.padding = 45
             setupLabels(xIntMax = 3, yIntMax = 3)
             addSeries(berGraphPoints)
+            addSeries(theoreticBerGraphPoints)
             viewport.isXAxisBoundsManual = true
         }
         view.findViewById<GraphView>(R.id.capacity_graph).apply {
@@ -90,6 +96,10 @@ class CharacteristicsFragment : Fragment() {
 
         viewModel.berData.observe(viewLifecycleOwner, Observer {
             berGraphPoints.resetData(it)
+        })
+
+        viewModel.theoreticBerData.observe(viewLifecycleOwner, Observer {
+            theoreticBerGraphPoints.resetData(it)
         })
 
         viewModel.capacityData.observe(viewLifecycleOwner, Observer {

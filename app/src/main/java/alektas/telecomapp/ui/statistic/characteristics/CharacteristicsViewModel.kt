@@ -25,11 +25,13 @@ class CharacteristicsViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val viewportData = MutableLiveData<Pair<Double, Double>>()
     val berData = MutableLiveData<Array<DataPoint>>()
+    val theoreticBerData = MutableLiveData<Array<DataPoint>>()
     val capacityData = MutableLiveData<Array<DataPoint>>()
     val isChannelsInvalid = MutableLiveData<Boolean>()
     val pointsCount = MutableLiveData<Int>()
     val fromSnr = MutableLiveData<Float>()
     val toSnr = MutableLiveData<Float>()
+    var theoreticBerList = mutableListOf<DataPoint>()
     var berList = mutableListOf<DataPoint>()
     var capacityList = mutableListOf<DataPoint>()
 
@@ -44,6 +46,8 @@ class CharacteristicsViewModel : ViewModel() {
 
         berList = storage.getBerByNoiseList().toSortedPoints()
         berData.value = berList.toTypedArray()
+        theoreticBerList = storage.getTheoreticBerByNoiseList().toSortedPoints()
+        theoreticBerData.value = theoreticBerList.toTypedArray()
         capacityList = storage.getCapacityByNoiseList().toSortedPoints()
         capacityData.value = capacityList.toTypedArray()
 
@@ -58,6 +62,23 @@ class CharacteristicsViewModel : ViewModel() {
                             sortBy { it.x }
                         }
                         berData.value = berList.toTypedArray()
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeTheoreticBerByNoise()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
+                    override fun onNext(t: Pair<Double, Double>) {
+                        theoreticBerList.apply {
+                            add(DataPoint(t.first, t.second))
+                            sortBy { it.x }
+                        }
+                        theoreticBerData.value = theoreticBerList.toTypedArray()
                     }
 
                     override fun onComplete() {}
