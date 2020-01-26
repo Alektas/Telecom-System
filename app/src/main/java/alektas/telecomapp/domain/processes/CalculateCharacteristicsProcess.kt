@@ -242,7 +242,13 @@ class CalculateCharacteristicsProcess(
     private fun createNoise(snr: Double, progress: (ProcessState) -> Unit): Noise {
         val state = ProcessState(CREATE_NOISE_KEY, CREATE_NOISE_NAME, ProcessState.STARTED)
         progress(state)
-        val noise = WhiteNoise(snr, QpskContract.DEFAULT_SIGNAL_POWER)
+        val bitTime = try {
+            storage.getSimulatedChannels().first().bitTime
+        } catch (e: NoSuchElementException) {
+            QpskContract.DEFAULT_DATA_BIT_TIME
+        }
+        val bitEnergy = QpskContract.DEFAULT_SIGNAL_POWER * bitTime
+        val noise = WhiteNoise(snr, bitEnergy)
         progress(state.withState(ProcessState.FINISHED))
         return noise
     }
