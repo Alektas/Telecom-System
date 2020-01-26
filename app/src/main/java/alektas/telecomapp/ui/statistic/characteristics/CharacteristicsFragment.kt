@@ -12,6 +12,7 @@ import alektas.telecomapp.ui.utils.setupLabels
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
@@ -20,14 +21,30 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.characteristics_fragment.*
 
-private const val DEFAULT_START_SNR: Float = -25f
-private const val DEFAULT_FINISH_SNR: Float = -5f
+private const val DEFAULT_START_SNR: Float = 0f
+private const val DEFAULT_FINISH_SNR: Float = 10f
 private const val DEFAULT_POINTS_COUNT: Int = 10
 
 class CharacteristicsFragment : Fragment() {
     private lateinit var viewModel: CharacteristicsViewModel
     private val berGraphPoints = LineGraphSeries<DataPoint>()
+        .apply {
+            title = "Практическая"
+        }
+    private val theoreticBerGraphPoints = LineGraphSeries<DataPoint>()
+        .apply {
+            title = "Теоретическая"
+            color = Color.rgb(255, 100, 100)
+        }
     private val capacityGraphPoints = LineGraphSeries<DataPoint>()
+        .apply {
+            title = "Проп. спос."
+            color = Color.rgb(255, 100, 100)
+        }
+    private val dataSpeedGraphPoints = LineGraphSeries<DataPoint>()
+        .apply {
+            title = "Скорость пер."
+        }
 
     companion object {
         fun newInstance() = CharacteristicsFragment()
@@ -42,15 +59,25 @@ class CharacteristicsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         view.findViewById<GraphView>(R.id.ber_graph).apply {
+            legendRenderer.apply {
+                isVisible = true
+                backgroundColor = Color.argb(50, 0, 0, 0)
+            }
             gridLabelRenderer.padding = 45
             setupLabels(xIntMax = 3, yIntMax = 3)
             addSeries(berGraphPoints)
+            addSeries(theoreticBerGraphPoints)
             viewport.isXAxisBoundsManual = true
         }
         view.findViewById<GraphView>(R.id.capacity_graph).apply {
+            legendRenderer.apply {
+                isVisible = true
+                backgroundColor = Color.argb(50, 0, 0, 0)
+            }
             gridLabelRenderer.padding = 45
             setupLabels(xIntMax = 3, yIntMax = 3)
             addSeries(capacityGraphPoints)
+            addSeries(dataSpeedGraphPoints)
             viewport.isXAxisBoundsManual = true
         }
         super.onViewCreated(view, savedInstanceState)
@@ -92,8 +119,16 @@ class CharacteristicsFragment : Fragment() {
             berGraphPoints.resetData(it)
         })
 
+        viewModel.theoreticBerData.observe(viewLifecycleOwner, Observer {
+            theoreticBerGraphPoints.resetData(it)
+        })
+
         viewModel.capacityData.observe(viewLifecycleOwner, Observer {
             capacityGraphPoints.resetData(it)
+        })
+
+        viewModel.dataSpeedData.observe(viewLifecycleOwner, Observer {
+            dataSpeedGraphPoints.resetData(it)
         })
 
         viewModel.isChannelsInvalid.observe(viewLifecycleOwner, Observer {

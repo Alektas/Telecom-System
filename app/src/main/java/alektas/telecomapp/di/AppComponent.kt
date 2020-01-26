@@ -52,6 +52,7 @@ interface AppComponent {
 
     fun context(): Context
     fun channelsConfig(): ChannelsConfig
+    fun decoderConfig(): DecoderConfig
 
     @Component.Builder
     interface Builder {

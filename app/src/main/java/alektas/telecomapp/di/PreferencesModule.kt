@@ -204,7 +204,7 @@ class PreferencesModule {
     ): DecoderConfig {
         val isAuto = prefs.getBoolean(
             context.getString(R.string.decoder_channels_autodetection_key),
-            true
+            false
         )
 
         val codeType = prefs.getInt(

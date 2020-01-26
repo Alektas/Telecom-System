@@ -7,6 +7,7 @@ import alektas.telecomapp.domain.entities.filters.FilterConfig
 import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.domain.processes.ProcessState
 import io.reactivex.Observable
 
 interface Repository {
@@ -77,8 +78,12 @@ interface Repository {
     fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
     fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
 
-    fun setTransmitProgress(progress: Int)
-    fun observeTransmitProgress(): Observable<Int>
+    fun setTransmittingState(state: Int, progress: Int)
+    fun setTransmittingSubProcess(state: ProcessState)
+    fun removeTransmittingSubProcesses()
+    fun resetTransmittingSubProcesses()
+    fun observeTransmittingState(): Observable<ProcessState>
+
     fun observeTransmittingChannelsCount(): Observable<Int>
     fun observeTransmittedBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>
@@ -89,8 +94,19 @@ interface Repository {
     fun getBerByNoiseList(): List<Pair<Double, Double>>
     fun clearBerByNoiseList()
     fun observeBerByNoise(): Observable<Pair<Double, Double>>
+
+    fun setTheoreticBerByNoise(berByNoise: Pair<Double, Double>)
+    fun getTheoreticBerByNoiseList(): List<Pair<Double, Double>>
+    fun clearTheoreticBerByNoiseList()
+    fun observeTheoreticBerByNoise(): Observable<Pair<Double, Double>>
+
     fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>)
     fun getCapacityByNoiseList(): List<Pair<Double, Double>>
     fun clearCapacityByNoiseList()
     fun observeCapacityByNoise(): Observable<Pair<Double, Double>>
+
+    fun setDataSpeedByNoise(capacityByNoise: Pair<Double, Double>)
+    fun getDataSpeedByNoiseList(): List<Pair<Double, Double>>
+    fun clearDataSpeedByNoiseList()
+    fun observeDataSpeedByNoise(): Observable<Pair<Double, Double>>
 }

@@ -33,7 +33,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top_text"
-            android:text="@string/capacity"
+            android:text="@string/capacity_and_dataspeed"
             android:textAlignment="viewStart"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"

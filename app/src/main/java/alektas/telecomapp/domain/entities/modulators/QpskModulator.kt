@@ -12,11 +12,13 @@ class QpskModulator(val bitTime: Double) : Modulator<DoubleArray> {
      * @param data массив данных группового сигнала
      */
     override fun modulate(carrier: HarmonicSignal, data: DoubleArray): Signal {
-        val dataI = data.filterIndexed { index, _ -> index % 2 == 0 }.toDoubleArray()
-        val signalI = DigitalSignal(dataI, bitTime * 2)
+        val channelSize = (0.5 * data.size).toInt()
+        val dataI = DoubleArray(channelSize) { data[it * 2] }
+        val dataQ = DoubleArray(channelSize) { data[it * 2 + 1] }
 
-        val dataQ = data.filterIndexed { index, _ -> index % 2 != 0 }.toDoubleArray()
-        val signalQ = DigitalSignal(dataQ, bitTime * 2)
+        val symbolTime = bitTime * 2
+        val signalI = DigitalSignal(dataI, symbolTime)
+        val signalQ = DigitalSignal(dataQ, symbolTime)
 
         return carrier * signalI - carrier.shiftPhaseBy(Math.PI / 2) * signalQ
     }

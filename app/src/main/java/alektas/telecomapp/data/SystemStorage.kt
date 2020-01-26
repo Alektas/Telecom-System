@@ -12,6 +12,9 @@ import alektas.telecomapp.domain.entities.signals.DigitalSignal
 import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.BaseNoise
 import alektas.telecomapp.domain.entities.signals.noises.Noise
+import alektas.telecomapp.domain.processes.ProcessState
+import alektas.telecomapp.domain.processes.TRANSMITTING_PROCESS_KEY
+import alektas.telecomapp.domain.processes.TRANSMITTING_PROCESS_NAME
 import alektas.telecomapp.utils.FileWorker
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
@@ -53,7 +56,7 @@ class SystemStorage : Repository {
     @JvmField
     @field:[Inject Named("sourceInterferenceEnabled")]
     var isInterferenceEnabled: Boolean = false
-    private var isStatisticsCounted: Boolean = false
+    private var isStatisticsCounting: Boolean = false
     /**
      * Сохряняется ли эфир в файл в виде битов с разрядностью {@code adcBitDepth}.
      */
@@ -124,9 +127,14 @@ class SystemStorage : Repository {
     private val berSource = BehaviorSubject.create<Double>()
     private val berByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
+    private val theoreticBerByNoiseList = mutableListOf<Pair<Double, Double>>()
+    private val theoreticBerByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val capacityByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val capacityByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
-    private val transmitProcess = BehaviorSubject.create<Int>()
+    private val dataSpeedByNoiseList = mutableListOf<Pair<Double, Double>>()
+    private val dataSpeedByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
+    private val transmittingStateSource = BehaviorSubject.create<ProcessState>()
+    private val transmittingState = ProcessState(TRANSMITTING_PROCESS_KEY, TRANSMITTING_PROCESS_NAME)
 
     init {
         App.component.inject(this)
@@ -136,7 +144,7 @@ class SystemStorage : Repository {
         disposable.addAll(
             simulatedChannelsSource
                 .subscribe {
-                    if (isStatisticsCounted) {
+                    if (isStatisticsCounting) {
                         transmittedBitsCount += it.sumBy { c -> c.frameData.size }
                         simulatedChannelsCountSource.onNext(it.size)
                     }
@@ -144,7 +152,7 @@ class SystemStorage : Repository {
 
             decoderChannelsSource
                 .subscribe {
-                    if (isStatisticsCounted) {
+                    if (isStatisticsCounting) {
                         if (receivedFramesCount >= expectedFramesCount) {
                             endCountingStatistics()
                             return@subscribe
@@ -157,7 +165,10 @@ class SystemStorage : Repository {
                         receivedFramesCount++
                         val progress =
                             (receivedFramesCount / expectedFramesCount.toDouble() * 100).toInt()
-                        transmitProcess.onNext(progress)
+                        transmittingStateSource.onNext(transmittingState.apply {
+                            if (receivedFramesCount == expectedFramesCount) endCountingStatistics()
+                            this.progress = progress
+                        })
                     }
                 },
 
@@ -169,7 +180,7 @@ class SystemStorage : Repository {
                     }
                 }
                 .subscribe {
-                    if (isStatisticsCounted && isSavedToFile) {
+                    if (isStatisticsCounting && isSavedToFile) {
                         val bitString =
                             ValueConverter(adcBitDepth).convertToBitString(it.getValues())
                         fileWorker.appendToFile(INTERNAL_ETHER_DATA_FILE_NAME, bitString)
@@ -247,7 +258,8 @@ class SystemStorage : Repository {
 
     override fun startCountingStatistics() {
         clearStatistics()
-        isStatisticsCounted = true
+        isStatisticsCounting = true
+        setTransmittingState(ProcessState.STARTED, 0)
     }
 
     private fun clearStatistics() {
@@ -260,7 +272,9 @@ class SystemStorage : Repository {
     }
 
     override fun endCountingStatistics() {
-        isStatisticsCounted = false
+        isStatisticsCounting = false
+        removeTransmittingSubProcesses()
+        setTransmittingState(ProcessState.FINISHED, 100)
     }
 
     override fun setExpectedFrameCount(count: Int) {
@@ -440,12 +454,31 @@ class SystemStorage : Repository {
         return channelsErrorsSource
     }
 
-    override fun setTransmitProgress(progress: Int) {
-        return transmitProcess.onNext(progress)
+    override fun setTransmittingState(state: Int, progress: Int) {
+        transmittingState.apply {
+            this.state = state
+            this.progress = progress
+        }
+        return transmittingStateSource.onNext(transmittingState)
     }
 
-    override fun observeTransmitProgress(): Observable<Int> {
-        return transmitProcess
+    override fun setTransmittingSubProcess(state: ProcessState) {
+        transmittingState.setSubState(state)
+        transmittingStateSource.onNext(transmittingState)
+    }
+
+    override fun removeTransmittingSubProcesses() {
+        transmittingState.removeSubStates()
+        transmittingStateSource.onNext(transmittingState)
+    }
+
+    override fun resetTransmittingSubProcesses() {
+        transmittingState.resetSubStates()
+        transmittingStateSource.onNext(transmittingState)
+    }
+
+    override fun observeTransmittingState(): Observable<ProcessState> {
+        return transmittingStateSource
     }
 
     override fun observeTransmittingChannelsCount(): Observable<Int> {
@@ -485,6 +518,23 @@ class SystemStorage : Repository {
         return berByNoiseSource
     }
 
+    override fun setTheoreticBerByNoise(berByNoise: Pair<Double, Double>) {
+        theoreticBerByNoiseList.add(berByNoise)
+        theoreticBerByNoiseSource.onNext(berByNoise)
+    }
+
+    override fun getTheoreticBerByNoiseList(): List<Pair<Double, Double>> {
+        return theoreticBerByNoiseList
+    }
+
+    override fun clearTheoreticBerByNoiseList() {
+        theoreticBerByNoiseList.clear()
+    }
+
+    override fun observeTheoreticBerByNoise(): Observable<Pair<Double, Double>> {
+        return theoreticBerByNoiseSource
+    }
+
     override fun setCapacityByNoise(capacityByNoise: Pair<Double, Double>) {
         capacityByNoiseList.add(capacityByNoise)
         capacityByNoiseSource.onNext(capacityByNoise)
@@ -500,5 +550,22 @@ class SystemStorage : Repository {
 
     override fun observeCapacityByNoise(): Observable<Pair<Double, Double>> {
         return capacityByNoiseSource
+    }
+
+    override fun setDataSpeedByNoise(capacityByNoise: Pair<Double, Double>) {
+        dataSpeedByNoiseList.add(capacityByNoise)
+        dataSpeedByNoiseSource.onNext(capacityByNoise)
+    }
+
+    override fun getDataSpeedByNoiseList(): List<Pair<Double, Double>> {
+        return dataSpeedByNoiseList
+    }
+
+    override fun clearDataSpeedByNoiseList() {
+        dataSpeedByNoiseList.clear()
+    }
+
+    override fun observeDataSpeedByNoise(): Observable<Pair<Double, Double>> {
+        return dataSpeedByNoiseSource
     }
 }
