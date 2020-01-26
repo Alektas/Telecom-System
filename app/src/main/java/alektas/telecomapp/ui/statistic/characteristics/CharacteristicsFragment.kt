@@ -21,8 +21,8 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.characteristics_fragment.*
 
-private const val DEFAULT_START_SNR: Float = -25f
-private const val DEFAULT_FINISH_SNR: Float = -5f
+private const val DEFAULT_START_SNR: Float = 0f
+private const val DEFAULT_FINISH_SNR: Float = 10f
 private const val DEFAULT_POINTS_COUNT: Int = 10
 
 class CharacteristicsFragment : Fragment() {
