@@ -67,6 +67,7 @@ class SystemProcessor {
                 it.codeType
             )
         }
+        App.component.decoderConfig().let { applyConfig(it) }
 
         if (noiseSnr != null) {
             setNoise(noiseSnr ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE)
