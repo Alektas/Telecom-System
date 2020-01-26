@@ -25,13 +25,17 @@ class CharacteristicsViewModel : ViewModel() {
     private val disposable = CompositeDisposable()
     val viewportData = MutableLiveData<Pair<Double, Double>>()
     val berData = MutableLiveData<Array<DataPoint>>()
+    val theoreticBerData = MutableLiveData<Array<DataPoint>>()
+    val dataSpeedData = MutableLiveData<Array<DataPoint>>()
     val capacityData = MutableLiveData<Array<DataPoint>>()
     val isChannelsInvalid = MutableLiveData<Boolean>()
     val pointsCount = MutableLiveData<Int>()
     val fromSnr = MutableLiveData<Float>()
     val toSnr = MutableLiveData<Float>()
+    var theoreticBerList = mutableListOf<DataPoint>()
     var berList = mutableListOf<DataPoint>()
     var capacityList = mutableListOf<DataPoint>()
+    var dataSpeedList = mutableListOf<DataPoint>()
 
     companion object {
         const val INVALID_SNR = -1000.0
@@ -44,8 +48,12 @@ class CharacteristicsViewModel : ViewModel() {
 
         berList = storage.getBerByNoiseList().toSortedPoints()
         berData.value = berList.toTypedArray()
+        theoreticBerList = storage.getTheoreticBerByNoiseList().toSortedPoints()
+        theoreticBerData.value = theoreticBerList.toTypedArray()
         capacityList = storage.getCapacityByNoiseList().toSortedPoints()
         capacityData.value = capacityList.toTypedArray()
+        dataSpeedList = storage.getDataSpeedByNoiseList().toSortedPoints()
+        dataSpeedData.value = dataSpeedList.toTypedArray()
 
         disposable.addAll(
             storage.observeBerByNoise()
@@ -65,6 +73,23 @@ class CharacteristicsViewModel : ViewModel() {
                     override fun onError(e: Throwable) {}
                 }),
 
+            storage.observeTheoreticBerByNoise()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
+                    override fun onNext(t: Pair<Double, Double>) {
+                        theoreticBerList.apply {
+                            add(DataPoint(t.first, t.second))
+                            sortBy { it.x }
+                        }
+                        theoreticBerData.value = theoreticBerList.toTypedArray()
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
             storage.observeCapacityByNoise()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -75,6 +100,23 @@ class CharacteristicsViewModel : ViewModel() {
                             sortBy { it.x }
                         }
                         capacityData.value = capacityList.toTypedArray()
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onError(e: Throwable) {}
+                }),
+
+            storage.observeDataSpeedByNoise()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<Pair<Double, Double>>() {
+                    override fun onNext(t: Pair<Double, Double>) {
+                        dataSpeedList.apply {
+                            add(DataPoint(t.first, t.second))
+                            sortBy { it.x }
+                        }
+                        dataSpeedData.value = dataSpeedList.toTypedArray()
                     }
 
                     override fun onComplete() {}
@@ -114,6 +156,9 @@ class CharacteristicsViewModel : ViewModel() {
             viewportData.value = Pair(fromSnr, toSnr)
             berList.clear()
             capacityList.clear()
+            theoreticBerList.clear()
+            capacityList.clear()
+            dataSpeedList.clear()
             processor.calculateCharacteristics(fromSnr, toSnr, pointsCount)
 
             this.pointsCount.value = pointsCount

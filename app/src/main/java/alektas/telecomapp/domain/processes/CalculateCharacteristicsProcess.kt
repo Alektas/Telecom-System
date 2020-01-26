@@ -19,13 +19,13 @@ import alektas.telecomapp.domain.entities.signals.Signal
 import alektas.telecomapp.domain.entities.signals.noises.Noise
 import alektas.telecomapp.domain.entities.signals.noises.WhiteNoise
 import alektas.telecomapp.utils.L
+import alektas.telecomapp.utils.Math
 import alektas.telecomapp.utils.format
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.toFlowable
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
-import kotlin.math.log2
-import kotlin.math.pow
+import kotlin.math.*
 
 class CalculateCharacteristicsProcess(
     private val transmittingChannels: List<Channel>,
@@ -40,7 +40,9 @@ class CalculateCharacteristicsProcess(
     private val disposable = CompositeDisposable()
     private val state = ProcessState(CHARACTERISTICS_KEY, CHARACTERISTICS_NAME)
     private val berState = ProcessState(BER_CALC_KEY, BER_CALC_NAME)
+    private val theoreticBerState = ProcessState(THEORETIC_BER_CALC_KEY, THEORETIC_BER_CALC_NAME)
     private val capacityState = ProcessState(CAPACITY_CALC_KEY, CAPACITY_CALC_NAME)
+    private val dataSpeedState = ProcessState(DATA_SPEED_CALC_KEY, DATA_SPEED_CALC_NAME)
     private val threshold = decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
     var currentStartSnr: Double? = null
     var currentFinishSnr: Double? = null
@@ -78,11 +80,16 @@ class CalculateCharacteristicsProcess(
                         decodingChannels,
                         decoderConfig
                     ) { progress(state.withSubState(it)) }
+                    val theoreticBer =
+                        calculateTheoreticBer(snr) { progress(state.withSubState(it)) }
                     val capacity = calculateCapacity(
                         snr,
                         transmittingChannels.first().bitTime
                     ) { progress(state.withSubState(it)) }
-                    Triple(snr, ber, capacity)
+                    val dataSpeed = calculateDataSpeed(transmittingChannels.first().bitTime, ber) {
+                        progress(state.withSubState(it))
+                    }
+                    SystemCharacteristics(snr, ber, theoreticBer, capacity, dataSpeed)
                 }
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
@@ -96,8 +103,10 @@ class CalculateCharacteristicsProcess(
                     pointsCalculated++
                     val p = (pointsCalculated / snrs.size.toDouble() * 100).toInt()
                     progress(state.withProgress(p))
-                    storage.setBerByNoise(it.first to it.second)
-                    storage.setCapacityByNoise(it.first to it.third)
+                    storage.setBerByNoise(it.snr to it.ber)
+                    storage.setTheoreticBerByNoise(it.snr to it.theoreticBer)
+                    storage.setCapacityByNoise(it.snr to it.capacity)
+                    storage.setDataSpeedByNoise(it.snr to it.dataSpeed)
                 }, {
                     it.printStackTrace()
                     progress(state.with(ProcessState.ERROR, 100))
@@ -179,6 +188,25 @@ class CalculateCharacteristicsProcess(
         return ber
     }
 
+    private fun calculateTheoreticBer(
+        snr: Double,
+        progress: (ProcessState) -> Unit
+    ): Double {
+        progress(theoreticBerState.withState(ProcessState.STARTED))
+
+        val linearSnr = 10.0.pow(snr / 10)
+        val f = sqrt(2 * linearSnr)
+        val ber = 100 / sqrt(2 * PI) * Math.integrate(f, 100.0, 100) { exp(-0.5 * it.pow(2)) }
+
+        L.d(
+            "Theoretic BER calculation",
+            "SNR=${snr.format(3)}дБ, linSNR=${linearSnr.format(3)}, BER=${ber.format(6)}%"
+        )
+
+        progress(theoreticBerState.withState(ProcessState.FINISHED))
+        return ber
+    }
+
     private fun calculateCapacity(
         snr: Double,
         bitTime: Double,
@@ -200,7 +228,27 @@ class CalculateCharacteristicsProcess(
         return capacity
     }
 
-    private fun generateData(channels: List<Channel>, progress: (ProcessState) -> Unit): List<Channel> {
+    /**
+     * @param bitTime время бита, сек
+     * @param ber верятность битовой ошибки, %
+     */
+    private fun calculateDataSpeed(
+        bitTime: Double,
+        ber: Double,
+        progress: (ProcessState) -> Unit
+    ): Double {
+        progress(dataSpeedState.withState(ProcessState.STARTED))
+
+        val dataSpeed = 1.0e-3 / bitTime * (100 - ber) / 100
+
+        progress(dataSpeedState.withState(ProcessState.FINISHED))
+        return dataSpeed
+    }
+
+    private fun generateData(
+        channels: List<Channel>,
+        progress: (ProcessState) -> Unit
+    ): List<Channel> {
         val state = ProcessState(GENERATE_DATA_KEY, GENERATE_DATA_NAME, ProcessState.STARTED)
         progress(state)
         val dataChannels = channels.map { c ->
@@ -306,7 +354,11 @@ class CalculateCharacteristicsProcess(
         return channels
     }
 
-    private fun decodeChannels(channels: List<Channel>, groupData: DoubleArray, threshold: Float): List<Channel> {
+    private fun decodeChannels(
+        channels: List<Channel>,
+        groupData: DoubleArray,
+        threshold: Float
+    ): List<Channel> {
         return channels.map {
             it.apply { frameData = decode(groupData, it.code, threshold) }
         }
@@ -319,5 +371,13 @@ class CalculateCharacteristicsProcess(
     ): BooleanArray {
         return CdmaDecimalCoder(threshold).decode(code.toBipolar(), groupData).toUnipolar()
     }
+
+    data class SystemCharacteristics(
+        val snr: Double,
+        val ber: Double,
+        val theoreticBer: Double,
+        val capacity: Double,
+        val dataSpeed: Double
+    )
 
 }

@@ -692,7 +692,9 @@ class SystemProcessor {
         val decodingChannels = storage.getDecoderChannels()
 
         storage.clearBerByNoiseList()
+        storage.clearTheoreticBerByNoiseList()
         storage.clearCapacityByNoiseList()
+        storage.clearDataSpeedByNoiseList()
 
         characteristicsProcess = CalculateCharacteristicsProcess(
             transmittingChannels,
