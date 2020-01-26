@@ -144,7 +144,7 @@ class DecoderFragment : Fragment(), ChannelController {
     }
 
     private fun setInitValues(prefs: SharedPreferences) {
-        val isAutoDetection = prefs.getBoolean(getString(R.string.decoder_channels_autodetection_key), true)
+        val isAutoDetection = prefs.getBoolean(getString(R.string.decoder_channels_autodetection_key), false)
         channels_autodetection_checkbox.isChecked = isAutoDetection
         setupViewByMode(isAutoDetection)
 
