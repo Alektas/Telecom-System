@@ -42,6 +42,7 @@ class CalculateCharacteristicsProcess(
     private val berState = ProcessState(BER_CALC_KEY, BER_CALC_NAME)
     private val theoreticBerState = ProcessState(THEORETIC_BER_CALC_KEY, THEORETIC_BER_CALC_NAME)
     private val capacityState = ProcessState(CAPACITY_CALC_KEY, CAPACITY_CALC_NAME)
+    private val dataSpeedState = ProcessState(DATA_SPEED_CALC_KEY, DATA_SPEED_CALC_NAME)
     private val threshold = decoderConfig.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
     var currentStartSnr: Double? = null
     var currentFinishSnr: Double? = null
@@ -85,7 +86,10 @@ class CalculateCharacteristicsProcess(
                         snr,
                         transmittingChannels.first().bitTime
                     ) { progress(state.withSubState(it)) }
-                    SystemCharacteristics(snr, ber, theoreticBer, capacity)
+                    val dataSpeed = calculateDataSpeed(transmittingChannels.first().bitTime, ber) {
+                        progress(state.withSubState(it))
+                    }
+                    SystemCharacteristics(snr, ber, theoreticBer, capacity, dataSpeed)
                 }
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
@@ -102,6 +106,7 @@ class CalculateCharacteristicsProcess(
                     storage.setBerByNoise(it.snr to it.ber)
                     storage.setTheoreticBerByNoise(it.snr to it.theoreticBer)
                     storage.setCapacityByNoise(it.snr to it.capacity)
+                    storage.setDataSpeedByNoise(it.snr to it.dataSpeed)
                 }, {
                     it.printStackTrace()
                     progress(state.with(ProcessState.ERROR, 100))
@@ -221,6 +226,23 @@ class CalculateCharacteristicsProcess(
 
         progress(capacityState.withState(ProcessState.FINISHED))
         return capacity
+    }
+
+    /**
+     * @param bitTime время бита, сек
+     * @param ber верятность битовой ошибки, %
+     */
+    private fun calculateDataSpeed(
+        bitTime: Double,
+        ber: Double,
+        progress: (ProcessState) -> Unit
+    ): Double {
+        progress(dataSpeedState.withState(ProcessState.STARTED))
+
+        val dataSpeed = 1.0e-3 / bitTime * (100 - ber) / 100
+
+        progress(dataSpeedState.withState(ProcessState.FINISHED))
+        return dataSpeed
     }
 
     private fun generateData(
@@ -348,7 +370,8 @@ class CalculateCharacteristicsProcess(
         val snr: Double,
         val ber: Double,
         val theoreticBer: Double,
-        val capacity: Double
+        val capacity: Double,
+        val dataSpeed: Double
     )
 
 }

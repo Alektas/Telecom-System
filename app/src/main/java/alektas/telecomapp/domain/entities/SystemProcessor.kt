@@ -670,6 +670,7 @@ class SystemProcessor {
         storage.clearBerByNoiseList()
         storage.clearTheoreticBerByNoiseList()
         storage.clearCapacityByNoiseList()
+        storage.clearDataSpeedByNoiseList()
 
         characteristicsProcess = CalculateCharacteristicsProcess(
             transmittingChannels,

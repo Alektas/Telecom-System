@@ -131,6 +131,8 @@ class SystemStorage : Repository {
     private val theoreticBerByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val capacityByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val capacityByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
+    private val dataSpeedByNoiseList = mutableListOf<Pair<Double, Double>>()
+    private val dataSpeedByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val transmittingStateSource = BehaviorSubject.create<ProcessState>()
     private val transmittingState = ProcessState(TRANSMITTING_PROCESS_KEY, TRANSMITTING_PROCESS_NAME)
 
@@ -548,5 +550,22 @@ class SystemStorage : Repository {
 
     override fun observeCapacityByNoise(): Observable<Pair<Double, Double>> {
         return capacityByNoiseSource
+    }
+
+    override fun setDataSpeedByNoise(capacityByNoise: Pair<Double, Double>) {
+        dataSpeedByNoiseList.add(capacityByNoise)
+        dataSpeedByNoiseSource.onNext(capacityByNoise)
+    }
+
+    override fun getDataSpeedByNoiseList(): List<Pair<Double, Double>> {
+        return dataSpeedByNoiseList
+    }
+
+    override fun clearDataSpeedByNoiseList() {
+        dataSpeedByNoiseList.clear()
+    }
+
+    override fun observeDataSpeedByNoise(): Observable<Pair<Double, Double>> {
+        return dataSpeedByNoiseSource
     }
 }

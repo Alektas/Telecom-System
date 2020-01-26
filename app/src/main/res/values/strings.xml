@@ -127,7 +127,7 @@
     <string name="channel_generated">Каналов сгенерировано</string>
     <string name="error_probability">Вероятность ошибки</string>
     <string name="characteristics_calculation">Расчет характеристик</string>
-    <string name="capacity">Пропускная способность, кБит/с</string>
+    <string name="capacity_and_dataspeed">Пропускная способность и скорость передачи, кБит/с</string>
     <string name="channels_autodetection">Автоопределение каналов</string>
     <string name="decoder_channels_autodetection_key">decoder_channels_autodetection_key</string>
     <string name="menu_about">О приложении</string>

@@ -28,11 +28,23 @@ private const val DEFAULT_POINTS_COUNT: Int = 10
 class CharacteristicsFragment : Fragment() {
     private lateinit var viewModel: CharacteristicsViewModel
     private val berGraphPoints = LineGraphSeries<DataPoint>()
-        .apply { color = Color.BLUE }
+        .apply {
+            title = "Практическая"
+        }
     private val theoreticBerGraphPoints = LineGraphSeries<DataPoint>()
-        .apply { color = Color.RED }
+        .apply {
+            title = "Теоретическая"
+            color = Color.rgb(255, 100, 100)
+        }
     private val capacityGraphPoints = LineGraphSeries<DataPoint>()
-        .apply { color = Color.RED }
+        .apply {
+            title = "Проп. спос."
+            color = Color.rgb(255, 100, 100)
+        }
+    private val dataSpeedGraphPoints = LineGraphSeries<DataPoint>()
+        .apply {
+            title = "Скорость пер."
+        }
 
     companion object {
         fun newInstance() = CharacteristicsFragment()
@@ -47,6 +59,10 @@ class CharacteristicsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         view.findViewById<GraphView>(R.id.ber_graph).apply {
+            legendRenderer.apply {
+                isVisible = true
+                backgroundColor = Color.argb(50, 0, 0, 0)
+            }
             gridLabelRenderer.padding = 45
             setupLabels(xIntMax = 3, yIntMax = 3)
             addSeries(berGraphPoints)
@@ -54,9 +70,14 @@ class CharacteristicsFragment : Fragment() {
             viewport.isXAxisBoundsManual = true
         }
         view.findViewById<GraphView>(R.id.capacity_graph).apply {
+            legendRenderer.apply {
+                isVisible = true
+                backgroundColor = Color.argb(50, 0, 0, 0)
+            }
             gridLabelRenderer.padding = 45
             setupLabels(xIntMax = 3, yIntMax = 3)
             addSeries(capacityGraphPoints)
+            addSeries(dataSpeedGraphPoints)
             viewport.isXAxisBoundsManual = true
         }
         super.onViewCreated(view, savedInstanceState)
@@ -104,6 +125,10 @@ class CharacteristicsFragment : Fragment() {
 
         viewModel.capacityData.observe(viewLifecycleOwner, Observer {
             capacityGraphPoints.resetData(it)
+        })
+
+        viewModel.dataSpeedData.observe(viewLifecycleOwner, Observer {
+            dataSpeedGraphPoints.resetData(it)
         })
 
         viewModel.isChannelsInvalid.observe(viewLifecycleOwner, Observer {
