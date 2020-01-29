@@ -240,6 +240,10 @@ class CalculateCharacteristicsProcess(
         progress(dataSpeedState.withState(ProcessState.STARTED))
 
         val dataSpeed = 1.0e-3 / bitTime * (100 - ber) / 100
+        L.d(
+            "Data speed calculation",
+            "BER=${ber.format(3)}%, Data speed=${dataSpeed.format(3)}кБит/с"
+        )
 
         progress(dataSpeedState.withState(ProcessState.FINISHED))
         return dataSpeed
