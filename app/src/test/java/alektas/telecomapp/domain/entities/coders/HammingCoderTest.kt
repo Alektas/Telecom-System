@@ -10,9 +10,13 @@ class HammingCoderTest {
     fun encode_1011_is0110011() {
         val actual = coder7.encode(booleanArrayOf(true, false, true, true))
         val expected = booleanArrayOf(false, true, true, false, false, true, true)
+        assertArrayEquals(expected, actual)
+    }
 
-        println("actual=${actual.contentToString()}")
-        println("expected=${expected.contentToString()}")
+    @Test
+    fun encode_empty_isEmpty() {
+        val actual = coder7.encode(booleanArrayOf())
+        val expected = booleanArrayOf()
         assertArrayEquals(expected, actual)
     }
 
@@ -20,9 +24,13 @@ class HammingCoderTest {
     fun decode_0110011_is1011() {
         val actual = coder7.decode(booleanArrayOf(false, true, true, false, false, true, true))
         val expected = booleanArrayOf(true, false, true, true)
+        assertArrayEquals(expected, actual)
+    }
 
-        println("actual=${actual.contentToString()}")
-        println("expected=${expected.contentToString()}")
+    @Test
+    fun decode_empty_isEmpty() {
+        val actual = coder7.decode(booleanArrayOf())
+        val expected = booleanArrayOf()
         assertArrayEquals(expected, actual)
     }
 

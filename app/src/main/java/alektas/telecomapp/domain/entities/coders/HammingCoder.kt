@@ -29,10 +29,13 @@ class HammingCoder(val wordSize: Int) {
      * @param data arbitrary number of information bits
      * @return coded data (concatenation of the code words)
      */
-    fun encode(data: BooleanArray): BooleanArray = data
-        .toRowCodeWords()
-        .map { encode(it).bits }
-        .toFlatData()
+    fun encode(data: BooleanArray): BooleanArray {
+        if (data.isEmpty()) return booleanArrayOf()
+        return data
+            .toRowCodeWords()
+            .map { encode(it).bits }
+            .toFlatData()
+    }
 
     /**
      * Decode coded data (concatenation of the code words) by Hamming code.
@@ -40,10 +43,13 @@ class HammingCoder(val wordSize: Int) {
      * @param codedData concatenation of the code words' bits
      * @return information bits, extracted from the coded data
      */
-    fun decode(codedData: BooleanArray): BooleanArray = codedData
-        .asCodeWords()
-        .map { decode(it) }
-        .toFlatData()
+    fun decode(codedData: BooleanArray): BooleanArray {
+        if (codedData.isEmpty()) return booleanArrayOf()
+        return codedData
+            .asCodeWords()
+            .map { decode(it) }
+            .toFlatData()
+    }
 
     /**
      * Calculate extra bits count, that will be added to the end of the data while encoding
