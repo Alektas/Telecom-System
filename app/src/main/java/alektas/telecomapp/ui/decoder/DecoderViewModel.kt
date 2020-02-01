@@ -1,7 +1,7 @@
 package alektas.telecomapp.ui.decoder
 
 import alektas.telecomapp.App
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
@@ -99,7 +99,7 @@ class DecoderViewModel : ViewModel() {
     ): Boolean {
         val channelCount = parseChannelCount(countString)
         val codeLength = parseChannelCount(codeLengthString)
-        val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+        val codeType = ChannelCodesGenerator.getCodeTypeId(codeTypeString)
         val threshold = parseThreshold(thresholdString)
 
         if (channelCount <= 0 || codeLength <= 0 || codeType < 0 || threshold < 0) return false
@@ -112,8 +112,8 @@ class DecoderViewModel : ViewModel() {
         val config = DecoderConfig(
             isAutoDetection = false,
             channelCount = channelCount,
-            codeLength = codeLength,
-            codeType = codeType,
+            channelsCodeLength = codeLength,
+            channelsCodeType = codeType,
             threshold = threshold
         )
 
@@ -127,7 +127,7 @@ class DecoderViewModel : ViewModel() {
         thresholdString: String
     ): Boolean {
         val codeLength = parseChannelCount(codeLengthString)
-        val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+        val codeType = ChannelCodesGenerator.getCodeTypeId(codeTypeString)
         val threshold = parseThreshold(thresholdString)
 
         if (codeLength <= 0 || codeType < 0 || threshold < 0) return false
@@ -138,8 +138,8 @@ class DecoderViewModel : ViewModel() {
 
         val config = DecoderConfig(
             isAutoDetection = true,
-            codeLength = codeLength,
-            codeType = codeType,
+            channelsCodeLength = codeLength,
+            channelsCodeType = codeType,
             threshold = threshold
         )
 

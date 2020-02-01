@@ -1,7 +1,7 @@
 package alektas.telecomapp.ui.datasource.simulation
 
 import alektas.telecomapp.App
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.SystemProcessor
 import androidx.lifecycle.MutableLiveData
@@ -40,7 +40,7 @@ class ChannelsSettingsViewModel : ViewModel() {
         val dataSpeed = parseDataspeed(dataSpeedString)
         val codeLength = parseFrameLength(codeLengthString)
         val frameLength = parseFrameLength(frameLengthString)
-        val codeType = CodeGenerator.getCodeTypeId(codeTypeString)
+        val codeType = ChannelCodesGenerator.getCodeTypeId(codeTypeString)
 
         if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || codeLength <= 0 ||
             frameLength <= 0 || codeType < 0) return

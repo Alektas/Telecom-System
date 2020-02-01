@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.contracts.QpskContract
@@ -101,11 +101,12 @@ class DecoderFragment : Fragment(), ChannelController {
         val adapter = SimpleArrayAdapter(
             requireContext(),
             R.layout.support_simple_spinner_dropdown_item,
-            listOf(CodeGenerator.codeNames[CodeGenerator.WALSH] ?: "")
+            listOf(ChannelCodesGenerator.codeNames[ChannelCodesGenerator.WALSH] ?: "")
         )
         decoder_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
-        val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
+        val defaultType = ChannelCodesGenerator.getCodeName(
+            ChannelCodesGenerator.WALSH)
         decoder_channel_code_type.setText(defaultType)
 
         decoder_channel_code_type_layout.setOnTouchListener { v, _ ->
@@ -150,14 +151,14 @@ class DecoderFragment : Fragment(), ChannelController {
 
         prefs.getInt(
             getString(R.string.decoder_channels_codetype_key),
-            CdmaContract.DEFAULT_CODE_TYPE
+            CdmaContract.DEFAULT_CHANNEL_CODE_TYPE
         ).let {
-            decoder_channel_code_type.setText(CodeGenerator.getCodeName(it))
+            decoder_channel_code_type.setText(ChannelCodesGenerator.getCodeName(it))
         }
 
         prefs.getInt(
             getString(R.string.decoder_code_length_key),
-            CdmaContract.DEFAULT_CODE_SIZE
+            CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         ).let {
             decoder_code_length.setText(it.toString())
         }

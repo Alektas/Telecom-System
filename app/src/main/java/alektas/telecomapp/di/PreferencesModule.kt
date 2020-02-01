@@ -87,9 +87,9 @@ class PreferencesModule {
         context: Context,
         @Named("sourcePrefs") prefs: SharedPreferences
     ): ChannelsConfig {
-        val codeType = prefs.getInt(
+        val channelsCodeType = prefs.getInt(
             context.getString(R.string.source_channels_codetype_key),
-            CdmaContract.DEFAULT_CODE_TYPE
+            CdmaContract.DEFAULT_CHANNEL_CODE_TYPE
         )
 
         val carrierFrequency = prefs.getFloat(
@@ -109,7 +109,7 @@ class PreferencesModule {
 
         val codeLength = prefs.getInt(
             context.getString(R.string.source_channels_codesize_key),
-            CdmaContract.DEFAULT_CODE_SIZE
+            CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         )
 
         val frameLength = prefs.getInt(
@@ -123,7 +123,7 @@ class PreferencesModule {
             dataSpeed,
             codeLength,
             frameLength,
-            codeType
+            channelsCodeType
         )
     }
 
@@ -156,7 +156,7 @@ class PreferencesModule {
 
         val codeLength = prefs.getInt(
             context.getString(R.string.demodulator_process_code_length_key),
-            CdmaContract.DEFAULT_CODE_SIZE
+            CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         )
 
         return DemodulatorConfig(
@@ -207,9 +207,9 @@ class PreferencesModule {
             false
         )
 
-        val codeType = prefs.getInt(
+        val channelsCodeType = prefs.getInt(
             context.getString(R.string.decoder_channels_codetype_key),
-            CdmaContract.DEFAULT_CODE_TYPE
+            CdmaContract.DEFAULT_CHANNEL_CODE_TYPE
         )
 
         val threshold = prefs.getFloat(
@@ -224,14 +224,14 @@ class PreferencesModule {
 
         val codeLength = prefs.getInt(
             context.getString(R.string.decoder_code_length_key),
-            CdmaContract.DEFAULT_CODE_SIZE
+            CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         )
 
         return DecoderConfig(
             isAuto,
             channelCount,
             codeLength,
-            codeType,
+            channelsCodeType,
             threshold
         )
     }

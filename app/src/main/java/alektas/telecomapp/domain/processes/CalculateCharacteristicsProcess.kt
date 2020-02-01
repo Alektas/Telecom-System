@@ -1,7 +1,7 @@
 package alektas.telecomapp.domain.processes
 
 import alektas.telecomapp.App
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
@@ -338,12 +338,12 @@ class CalculateCharacteristicsProcess(
         val state = ProcessState(DETECT_CHANNELS_KEY, DETECT_CHANNELS_NAME, ProcessState.STARTED)
         progress(state)
 
-        val codeGen = CodeGenerator()
-        val codes = when (decoderConfig.codeType) {
-            CodeGenerator.WALSH -> codeGen.generateWalshMatrix(
-                decoderConfig.codeLength ?: 0
+        val codeGen = ChannelCodesGenerator()
+        val codes = when (decoderConfig.channelsCodeType) {
+            ChannelCodesGenerator.WALSH -> codeGen.generateWalshMatrix(
+                decoderConfig.channelsCodeLength ?: 0
             )
-            else -> codeGen.generateWalshMatrix(decoderConfig.codeLength ?: 0)
+            else -> codeGen.generateWalshMatrix(decoderConfig.channelsCodeLength ?: 0)
         }
         val channels = mutableListOf<Channel>()
         for (i in codes.indices) {

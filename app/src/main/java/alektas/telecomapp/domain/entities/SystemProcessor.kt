@@ -1,7 +1,7 @@
 package alektas.telecomapp.domain.entities
 
 import alektas.telecomapp.App
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
@@ -62,9 +62,9 @@ class SystemProcessor {
                 it.channelCount,
                 it.carrierFrequency,
                 it.dataSpeed,
-                it.codeLength,
+                it.channelsCodeLength,
                 it.frameLength,
-                it.codeType
+                it.channelsCodeType
             )
         }
         App.component.decoderConfig().let { applyConfig(it) }
@@ -107,8 +107,8 @@ class SystemProcessor {
                     if (config.isAutoDetection) {
                         autoDecode(
                             data,
-                            config.codeLength ?: 0,
-                            config.codeType ?: 0,
+                            config.channelsCodeLength ?: 0,
+                            config.channelsCodeType ?: 0,
                             config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
                         )
                     } else {
@@ -221,7 +221,7 @@ class SystemProcessor {
      * @param dataSpeed скорость передачи данных, кБит/с
      * @param codeLength длина генерируемого уникального кода канала
      * @param frameLength длина фреймов (массивов данных)
-     * @param codesType семейство кодов каналов, см. [CodeGenerator]
+     * @param channelsCodeType семейство кодов каналов, см. [ChannelCodesGenerator]
      */
     @SuppressLint("CheckResult")
     fun createChannels(
@@ -230,11 +230,11 @@ class SystemProcessor {
         dataSpeed: Double, // кБит/с
         codeLength: Int,
         frameLength: Int,
-        codesType: Int
+        channelsCodeType: Int
     ) {
         simulationSubscription?.dispose()
         simulationSubscription =
-            generateChannels(count, carrierFrequency, dataSpeed, codeLength, frameLength, codesType)
+            generateChannels(count, carrierFrequency, dataSpeed, codeLength, frameLength, channelsCodeType)
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
                 .subscribe { channels: List<Channel> ->
@@ -248,13 +248,14 @@ class SystemProcessor {
         dataSpeed: Double, // кБит/с
         codeLength: Int,
         frameLength: Int,
-        codesType: Int
+        channelsCodeType: Int
     ): Single<List<Channel>> {
         return Single.create<List<Channel>> {
             val channels = mutableListOf<Channel>()
-            val codeGen = CodeGenerator()
-            val codes = when (codesType) {
-                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
+            val codeGen =
+                ChannelCodesGenerator()
+            val codes = when (channelsCodeType) {
+                ChannelCodesGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
                 else -> codeGen.generateRandomCodes(count, codeLength)
             }
 
@@ -267,7 +268,7 @@ class SystemProcessor {
                     frameLength = frameLength,
                     bitTime = bitTime,
                     code = codes[i],
-                    codeType = codesType
+                    channelCodeType = channelsCodeType
                 )
                 channels.add(channel)
             }
@@ -536,8 +537,8 @@ class SystemProcessor {
         if (!config.isAutoDetection) {
             val chls = createDecoderChannels(
                 config.channelCount ?: 0,
-                config.codeLength ?: 0,
-                config.codeType ?: CdmaContract.DEFAULT_CODE_TYPE
+                config.channelsCodeLength ?: 0,
+                config.channelsCodeType ?: CdmaContract.DEFAULT_CHANNEL_CODE_TYPE
             )
             storage.setDecoderChannels(chls)
         }
@@ -548,12 +549,13 @@ class SystemProcessor {
     private fun createDecoderChannels(
         count: Int,
         codeLength: Int,
-        codeType: Int
+        channelsCodeType: Int
     ): List<Channel> {
         val channels = mutableListOf<Channel>()
-        val codeGen = CodeGenerator()
-        val codes = when (codeType) {
-            CodeGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
+        val codeGen =
+            ChannelCodesGenerator()
+        val codes = when (channelsCodeType) {
+            ChannelCodesGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
             else -> codeGen.generateWalshMatrix(max(codeLength, count))
         }
 
@@ -619,12 +621,13 @@ class SystemProcessor {
     /**
      * Корреляционное автоопределение и декодирование каналов.
      */
-    private fun autoDecode(data: DoubleArray, codeLength: Int, codeType: Int, threshold: Float) {
+    private fun autoDecode(data: DoubleArray, codeLength: Int, channelsCodeType: Int, threshold: Float) {
         decodeSubscription = Single.create<List<Channel>> { emitter ->
             val channels = mutableListOf<Channel>()
-            val codeGen = CodeGenerator()
-            val codes = when (codeType) {
-                CodeGenerator.WALSH -> codeGen.generateWalshMatrix(codeLength)
+            val codeGen =
+                ChannelCodesGenerator()
+            val codes = when (channelsCodeType) {
+                ChannelCodesGenerator.WALSH -> codeGen.generateWalshMatrix(codeLength)
                 else -> codeGen.generateWalshMatrix(codeLength)
             }
 

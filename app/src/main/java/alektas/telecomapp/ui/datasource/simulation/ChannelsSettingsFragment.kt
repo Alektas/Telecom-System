@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
@@ -58,9 +58,9 @@ class ChannelsSettingsFragment : Fragment() {
     private fun setInitValues(prefs: SharedPreferences) {
         prefs.getInt(
             getString(R.string.source_channels_codetype_key),
-            CdmaContract.DEFAULT_CODE_TYPE
+            CdmaContract.DEFAULT_CHANNEL_CODE_TYPE
         ).let {
-            source_channel_code_type.setText(CodeGenerator.getCodeName(it))
+            source_channel_code_type.setText(ChannelCodesGenerator.getCodeName(it))
         }
 
         val defaultCarFreq = (1.0e-6 * QpskContract.DEFAULT_CARRIER_FREQUENCY).toFloat()
@@ -85,7 +85,7 @@ class ChannelsSettingsFragment : Fragment() {
 
         prefs.getInt(
             getString(R.string.source_channels_codesize_key),
-            CdmaContract.DEFAULT_CODE_SIZE
+            CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         ).let {
             source_code_length.setText(it.toString())
         }
