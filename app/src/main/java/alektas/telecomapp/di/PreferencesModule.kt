@@ -1,6 +1,7 @@
 package alektas.telecomapp.di
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.coders.DataCodesContract
 import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
@@ -107,7 +108,7 @@ class PreferencesModule {
             CdmaContract.DEFAULT_CHANNEL_COUNT
         )
 
-        val codeLength = prefs.getInt(
+        val channelsCodeLength = prefs.getInt(
             context.getString(R.string.source_channels_codesize_key),
             CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         )
@@ -117,13 +118,31 @@ class PreferencesModule {
             CdmaContract.DEFAULT_FRAME_SIZE
         )
 
+        val isDataCodingEnabled = prefs.getBoolean(
+            context.getString(R.string.source_data_coding_enable_key),
+            DataCodesContract.DEFAULT_IS_CODING_ENABLED
+            )
+
+        val dataCodeType = prefs.getInt(
+            context.getString(R.string.source_data_coding_type_key),
+            DataCodesContract.HAMMING
+        )
+
+        val dataCodeLength = prefs.getInt(
+            context.getString(R.string.source_data_coding_word_length_key),
+            DataCodesContract.DEFAULT_CODE_WORD_LENGTH
+        )
+
         return ChannelsConfig(
             channelCount,
             carrierFrequency,
             dataSpeed,
-            codeLength,
+            channelsCodeType,
+            channelsCodeLength,
             frameLength,
-            channelsCodeType
+            isDataCodingEnabled,
+            dataCodeType,
+            dataCodeLength
         )
     }
 

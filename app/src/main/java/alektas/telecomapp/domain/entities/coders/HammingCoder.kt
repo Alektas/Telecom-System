@@ -7,7 +7,7 @@ package alektas.telecomapp.domain.entities.coders
  *
  * @param wordSize size of the code words. Warning! It must be greater than 2!
  */
-class HammingCoder(val wordSize: Int) {
+class HammingCoder(val wordSize: Int): DataCoder {
     val parityBitsInWord = getParityBitsCount(wordSize)
     val dataBitsInWord = wordSize - parityBitsInWord
     /**
@@ -29,7 +29,7 @@ class HammingCoder(val wordSize: Int) {
      * @param data arbitrary number of information bits
      * @return coded data (concatenation of the code words)
      */
-    fun encode(data: BooleanArray): BooleanArray {
+    override fun encode(data: BooleanArray): BooleanArray {
         if (data.isEmpty()) return booleanArrayOf()
         return data
             .toRowCodeWords()
@@ -43,7 +43,7 @@ class HammingCoder(val wordSize: Int) {
      * @param codedData concatenation of the code words' bits
      * @return information bits, extracted from the coded data
      */
-    fun decode(codedData: BooleanArray): BooleanArray {
+    override fun decode(codedData: BooleanArray): BooleanArray {
         if (codedData.isEmpty()) return booleanArrayOf()
         return codedData
             .asCodeWords()

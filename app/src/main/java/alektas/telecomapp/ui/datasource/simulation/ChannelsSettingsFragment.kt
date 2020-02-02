@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
+import alektas.telecomapp.domain.entities.coders.DataCodesContract
 import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
@@ -46,7 +47,11 @@ class ChannelsSettingsFragment : Fragment() {
             Context.MODE_PRIVATE
         )
 
-        setupCodeTypesDropdown()
+        val channelCodes = ChannelCodesGenerator.codeNames.values.toList()
+        setupDropdown(source_channel_code_type, channelCodes)
+        val dataCodes = DataCodesContract.codeNames.values.toList()
+        setupDropdown(source_data_code_type, dataCodes)
+
         setInitValues(prefs)
         // Нужно вызывать после setInitValues, иначе метка изменений настроек
         // будет всегда появлятся при открытии страницы
@@ -96,26 +101,47 @@ class ChannelsSettingsFragment : Fragment() {
         ).let {
             source_frame_length.setText(it.toString())
         }
+
+        val isDataCodingEnabled =
+            prefs.getBoolean(getString(R.string.source_data_coding_enable_key), false)
+        source_data_coding_checkbox.isChecked = isDataCodingEnabled
+        setupViewByMode(isDataCodingEnabled)
+
+        prefs.getInt(
+            getString(R.string.source_data_coding_type_key),
+            DataCodesContract.HAMMING
+        ).let {
+            source_data_code_type.setText(DataCodesContract.getCodeName(it))
+        }
+
+        prefs.getInt(
+            getString(R.string.source_data_coding_word_length_key),
+            DataCodesContract.DEFAULT_CODE_WORD_LENGTH
+        ).let {
+            source_code_word_length.setText(it.toString())
+        }
     }
 
     private fun observeSettings(viewModel: ChannelsSettingsViewModel, prefs: SharedPreferences) {
-        viewModel.codeType.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putInt(getString(R.string.source_channels_codetype_key), it).apply()
-        })
-
         viewModel.carrierFrequency.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_channels_freq_key), it.toFloat()).apply()
+            prefs.edit().putFloat(getString(R.string.source_channels_freq_key), it.toFloat())
+                .apply()
         })
 
         viewModel.dataSpeed.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putFloat(getString(R.string.source_channels_dataspeed_key), it.toFloat()).apply()
+            prefs.edit().putFloat(getString(R.string.source_channels_dataspeed_key), it.toFloat())
+                .apply()
         })
 
         viewModel.channelCount.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.source_channels_count_key), it).apply()
         })
 
-        viewModel.codeSize.observe(viewLifecycleOwner, Observer {
+        viewModel.channelCodeType.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_channels_codetype_key), it).apply()
+        })
+
+        viewModel.channelCodeLength.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.source_channels_codesize_key), it).apply()
         })
 
@@ -123,27 +149,32 @@ class ChannelsSettingsFragment : Fragment() {
             prefs.edit().putInt(getString(R.string.source_channels_framesize_key), it).apply()
         })
 
+        viewModel.dataCodeType.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_data_coding_type_key), it).apply()
+        })
+
+        viewModel.dataCodeLength.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.source_data_coding_word_length_key), it).apply()
+        })
+
         viewModel.isSettingsChanged.observe(viewLifecycleOwner, Observer {
             settings_changed_label.visibility = if (it) View.VISIBLE else View.INVISIBLE
         })
     }
 
-    private fun setupCodeTypesDropdown() {
+    private fun setupDropdown(dropdown: AutoCompleteTextView, items: List<String>) {
         val adapter = SimpleArrayAdapter(
             requireContext(),
             R.layout.support_simple_spinner_dropdown_item,
-            CodeGenerator.codeNames.values.toList()
+            items
         )
-        source_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
-        source_channel_code_type.setOnItemClickListener { _, _, _, _ ->
-            viewModel.setSettingsChanged()
-        }
-        source_channel_code_type_layout.setOnTouchListener { v, _ ->
-            SystemUtils.hideKeyboard(this)
-            val dropDown = v.findViewById<AutoCompleteTextView>(R.id.source_channel_code_type)
-            dropDown.showDropDown()
-            false
+        dropdown.apply {
+            setAdapter<ArrayAdapter<String>>(adapter)
+            setOnItemClickListener { _, _, _, _ ->
+                SystemUtils.hideKeyboard(this)
+                viewModel.setSettingsChanged()
+            }
         }
     }
 
@@ -193,12 +224,29 @@ class ChannelsSettingsFragment : Fragment() {
                 source_frame_length_layout.error = getString(R.string.error_positive_num)
             }
         }
+
+        source_code_word_length.doOnTextChanged { text, _, _, _ ->
+            viewModel.setSettingsChanged()
+            if (viewModel.parseCodeWordLength(text.toString()) > 2) {
+                source_code_word_length_layout.error = null
+            } else {
+                source_code_word_length_layout.error = getString(R.string.error_code_word_length)
+            }
+        }
     }
 
     private fun setupControls() {
-        source_frame_length.setOnEditorActionListener { _, _, _ ->
+        source_code_word_length.setOnEditorActionListener { _, _, _ ->
             generate_channels_btn.performClick()
             false
+        }
+
+        source_data_coding_checkbox.setOnCheckedChangeListener { _, isEnabled ->
+            setupViewByMode(isEnabled)
+            prefs.edit()
+                .putBoolean(getString(R.string.source_data_coding_enable_key), isEnabled)
+                .apply()
+            setupDataCoding(isEnabled)
         }
 
         generate_channels_btn.setOnClickListener {
@@ -207,31 +255,72 @@ class ChannelsSettingsFragment : Fragment() {
         }
     }
 
+    private fun setupDataCoding(isEnabled: Boolean) {
+        if (isEnabled) {
+            val codesType = source_data_code_type.text.toString()
+            val codesLength = source_code_word_length.text.toString()
+            val isSuccess = viewModel.enableDataCoding(codesType, codesLength)
+            if (!isSuccess) {
+                Toast.makeText(
+                    requireContext(),
+                    "Выберите корректные тип и длину кода",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else {
+            viewModel.disableDataCoding()
+        }
+    }
+
     private fun createChannels() {
         val channelCount = source_channel_count.text.toString()
         val freq = source_carrier_frequency.text.toString()
         val dataSpeed = source_data_speed.text.toString()
+        val channelCodeLength = source_code_length.text.toString()
+        val channelCodeType = source_channel_code_type.text.toString()
         val frameLength = source_frame_length.text.toString()
-        val codeLength = source_code_length.text.toString()
-        val codeType = source_channel_code_type.text.toString()
 
-        if (source_channel_count_layout.error != null ||
-            source_carrier_frequency_layout.error != null ||
-            source_data_speed_layout.error != null ||
-            source_code_length_layout.error != null ||
-            source_frame_length_layout.error != null ||
-            channelCount.isEmpty() ||
-            freq.isEmpty() ||
-            dataSpeed.isEmpty() ||
-            codeLength.isEmpty() ||
-            frameLength.isEmpty() ||
-            codeType.isEmpty()
-        ) {
+        val isSuccess = viewModel.createChannels(
+            channelCount,
+            freq,
+            dataSpeed,
+            channelCodeLength,
+            channelCodeType,
+            frameLength
+        )
+
+        if (!isSuccess) {
             Toast.makeText(requireContext(), "Введите корректные данные", Toast.LENGTH_SHORT).show()
-            return
         }
+    }
 
-        viewModel.createChannels(channelCount, freq, dataSpeed, codeLength, frameLength, codeType)
+    private fun setupViewByMode(isDataCoding: Boolean) {
+        if (isDataCoding) {
+            showDataCodingFields()
+        } else {
+            hideDataCodingFields()
+        }
+    }
+
+    private fun showDataCodingFields() {
+        View.VISIBLE.let {
+            if (source_code_word_length_layout.error != null) {
+                val codeLength = prefs.getInt(
+                    getString(R.string.source_data_coding_word_length_key),
+                    DataCodesContract.DEFAULT_CODE_WORD_LENGTH
+                ).toString()
+                source_code_word_length.setText(codeLength)
+            }
+            source_data_code_type_layout.visibility = it
+            source_code_word_length_layout.visibility = it
+        }
+    }
+
+    private fun hideDataCodingFields() {
+        View.GONE.let {
+            source_data_code_type_layout.visibility = it
+            source_code_word_length_layout.visibility = it
+        }
     }
 
 }

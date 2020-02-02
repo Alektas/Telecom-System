@@ -4,9 +4,7 @@ import alektas.telecomapp.App
 import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
-import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
-import alektas.telecomapp.domain.entities.coders.toBipolar
-import alektas.telecomapp.domain.entities.coders.toUnipolar
+import alektas.telecomapp.domain.entities.coders.*
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
@@ -48,23 +46,29 @@ class SystemProcessor {
     @JvmField
     @field:[Inject Named("interferenceSparseness")]
     var interferenceSparseness: Double? = null
+    val characteristicsProcessState = BehaviorSubject.create<ProcessState>()
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
     private var transmitSubscription: Disposable? = null
     private var decodeSubscription: Disposable? = null
     private var characteristicsProcess: CalculateCharacteristicsProcess? = null
-    val characteristicsProcessState = BehaviorSubject.create<ProcessState>()
+    private var dataCodesType = DataCodesContract.HAMMING
+    private var dataCodesLength = DataCodesContract.DEFAULT_CODE_WORD_LENGTH
+    private var isDataCodingEnabled = DataCodesContract.DEFAULT_IS_CODING_ENABLED
 
     init {
         App.component.inject(this)
         App.component.channelsConfig().let {
+            this.isDataCodingEnabled = it.isDataCodingEnabled
+            this.dataCodesType = it.dataCodesType
+            this.dataCodesLength = it.dataCodesLength
             createChannels(
                 it.channelCount,
                 it.carrierFrequency,
                 it.dataSpeed,
-                it.channelsCodeLength,
-                it.frameLength,
-                it.channelsCodeType
+                it.channelsCodesType,
+                it.channelsCodesLength,
+                it.frameLength
             )
         }
         App.component.decoderConfig().let { applyConfig(it) }
@@ -162,10 +166,22 @@ class SystemProcessor {
         cancelCurrentProcess()
         transmitSubscription = Single
             .create<DoubleArray> {
-                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME, state = ProcessState.STARTED))
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        READ_FILE_KEY,
+                        READ_FILE_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
                 val data =
                     ValueConverter(adcResolution).convertToBipolarNormalizedValues(dataString)
-                storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME, state = ProcessState.FINISHED))
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        READ_FILE_KEY,
+                        READ_FILE_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
                 it.onSuccess(data)
             }
             .flatMapObservable { generateFrames(adcSamplingRate * 1.0e6, it) }
@@ -205,10 +221,22 @@ class SystemProcessor {
             subscriber.onComplete()
         }
             .doOnSubscribe {
-                storage.setTransmittingSubProcess(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, state = ProcessState.STARTED))
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        CREATE_SIGNAL_KEY,
+                        CREATE_SIGNAL_NAME,
+                        state = ProcessState.STARTED
+                    )
+                )
             }
             .doFinally {
-                storage.setTransmittingSubProcess(ProcessState(CREATE_SIGNAL_KEY, CREATE_SIGNAL_NAME, state = ProcessState.FINISHED))
+                storage.setTransmittingSubProcess(
+                    ProcessState(
+                        CREATE_SIGNAL_KEY,
+                        CREATE_SIGNAL_NAME,
+                        state = ProcessState.FINISHED
+                    )
+                )
             }
     }
 
@@ -219,22 +247,29 @@ class SystemProcessor {
      * @param count количество создаваемых каналов
      * @param carrierFrequency частота несущей гармоники каналов, МГц
      * @param dataSpeed скорость передачи данных, кБит/с
-     * @param codeLength длина генерируемого уникального кода канала
-     * @param frameLength длина фреймов (массивов данных)
      * @param channelsCodeType семейство кодов каналов, см. [ChannelCodesGenerator]
+     * @param channelsCodeLength длина генерируемого уникального кода канала
+     * @param frameLength длина фреймов (массивов данных)
      */
     @SuppressLint("CheckResult")
     fun createChannels(
         count: Int,
         carrierFrequency: Double, // МГц
         dataSpeed: Double, // кБит/с
-        codeLength: Int,
-        frameLength: Int,
-        channelsCodeType: Int
+        channelsCodeType: Int,
+        channelsCodeLength: Int,
+        frameLength: Int
     ) {
         simulationSubscription?.dispose()
         simulationSubscription =
-            generateChannels(count, carrierFrequency, dataSpeed, codeLength, frameLength, channelsCodeType)
+            generateChannels(
+                count,
+                carrierFrequency,
+                dataSpeed,
+                channelsCodeType,
+                channelsCodeLength,
+                frameLength
+            )
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
                 .subscribe { channels: List<Channel> ->
@@ -246,17 +281,21 @@ class SystemProcessor {
         count: Int,
         carrierFrequency: Double, // МГц
         dataSpeed: Double, // кБит/с
+        channelsCodeType: Int,
         codeLength: Int,
-        frameLength: Int,
-        channelsCodeType: Int
+        frameLength: Int
     ): Single<List<Channel>> {
         return Single.create<List<Channel>> {
             val channels = mutableListOf<Channel>()
-            val codeGen =
-                ChannelCodesGenerator()
-            val codes = when (channelsCodeType) {
-                ChannelCodesGenerator.WALSH -> codeGen.generateWalshMatrix(max(codeLength, count))
-                else -> codeGen.generateRandomCodes(count, codeLength)
+            val channelCodesGen = ChannelCodesGenerator()
+            val channelsCodes = when (channelsCodeType) {
+                ChannelCodesGenerator.WALSH -> channelCodesGen.generateWalshMatrix(
+                    max(
+                        codeLength,
+                        count
+                    )
+                )
+                else -> channelCodesGen.generateRandomCodes(count, codeLength)
             }
 
             val bitTime = 1.0e-3 / dataSpeed // скорость в период бита (в секундах)
@@ -267,14 +306,14 @@ class SystemProcessor {
                     carrierFrequency = carrierFrequency * 1.0e6, // МГц -> Гц
                     frameLength = frameLength,
                     bitTime = bitTime,
-                    code = codes[i],
+                    code = channelsCodes[i],
                     channelCodeType = channelsCodeType
                 )
                 channels.add(channel)
             }
 
             // Так как продолжительность данных изменилась, обновляем время симуляции
-            val dataTime = frameLength * codes[0].size * bitTime
+            val dataTime = frameLength * channelsCodes[0].size * bitTime
             changeSimulationTime(dataTime)
 
             it.onSuccess(channels)
@@ -293,24 +332,41 @@ class SystemProcessor {
         } // генерируем новые помехи с обновленной продолжительностью
     }
 
+    fun disableDataCoding() {
+        isDataCodingEnabled = false
+    }
+
+    fun setDataCoding(codesType: Int, codesLength: Int) {
+        isDataCodingEnabled = true
+        dataCodesType = codesType
+        dataCodesLength = codesLength
+    }
+
     /**
      * Генерация и передача фреймов в выделенных каналах.
      *
      * @param channels каналы связи, в которых будут передаваться фреймы
      * @param frameCount количество фреймов, которые нужно передать
      */
-    fun transmitFrames(channels: List<Channel>, frameCount: Int) {
+    fun transmitFrames(
+        channels: List<Channel>,
+        frameCount: Int
+    ) {
+        if (channels.isEmpty()) return
+
         cancelCurrentProcess()
         var framesTransmitted = 0
-        val frameSize = if (channels.isEmpty()) 0 else channels.first().frameLength
+        val coder = if (!isDataCodingEnabled) Repeater() else
+            when (dataCodesType) {
+                DataCodesContract.HAMMING -> HammingCoder(dataCodesLength)
+                else -> Repeater()
+            }
 
         transmitSubscription = Observable
             .create<List<Channel>> {
                 // генерировать на 1 фрейм меньше, так как первый фрейм отправляется в startWith
                 for (i in 1 until frameCount) {
-                    val chls = channels.map { c ->
-                        c.copy().apply { frameData = UserDataProvider.generateData(frameSize) }
-                    }
+                    val chls = channels.map { c -> setupWithData(c, coder) }
                     it.onNext(chls)
                 }
 
@@ -328,9 +384,8 @@ class SystemProcessor {
                 framesTransmitted++
                 next
             } // дожидаться декодирования
-            .startWith(channels.map { c ->
-                c.apply { frameData = UserDataProvider.generateData(frameSize) }
-            }) // первый фрейм запускает цикл передачи (нужно для срабатывания zipWith)
+            // Первый фрейм запускает цикл передачи (нужно для срабатывания zipWith)
+            .startWith(channels.map { c -> setupWithData(c, coder) })
             .subscribeOn(Schedulers.io())
             .doOnSubscribe {
                 storage.startCountingStatistics()
@@ -345,6 +400,12 @@ class SystemProcessor {
 
                 storage.setChannels(it) // передача очередного фрейма всеми каналами
             }
+    }
+
+    private fun setupWithData(channel: Channel, coder: DataCoder): Channel {
+        val data = UserDataProvider.generateData(channel.frameLength)
+        val codedData = coder.encode(data)
+        return channel.copy().apply { frameData = codedData }
     }
 
     @SuppressLint("CheckResult")
@@ -621,7 +682,12 @@ class SystemProcessor {
     /**
      * Корреляционное автоопределение и декодирование каналов.
      */
-    private fun autoDecode(data: DoubleArray, codeLength: Int, channelsCodeType: Int, threshold: Float) {
+    private fun autoDecode(
+        data: DoubleArray,
+        codeLength: Int,
+        channelsCodeType: Int,
+        threshold: Float
+    ) {
         decodeSubscription = Single.create<List<Channel>> { emitter ->
             val channels = mutableListOf<Channel>()
             val codeGen =

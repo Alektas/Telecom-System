@@ -140,4 +140,11 @@
     <string name="characteristics_finish_snr_key">characteristics_finish_snr_key</string>
     <string name="characteristics_points_count_key">characteristics_points_count_key</string>
     <string name="process_name_placeholder">Название процесса</string>
+    <string name="data_label">Данные</string>
+    <string name="source_coding">Кодирование источника</string>
+    <string name="source_data_coding_enable_key">source_data_coding_enable_key</string>
+    <string name="source_data_coding_type_key">source_data_coding_type_key</string>
+    <string name="source_data_coding_word_length_key">source_data_coding_word_length_key</string>
+    <string name="code_word_length">Длина слова</string>
+    <string name="error_code_word_length">Длина слова не может быть меньше 3</string>
 </resources>

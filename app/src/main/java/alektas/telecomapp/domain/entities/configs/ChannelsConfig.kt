@@ -4,7 +4,10 @@ data class ChannelsConfig(
     val channelCount: Int,
     val carrierFrequency: Double,
     val dataSpeed: Double,
-    val channelsCodeLength: Int,
+    val channelsCodesType: Int,
+    val channelsCodesLength: Int,
     val frameLength: Int,
-    val channelsCodeType: Int
+    val isDataCodingEnabled: Boolean,
+    val dataCodesType: Int,
+    val dataCodesLength: Int
 )
