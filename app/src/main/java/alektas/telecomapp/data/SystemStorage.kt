@@ -3,6 +3,7 @@ package alektas.telecomapp.data
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.converters.ValueConverter
@@ -36,6 +37,8 @@ class SystemStorage : Repository {
     lateinit var filterConfig: FilterConfig
     @Inject
     lateinit var decoderConfig: DecoderConfig
+    @Inject
+    lateinit var simulatedChannelsConfig: ChannelsConfig
     /**
      * Шум источника.
      * Если шум отключен с помощью метода {@see #disableNoise}, то этот объект сохраняется,
@@ -88,6 +91,7 @@ class SystemStorage : Repository {
         BehaviorSubject.create<DemodulatorConfig>()
     private val decoderConfigSource =
         BehaviorSubject.create<DecoderConfig>()
+    private val simulatedChannelsConfigSource = BehaviorSubject.create<ChannelsConfig>()
     private val simulatedChannelsCountSource = BehaviorSubject.create<Int>()
     private var transmittedBitsCount = 0
         set(value) {
@@ -134,12 +138,12 @@ class SystemStorage : Repository {
     private val dataSpeedByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val dataSpeedByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val transmittingStateSource = BehaviorSubject.create<ProcessState>()
-    private val transmittingState = ProcessState(TRANSMITTING_PROCESS_KEY, TRANSMITTING_PROCESS_NAME)
+    private val transmittingState =
+        ProcessState(TRANSMITTING_PROCESS_KEY, TRANSMITTING_PROCESS_NAME)
 
     init {
         App.component.inject(this)
         demodulatorConfigSource.onNext(demodulatorConfig)
-        decoderConfigSource.onNext(decoderConfig)
 
         disposable.addAll(
             simulatedChannelsSource
@@ -202,6 +206,19 @@ class SystemStorage : Repository {
                 signal + noise + interf
             })
             .mergeWith(fileSignalSource)
+    }
+
+    override fun getSimulatedChannelsConfiguration(): ChannelsConfig {
+        return simulatedChannelsConfig
+    }
+
+    override fun observeSimulationChannelsConfig(): Observable<ChannelsConfig> {
+        return simulatedChannelsConfigSource
+    }
+
+    override fun updateSimulationChannelsConfig(config: ChannelsConfig) {
+        simulatedChannelsConfig.update(config)
+        simulatedChannelsConfigSource.onNext(simulatedChannelsConfig)
     }
 
     override fun getCurrentDemodulatorConfig(): DemodulatorConfig {
@@ -287,7 +304,9 @@ class SystemStorage : Repository {
     }
 
     override fun removeChannel(channel: Channel) {
-        if (simulatedChannelList.remove(channel)) simulatedChannelsSource.onNext(simulatedChannelList)
+        if (simulatedChannelList.remove(channel)) simulatedChannelsSource.onNext(
+            simulatedChannelList
+        )
     }
 
     override fun getSimulatedChannels(): List<Channel> {

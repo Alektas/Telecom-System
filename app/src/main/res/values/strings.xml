@@ -147,4 +147,11 @@
     <string name="source_data_coding_word_length_key">source_data_coding_word_length_key</string>
     <string name="code_word_length">Длина слова</string>
     <string name="error_code_word_length">Длина слова не может быть меньше 3</string>
+    <string name="source_decoding">Декодирование источника</string>
+    <string name="channel_code_types">Тип канальных кодов</string>
+    <string name="channel_code_length">Длина канальных кодов</string>
+    <string name="data_code_types">Тип кодов источника</string>
+    <string name="decoder_data_decoding_enable_key">decoder_data_coding_enable_key</string>
+    <string name="decoder_data_coding_type_key">decoder_data_coding_type_key</string>
+    <string name="decoder_data_coding_word_length_key">decoder_data_coding_word_length_key</string>
 </resources>

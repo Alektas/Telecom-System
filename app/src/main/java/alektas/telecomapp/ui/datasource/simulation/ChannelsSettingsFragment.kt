@@ -12,6 +12,8 @@ import alektas.telecomapp.domain.entities.coders.DataCodesContract
 import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
+import alektas.telecomapp.ui.utils.DataCoding
+import alektas.telecomapp.ui.utils.Mode
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
@@ -22,6 +24,7 @@ import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.channels_settings_fragment.*
+import java.lang.NumberFormatException
 
 class ChannelsSettingsFragment : Fragment() {
 
@@ -102,23 +105,18 @@ class ChannelsSettingsFragment : Fragment() {
             source_frame_length.setText(it.toString())
         }
 
-        val isDataCodingEnabled =
-            prefs.getBoolean(getString(R.string.source_data_coding_enable_key), false)
+        val isDataCodingEnabled = prefs.getBoolean(
+            getString(R.string.source_data_coding_enable_key),
+            DataCodesContract.DEFAULT_IS_CODING_ENABLED
+        )
         source_data_coding_checkbox.isChecked = isDataCodingEnabled
-        setupViewByMode(isDataCodingEnabled)
+        setupViewByMode(DataCoding(isDataCodingEnabled))
 
         prefs.getInt(
             getString(R.string.source_data_coding_type_key),
             DataCodesContract.HAMMING
         ).let {
             source_data_code_type.setText(DataCodesContract.getCodeName(it))
-        }
-
-        prefs.getInt(
-            getString(R.string.source_data_coding_word_length_key),
-            DataCodesContract.DEFAULT_CODE_WORD_LENGTH
-        ).let {
-            source_code_word_length.setText(it.toString())
         }
     }
 
@@ -153,10 +151,6 @@ class ChannelsSettingsFragment : Fragment() {
             prefs.edit().putInt(getString(R.string.source_data_coding_type_key), it).apply()
         })
 
-        viewModel.dataCodeLength.observe(viewLifecycleOwner, Observer {
-            prefs.edit().putInt(getString(R.string.source_data_coding_word_length_key), it).apply()
-        })
-
         viewModel.isSettingsChanged.observe(viewLifecycleOwner, Observer {
             settings_changed_label.visibility = if (it) View.VISIBLE else View.INVISIBLE
         })
@@ -181,94 +175,67 @@ class ChannelsSettingsFragment : Fragment() {
     private fun setupFieldsValidation() {
         source_channel_count.doOnTextChanged { text, _, _, _ ->
             viewModel.setSettingsChanged()
-            if (viewModel.parseChannelCount(text.toString()) > 0) {
-                source_channel_count_layout.error = null
-            } else {
-                source_channel_count_layout.error = getString(R.string.error_positive_num)
+            source_channel_count_layout.error = try {
+                viewModel.parseChannelCount(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_positive_num)
             }
         }
 
         source_carrier_frequency.doOnTextChanged { text, _, _, _ ->
             viewModel.setSettingsChanged()
-            if (viewModel.parseFrequency(text.toString()) > 0) {
-                source_carrier_frequency_layout.error = null
-            } else {
-                source_carrier_frequency_layout.error =
-                    getString(R.string.error_positive_num_decimal)
+            source_carrier_frequency_layout.error = try {
+                viewModel.parseFrequency(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_positive_num_decimal)
             }
         }
 
         source_data_speed.doOnTextChanged { text, _, _, _ ->
             viewModel.setSettingsChanged()
-            if (viewModel.parseDataspeed(text.toString()) > 0) {
-                source_data_speed_layout.error = null
-            } else {
-                source_data_speed_layout.error = getString(R.string.error_positive_num_decimal)
+            source_data_speed_layout.error = try {
+                viewModel.parseDataspeed(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_positive_num_decimal)
             }
         }
 
         source_code_length.doOnTextChanged { text, _, _, _ ->
             viewModel.setSettingsChanged()
-            if (viewModel.parseFrameLength(text.toString()) > 0) {
-                source_code_length_layout.error = null
-            } else {
-                source_code_length_layout.error = getString(R.string.error_positive_num)
+            source_code_length_layout.error = try {
+                viewModel.parseFrameLength(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_positive_num)
             }
         }
 
         source_frame_length.doOnTextChanged { text, _, _, _ ->
             viewModel.setSettingsChanged()
-            if (viewModel.parseFrameLength(text.toString()) > 0) {
-                source_frame_length_layout.error = null
-            } else {
-                source_frame_length_layout.error = getString(R.string.error_positive_num)
-            }
-        }
-
-        source_code_word_length.doOnTextChanged { text, _, _, _ ->
-            viewModel.setSettingsChanged()
-            if (viewModel.parseCodeWordLength(text.toString()) > 2) {
-                source_code_word_length_layout.error = null
-            } else {
-                source_code_word_length_layout.error = getString(R.string.error_code_word_length)
+            source_frame_length_layout.error = try {
+                viewModel.parseFrameLength(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_positive_num)
             }
         }
     }
 
     private fun setupControls() {
-        source_code_word_length.setOnEditorActionListener { _, _, _ ->
-            generate_channels_btn.performClick()
-            false
-        }
-
         source_data_coding_checkbox.setOnCheckedChangeListener { _, isEnabled ->
-            setupViewByMode(isEnabled)
+            setupViewByMode(DataCoding(isEnabled))
             prefs.edit()
                 .putBoolean(getString(R.string.source_data_coding_enable_key), isEnabled)
                 .apply()
-            setupDataCoding(isEnabled)
+            createChannels()
         }
 
         generate_channels_btn.setOnClickListener {
             SystemUtils.hideKeyboard(this)
             createChannels()
-        }
-    }
-
-    private fun setupDataCoding(isEnabled: Boolean) {
-        if (isEnabled) {
-            val codesType = source_data_code_type.text.toString()
-            val codesLength = source_code_word_length.text.toString()
-            val isSuccess = viewModel.enableDataCoding(codesType, codesLength)
-            if (!isSuccess) {
-                Toast.makeText(
-                    requireContext(),
-                    "Выберите корректные тип и длину кода",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        } else {
-            viewModel.disableDataCoding()
         }
     }
 
@@ -279,14 +246,18 @@ class ChannelsSettingsFragment : Fragment() {
         val channelCodeLength = source_code_length.text.toString()
         val channelCodeType = source_channel_code_type.text.toString()
         val frameLength = source_frame_length.text.toString()
+        val isDataDecoding = source_data_coding_checkbox.isChecked
+        val dataCodesType = source_data_code_type.text.toString()
 
-        val isSuccess = viewModel.createChannels(
+        val isSuccess = viewModel.setupChannelsConfig(
             channelCount,
             freq,
             dataSpeed,
-            channelCodeLength,
             channelCodeType,
-            frameLength
+            channelCodeLength,
+            frameLength,
+            isDataDecoding,
+            dataCodesType
         )
 
         if (!isSuccess) {
@@ -294,33 +265,8 @@ class ChannelsSettingsFragment : Fragment() {
         }
     }
 
-    private fun setupViewByMode(isDataCoding: Boolean) {
-        if (isDataCoding) {
-            showDataCodingFields()
-        } else {
-            hideDataCodingFields()
-        }
-    }
-
-    private fun showDataCodingFields() {
-        View.VISIBLE.let {
-            if (source_code_word_length_layout.error != null) {
-                val codeLength = prefs.getInt(
-                    getString(R.string.source_data_coding_word_length_key),
-                    DataCodesContract.DEFAULT_CODE_WORD_LENGTH
-                ).toString()
-                source_code_word_length.setText(codeLength)
-            }
-            source_data_code_type_layout.visibility = it
-            source_code_word_length_layout.visibility = it
-        }
-    }
-
-    private fun hideDataCodingFields() {
-        View.GONE.let {
-            source_data_code_type_layout.visibility = it
-            source_code_word_length_layout.visibility = it
-        }
+    private fun setupViewByMode(mode: Mode) {
+        source_data_code_type_layout.isEnabled = mode is DataCoding && mode.isEnabled
     }
 
 }

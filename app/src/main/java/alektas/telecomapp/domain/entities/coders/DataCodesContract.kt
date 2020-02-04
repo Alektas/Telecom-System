@@ -4,7 +4,6 @@ class DataCodesContract {
 
     companion object {
         const val DEFAULT_IS_CODING_ENABLED = false
-        const val DEFAULT_CODE_WORD_LENGTH = 7
         const val HAMMING = 0
         val codeNames = mapOf(
             HAMMING to "Хэмминга"

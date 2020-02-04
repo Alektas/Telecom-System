@@ -1,6 +1,7 @@
 package alektas.telecomapp.domain
 
 import alektas.telecomapp.domain.entities.Channel
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.filters.FilterConfig
@@ -11,6 +12,9 @@ import alektas.telecomapp.domain.processes.ProcessState
 import io.reactivex.Observable
 
 interface Repository {
+    fun getSimulatedChannelsConfiguration(): ChannelsConfig
+    fun observeSimulationChannelsConfig(): Observable<ChannelsConfig>
+    fun updateSimulationChannelsConfig(config: ChannelsConfig)
     fun getCurrentDemodulatorConfig(): DemodulatorConfig
     fun observeDemodulatorConfig(): Observable<DemodulatorConfig>
     fun getDemodulatorFilterConfig(): FilterConfig

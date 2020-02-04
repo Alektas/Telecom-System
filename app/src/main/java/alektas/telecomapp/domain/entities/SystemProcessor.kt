@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.coders.*
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
@@ -52,25 +53,12 @@ class SystemProcessor {
     private var transmitSubscription: Disposable? = null
     private var decodeSubscription: Disposable? = null
     private var characteristicsProcess: CalculateCharacteristicsProcess? = null
-    private var dataCodesType = DataCodesContract.HAMMING
-    private var dataCodesLength = DataCodesContract.DEFAULT_CODE_WORD_LENGTH
+    private var sourceDataCodesType = DataCodesContract.HAMMING
     private var isDataCodingEnabled = DataCodesContract.DEFAULT_IS_CODING_ENABLED
 
     init {
         App.component.inject(this)
-        App.component.channelsConfig().let {
-            this.isDataCodingEnabled = it.isDataCodingEnabled
-            this.dataCodesType = it.dataCodesType
-            this.dataCodesLength = it.dataCodesLength
-            createChannels(
-                it.channelCount,
-                it.carrierFrequency,
-                it.dataSpeed,
-                it.channelsCodesType,
-                it.channelsCodesLength,
-                it.frameLength
-            )
-        }
+        App.component.channelsConfig().let { applyConfig(it) }
         App.component.decoderConfig().let { applyConfig(it) }
 
         if (noiseSnr != null) {
@@ -85,6 +73,21 @@ class SystemProcessor {
         }
 
         disposable.addAll(
+            storage.observeSimulationChannelsConfig()
+                .subscribeOn(Schedulers.io())
+                .subscribe { config ->
+                    createChannels(
+                        config.channelCount ?: CdmaContract.DEFAULT_CHANNEL_COUNT,
+                        config.carrierFrequency ?: 1.0e-6 * QpskContract.DEFAULT_CARRIER_FREQUENCY,
+                        config.dataSpeed ?: 1.0e-3 / QpskContract.DEFAULT_DATA_BIT_TIME,
+                        config.channelsCodesType ?: CdmaContract.DEFAULT_CHANNEL_CODE_TYPE,
+                        config.channelsCodesLength ?: CdmaContract.DEFAULT_CHANNEL_CODE_SIZE,
+                        config.frameLength ?: CdmaContract.DEFAULT_FRAME_SIZE,
+                        config.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED,
+                        config.dataCodesType ?: DataCodesContract.HAMMING
+                    )
+                },
+
             storage.observeSimulatedChannels()
                 .subscribeOn(Schedulers.io())
                 .subscribe {
@@ -108,7 +111,9 @@ class SystemProcessor {
                 .subscribe { (data, config) ->
                     L.d(this, "Decoding: new frame arrived or decoder configuration changed")
                     decodeSubscription?.dispose()
-                    if (config.isAutoDetection) {
+                    val isAuto =
+                        config.isAutoDetection ?: CdmaContract.DEFAULT_IS_AUTO_DETECTION_ENABLED
+                    if (isAuto) {
                         autoDecode(
                             data,
                             config.channelsCodeLength ?: 0,
@@ -240,6 +245,11 @@ class SystemProcessor {
             }
     }
 
+    fun applyConfig(config: ChannelsConfig) {
+        L.d(this, "Decoding: update simulation channels config")
+        storage.updateSimulationChannelsConfig(config)
+    }
+
     /**
      * Создание и установка каналов связи, которые затем можно использовать для хранения
      * и передачи фреймов.
@@ -250,6 +260,8 @@ class SystemProcessor {
      * @param channelsCodeType семейство кодов каналов, см. [ChannelCodesGenerator]
      * @param channelsCodeLength длина генерируемого уникального кода канала
      * @param frameLength длина фреймов (массивов данных)
+     * @param isDataDecoding кодируются ли данные источника
+     * @param dataCodesType семейство кодов источника данных, см. [DataCodesContract]
      */
     @SuppressLint("CheckResult")
     fun createChannels(
@@ -258,8 +270,13 @@ class SystemProcessor {
         dataSpeed: Double, // кБит/с
         channelsCodeType: Int,
         channelsCodeLength: Int,
-        frameLength: Int
+        frameLength: Int,
+        isDataDecoding: Boolean,
+        dataCodesType: Int
     ) {
+        this.isDataCodingEnabled = isDataDecoding
+        this.sourceDataCodesType = dataCodesType
+
         simulationSubscription?.dispose()
         simulationSubscription =
             generateChannels(
@@ -285,6 +302,7 @@ class SystemProcessor {
         codeLength: Int,
         frameLength: Int
     ): Single<List<Channel>> {
+        L.d(this, "Generate simulation channels")
         return Single.create<List<Channel>> {
             val channels = mutableListOf<Channel>()
             val channelCodesGen = ChannelCodesGenerator()
@@ -323,6 +341,8 @@ class SystemProcessor {
     private fun changeSimulationTime(time: Double) {
         if (Simulator.simulationTime == time) return
 
+        L.d(this, "Change simulation time")
+
         Simulator.simulationTime = time
         noiseSnr?.let { n -> setNoise(n) } // генерируем новый шум с обновленной продолжительностью
         interferenceRate?.let { rate ->
@@ -330,16 +350,6 @@ class SystemProcessor {
                 setInterference(sp, rate)
             }
         } // генерируем новые помехи с обновленной продолжительностью
-    }
-
-    fun disableDataCoding() {
-        isDataCodingEnabled = false
-    }
-
-    fun setDataCoding(codesType: Int, codesLength: Int) {
-        isDataCodingEnabled = true
-        dataCodesType = codesType
-        dataCodesLength = codesLength
     }
 
     /**
@@ -357,10 +367,14 @@ class SystemProcessor {
         cancelCurrentProcess()
         var framesTransmitted = 0
         val coder = if (!isDataCodingEnabled) Repeater() else
-            when (dataCodesType) {
-                DataCodesContract.HAMMING -> HammingCoder(dataCodesLength)
+            when (sourceDataCodesType) {
+                DataCodesContract.HAMMING -> HammingCoder(
+                    channels.firstOrNull()?.frameLength ?: CdmaContract.DEFAULT_FRAME_SIZE
+                )
                 else -> Repeater()
             }
+
+        L.d(this, "Transmitting: start transmitting $frameCount frames")
 
         transmitSubscription = Observable
             .create<List<Channel>> {
@@ -403,7 +417,8 @@ class SystemProcessor {
     }
 
     private fun setupWithData(channel: Channel, coder: DataCoder): Channel {
-        val data = UserDataProvider.generateData(channel.frameLength)
+        val dataLength = if (coder is HammingCoder) coder.dataBitsInWord else channel.frameLength
+        val data = UserDataProvider.generateData(dataLength)
         val codedData = coder.encode(data)
         return channel.copy().apply { frameData = codedData }
     }
@@ -559,6 +574,7 @@ class SystemProcessor {
 
     @SuppressLint("CheckResult")
     private fun demodulate(signal: Signal, config: DemodulatorConfig) {
+        L.d(this, "Demodulation: start frame demodulation")
         val demodulator = QpskDemodulator(config)
 
         Single.create<DigitalSignal> {
@@ -595,7 +611,8 @@ class SystemProcessor {
     }
 
     fun applyConfig(config: DecoderConfig) {
-        if (!config.isAutoDetection) {
+        val isAuto = config.isAutoDetection ?: CdmaContract.DEFAULT_IS_AUTO_DETECTION_ENABLED
+        if (!isAuto) {
             val chls = createDecoderChannels(
                 config.channelCount ?: 0,
                 config.channelsCodeLength ?: 0,
@@ -605,6 +622,14 @@ class SystemProcessor {
         }
         L.d(this, "Decoding: update decoder config")
         storage.updateDecoderConfig(config)
+    }
+
+    fun addCustomDecoderChannel(code: BooleanArray) {
+        val c = Channel(code = code).apply {
+            name = "Custom-$id"
+        }
+        L.d(this, "Decoding: add custom channel")
+        storage.addDecoderChannel(c)
     }
 
     private fun createDecoderChannels(
@@ -636,11 +661,11 @@ class SystemProcessor {
         decodeSubscription = Single.create<List<Channel>> { emitter ->
             val decodedChannels = channels.map {
                 it.copy().apply {
-                    val frameData = CdmaDecimalCoder(threshold).decode(code.toBipolar(), data)
+                    val frame = CdmaDecimalCoder(threshold).decode(code.toBipolar(), data)
                     val errors = mutableListOf<Int>()
-                    frameData.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
+                    frame.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
                     this.errors = errors
-                    this.frameData = frameData.toUnipolar()
+                    this.frameData = frame.toUnipolar()
                 }
             }
             emitter.onSuccess(decodedChannels)
@@ -671,14 +696,6 @@ class SystemProcessor {
             }
     }
 
-    fun addCustomDecoderChannel(code: BooleanArray) {
-        val c = Channel(code = code).apply {
-            name = "Custom-$id"
-        }
-        L.d(this, "Decoding: add custom channel")
-        storage.addDecoderChannel(c)
-    }
-
     /**
      * Корреляционное автоопределение и декодирование каналов.
      */
@@ -690,8 +707,7 @@ class SystemProcessor {
     ) {
         decodeSubscription = Single.create<List<Channel>> { emitter ->
             val channels = mutableListOf<Channel>()
-            val codeGen =
-                ChannelCodesGenerator()
+            val codeGen = ChannelCodesGenerator()
             val codes = when (channelsCodeType) {
                 ChannelCodesGenerator.WALSH -> codeGen.generateWalshMatrix(codeLength)
                 else -> codeGen.generateWalshMatrix(codeLength)
@@ -702,12 +718,12 @@ class SystemProcessor {
                 val code = codes[i].toBipolar()
                 if (decoder.detectChannel(code, data)) {
                     val errors = mutableListOf<Int>()
-                    val frameData = decoder.decode(code, data).apply {
+                    val frame = decoder.decode(code, data).apply {
                         forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
                     }
                     val channel = Channel(
                         name = "${i + 1}",
-                        frameData = frameData.toUnipolar(),
+                        frameData = frame.toUnipolar(),
                         code = codes[i]
                     ).apply {
                         this.errors = errors
@@ -757,6 +773,7 @@ class SystemProcessor {
         cancelCurrentProcess()
 
         val transmittingChannels = storage.getSimulatedChannels()
+        val sourceConfig = storage.getSimulatedChannelsConfiguration()
         val demodConfig = storage.getCurrentDemodulatorConfig()
         val decoderConfig = storage.getDecoderConfiguration()
         val decodingChannels = storage.getDecoderChannels()
@@ -768,6 +785,7 @@ class SystemProcessor {
 
         characteristicsProcess = CalculateCharacteristicsProcess(
             transmittingChannels,
+            sourceConfig,
             decodingChannels,
             demodConfig,
             decoderConfig

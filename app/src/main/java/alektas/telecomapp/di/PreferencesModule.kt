@@ -121,16 +121,11 @@ class PreferencesModule {
         val isDataCodingEnabled = prefs.getBoolean(
             context.getString(R.string.source_data_coding_enable_key),
             DataCodesContract.DEFAULT_IS_CODING_ENABLED
-            )
+        )
 
         val dataCodeType = prefs.getInt(
             context.getString(R.string.source_data_coding_type_key),
             DataCodesContract.HAMMING
-        )
-
-        val dataCodeLength = prefs.getInt(
-            context.getString(R.string.source_data_coding_word_length_key),
-            DataCodesContract.DEFAULT_CODE_WORD_LENGTH
         )
 
         return ChannelsConfig(
@@ -141,8 +136,7 @@ class PreferencesModule {
             channelsCodeLength,
             frameLength,
             isDataCodingEnabled,
-            dataCodeType,
-            dataCodeLength
+            dataCodeType
         )
     }
 
@@ -223,7 +217,7 @@ class PreferencesModule {
     ): DecoderConfig {
         val isAuto = prefs.getBoolean(
             context.getString(R.string.decoder_channels_autodetection_key),
-            false
+            CdmaContract.DEFAULT_IS_AUTO_DETECTION_ENABLED
         )
 
         val channelsCodeType = prefs.getInt(
@@ -246,12 +240,24 @@ class PreferencesModule {
             CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         )
 
+        val isDataCoding = prefs.getBoolean(
+            context.getString(R.string.decoder_data_decoding_enable_key),
+            DataCodesContract.DEFAULT_IS_CODING_ENABLED
+        )
+
+        val dataCodeType = prefs.getInt(
+            context.getString(R.string.decoder_data_coding_type_key),
+            DataCodesContract.HAMMING
+        )
+
         return DecoderConfig(
             isAuto,
             channelCount,
-            codeLength,
             channelsCodeType,
-            threshold
+            codeLength,
+            threshold,
+            isDataCoding,
+            dataCodeType
         )
     }
 }

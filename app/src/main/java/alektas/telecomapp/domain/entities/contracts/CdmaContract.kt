@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 class CdmaContract {
 
     companion object {
+        const val DEFAULT_IS_AUTO_DETECTION_ENABLED = false
         const val DEFAULT_FRAME_SIZE = 100
         const val DEFAULT_CHANNEL_CODE_SIZE = 4
         const val DEFAULT_CHANNEL_COUNT = 4

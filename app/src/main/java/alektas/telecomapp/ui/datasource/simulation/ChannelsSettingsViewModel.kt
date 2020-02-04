@@ -5,12 +5,11 @@ import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.coders.DataCodesContract
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
-
-private const val MINIMAL_CODE_WORD_LENGTH = 3
 
 class ChannelsSettingsViewModel : ViewModel() {
     @Inject
@@ -25,138 +24,131 @@ class ChannelsSettingsViewModel : ViewModel() {
     val channelCodeLength = MutableLiveData<Int>()
     val frameSize = MutableLiveData<Int>()
     val dataCodeType = MutableLiveData<Int>()
-    val dataCodeLength = MutableLiveData<Int>()
     val isSettingsChanged = MutableLiveData<Boolean>()
 
     init {
         App.component.inject(this)
     }
 
-    fun createChannels(
+    fun setupChannelsConfig(
         countString: String,
         carrierFrequencyString: String,
         dataSpeedString: String,
-        channelCodeLengthString: String,
         channelCodeTypeString: String,
-        frameLengthString: String
+        channelCodeLengthString: String,
+        frameLengthString: String,
+        isDataDecoding: Boolean,
+        dataCodesTypeString: String
     ): Boolean {
-        val channelCount = parseChannelCount(countString)
-        val freq = parseFrequency(carrierFrequencyString)
-        val dataSpeed = parseDataspeed(dataSpeedString)
-        val channelCodeLength = parseFrameLength(channelCodeLengthString)
-        val channelCodeType = ChannelCodesGenerator.getCodeTypeId(channelCodeTypeString)
-        val frameLength = parseFrameLength(frameLengthString)
+        try {
+            val config = buildConfig(
+                countString,
+                carrierFrequencyString,
+                dataSpeedString,
+                channelCodeTypeString,
+                channelCodeLengthString,
+                frameLengthString,
+                isDataDecoding,
+                dataCodesTypeString
+            )
+            processor.applyConfig(config)
+            return true
+        } catch (e: Exception) {
+            return false
+        }
+    }
 
-        if (channelCount <= 0 || freq <= 0 || dataSpeed <= 0 || channelCodeLength <= 0
-            || channelCodeType < 0 || frameLength <= 0
-        ) return false
+    private fun buildConfig(
+        countString: String?,
+        carrierFrequencyString: String?,
+        dataSpeedString: String?,
+        channelCodeTypeString: String?,
+        channelCodeLengthString: String?,
+        frameLengthString: String?,
+        isDataDecoding: Boolean?,
+        dataCodesTypeString: String?
+    ): ChannelsConfig {
+        val channelCount = countString?.let { parseChannelCount(it) }
+        val freq = carrierFrequencyString?.let { parseFrequency(it) }
+        val dataSpeed = dataSpeedString?.let { parseDataspeed(it) }
+        val channelCodeLength = channelCodeLengthString?.let { parseFrameLength(it) }
+        val channelCodeType = channelCodeTypeString?.let { ChannelCodesGenerator.getCodeTypeId(it) }
+        val frameLength = frameLengthString?.let { parseFrameLength(it) }
+        val dataCodesType = dataCodesTypeString?.let { DataCodesContract.getCodeTypeId(it) }
 
-        saveChannelsSettings(
+        if (channelCodeType != null && channelCodeType < 0
+            || dataCodesType != null && dataCodesType < 0
+        ) {
+            throw NumberFormatException()
+        }
+
+        saveSettings(
             channelCount,
             freq,
             dataSpeed,
             channelCodeType,
             channelCodeLength,
-            frameLength
+            frameLength,
+            dataCodesType
         )
         isSettingsChanged.value = false
 
-        processor.createChannels(
+        return ChannelsConfig(
             channelCount,
             freq,
             dataSpeed,
             channelCodeType,
             channelCodeLength,
-            frameLength
+            frameLength,
+            isDataDecoding,
+            dataCodesType
         )
-
-        return true
-    }
-
-    fun enableDataCoding(codesTypeString: String, codesLengthString: String): Boolean {
-        val codesType = DataCodesContract.getCodeTypeId(codesTypeString)
-        val codesLength = parseCodeWordLength(codesLengthString)
-
-        if (codesType < 0 || codesLength < MINIMAL_CODE_WORD_LENGTH) return false
-
-        this.dataCodeType.value = codesType
-        this.dataCodeLength.value = codesLength
-        processor.setDataCoding(codesType, codesLength)
-        return true
-    }
-
-    fun disableDataCoding() {
-        processor.disableDataCoding()
     }
 
     fun setSettingsChanged() {
         isSettingsChanged.value = true
     }
 
-    private fun saveChannelsSettings(
-        channelCount: Int,
-        freq: Double,
-        dataSpeed: Double,
-        channelCodeType: Int,
-        channelCodeLength: Int,
-        frameLength: Int
+    private fun saveSettings(
+        channelCount: Int? = null,
+        freq: Double? = null,
+        dataSpeed: Double? = null,
+        channelCodeType: Int? = null,
+        channelCodeLength: Int? = null,
+        frameLength: Int? = null,
+        dataCodesType: Int? = null
     ) {
-        this.channelCount.value = channelCount
-        carrierFrequency.value = freq
-        this.dataSpeed.value = dataSpeed
-        this.channelCodeLength.value = channelCodeLength
-        this.channelCodeType.value = channelCodeType
-        frameSize.value = frameLength
+        channelCount?.let { this.channelCount.value = it }
+        freq?.let { this.carrierFrequency.value = it }
+        dataSpeed?.let { this.dataSpeed.value = it }
+        channelCodeLength?.let { this.channelCodeLength.value = it }
+        channelCodeType?.let { this.channelCodeType.value = it }
+        frameLength?.let { this.frameSize.value = it }
+        dataCodesType?.let { this.dataCodeType.value = it }
     }
 
     fun parseChannelCount(count: String): Int {
-        return try {
-            val c = count.toInt()
-            if (c <= 0) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1
-        }
+        val c = count.toInt()
+        if (c <= 0) throw NumberFormatException()
+        return c
     }
 
     fun parseFrequency(freqString: String): Double {
-        return try {
-            val c = freqString.toDouble()
-            if (c <= 0) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1.0
-        }
+        val c = freqString.toDouble()
+        if (c <= 0) throw NumberFormatException()
+        return c
     }
 
     fun parseDataspeed(speed: String): Double {
-        return try {
-            val c = speed.toDouble()
-            if (c <= 0) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1.0
-        }
+        val c = speed.toDouble()
+        if (c <= 0) throw NumberFormatException()
+        return c
     }
 
     fun parseFrameLength(length: String): Int {
-        return try {
-            val c = length.toInt()
-            if (c <= 0) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1
-        }
-    }
-
-    fun parseCodeWordLength(length: String): Int {
-        return try {
-            val c = length.toInt()
-            if (c < MINIMAL_CODE_WORD_LENGTH) throw NumberFormatException()
-            c
-        } catch (e: NumberFormatException) {
-            -1
-        }
+        val c = length.toInt()
+        if (c <= 0) throw NumberFormatException()
+        return c
     }
 
     override fun onCleared() {
