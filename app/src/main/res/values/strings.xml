@@ -154,4 +154,12 @@
     <string name="decoder_data_decoding_enable_key">decoder_data_coding_enable_key</string>
     <string name="decoder_data_coding_type_key">decoder_data_coding_type_key</string>
     <string name="decoder_data_coding_word_length_key">decoder_data_coding_word_length_key</string>
+    <string name="channels_label">Каналы</string>
+    <string name="data_bits_transmitted">Передано</string>
+    <string name="data_bits_received">Принято</string>
+    <string name="data_error_bits">Ошибок</string>
+    <string name="transmitted">Передано</string>
+    <string name="received">Принято</string>
+    <string name="errors">Ошибок</string>
+    <string name="bit">бит</string>
 </resources>

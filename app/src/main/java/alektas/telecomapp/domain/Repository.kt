@@ -34,11 +34,15 @@ interface Repository {
     fun startCountingStatistics()
     fun endCountingStatistics()
     fun setExpectedFrameCount(count: Int)
+    fun startFileProcessingMode()
 
-    fun setChannels(channels: List<Channel>)
-    fun removeChannel(channel: Channel)
+    fun setSimulatedChannels(channels: List<Channel>)
+    fun removeSimulatedChannel(channel: Channel)
     fun getSimulatedChannels(): List<Channel>
-    fun observeSimulatedChannels(): Observable<List<Channel>>
+    /**
+     * @param withLast true - источник при подписке выдает последний список декодированных каналов
+     */
+    fun observeSimulatedChannels(withLast: Boolean = true): Observable<List<Channel>>
 
     fun setChannelsFrameSignal(signal: Signal)
     fun observeChannelsSignal(): Observable<Signal>
@@ -77,10 +81,12 @@ interface Repository {
     fun removeDecoderChannel(channel: Channel)
     fun setDecoderChannels(channels: List<Channel>)
     fun getDecoderChannels(): List<Channel>
+    /**
+     * @param withLast true - источник при подписке выдает последний список декодированных каналов
+     */
     fun observeDecoderChannels(withLast: Boolean = true): Observable<List<Channel>>
 
-    fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>)
-    fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>>
+    fun setChannelsDataErrors(errors: Map<BooleanArray, List<Int>>)
 
     fun setTransmittingState(state: Int, progress: Int)
     fun setTransmittingSubProcess(state: ProcessState)
@@ -90,9 +96,13 @@ interface Repository {
 
     fun observeTransmittingChannelsCount(): Observable<Int>
     fun observeTransmittedBitsCount(): Observable<Int>
+    fun observeTransmittedDataBitsCount(): Observable<Int>
     fun observeReceivedBitsCount(): Observable<Int>
+    fun observeReceivedDataBitsCount(): Observable<Int>
     fun observeReceivedErrorsCount(): Observable<Int>
+    fun observeReceivedDataErrorsCount(): Observable<Int>
     fun observeBer(): Observable<Double>
+    fun observeDataBer(): Observable<Double>
 
     fun setBerByNoise(berByNoise: Pair<Double, Double>)
     fun getBerByNoiseList(): List<Pair<Double, Double>>

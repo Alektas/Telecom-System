@@ -209,7 +209,7 @@ class CalculateCharacteristicsProcess(
         val bitCount = decodedChannels.fold(0) { acc, c ->
             acc + c.frameData.size
         }
-        val errorMap = processor.diffChannels(dataChannels, decodedChannels)
+        val errorMap = processor.diffChannelsFrames(dataChannels, decodedChannels)
         val errorCount = errorMap.values.flatten().size
         progress(berState.withSubState(errorsState.withState(ProcessState.FINISHED)))
 

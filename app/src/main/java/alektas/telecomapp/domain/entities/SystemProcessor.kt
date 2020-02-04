@@ -51,6 +51,7 @@ class SystemProcessor {
     private var disposable = CompositeDisposable()
     private var simulationSubscription: Disposable? = null
     private var transmitSubscription: Disposable? = null
+    private var errorsCountingSubscription: Disposable? = null
     private var decodeSubscription: Disposable? = null
     private var characteristicsProcess: CalculateCharacteristicsProcess? = null
     private var sourceDataCodesType = DataCodesContract.HAMMING
@@ -118,13 +119,17 @@ class SystemProcessor {
                             data,
                             config.channelsCodeLength ?: 0,
                             config.channelsCodeType ?: 0,
-                            config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+                            config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD,
+                            config.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED,
+                            config.dataCodesType ?: DataCodesContract.HAMMING
                         )
                     } else {
                         decodeChannels(
                             storage.getDecoderChannels(),
                             data,
-                            config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+                            config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD,
+                            config.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED,
+                            config.dataCodesType ?: DataCodesContract.HAMMING
                         )
                     }
                 },
@@ -193,6 +198,7 @@ class SystemProcessor {
             .subscribeOn(Schedulers.io())
             .doOnSubscribe {
                 storage.setTransmittingSubProcess(ProcessState(READ_FILE_KEY, READ_FILE_NAME))
+                storage.startFileProcessingMode()
                 storage.startCountingStatistics()
             }
             .subscribe({
@@ -290,7 +296,7 @@ class SystemProcessor {
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.io())
                 .subscribe { channels: List<Channel> ->
-                    storage.setChannels(channels)
+                    storage.setSimulatedChannels(channels)
                 }
     }
 
@@ -365,7 +371,6 @@ class SystemProcessor {
         if (channels.isEmpty()) return
 
         cancelCurrentProcess()
-        var framesTransmitted = 0
         val coder = if (!isDataCodingEnabled) Repeater() else
             when (sourceDataCodesType) {
                 DataCodesContract.HAMMING -> HammingCoder(
@@ -376,51 +381,50 @@ class SystemProcessor {
 
         L.d(this, "Transmitting: start transmitting $frameCount frames")
 
+        errorsCountingSubscription = storage.observeSimulatedChannels(withLast = false)
+            .zipWith(storage.observeDecoderChannels(withLast = false)) { trans, rec ->
+                diffChannelsData(trans, rec)
+            }
+            .subscribeOn(Schedulers.io())
+            .subscribe {
+                L.d(this, "Statistics: computed transmitted and received data difference")
+                storage.setChannelsDataErrors(it)
+            }
+
         transmitSubscription = Observable
             .create<List<Channel>> {
-                // генерировать на 1 фрейм меньше, так как первый фрейм отправляется в startWith
-                for (i in 1 until frameCount) {
+                for (i in 0 until frameCount) {
                     val chls = channels.map { c -> setupWithData(c, coder) }
                     it.onNext(chls)
+                    try {
+                        Thread.sleep(1000)
+                    } catch (e: InterruptedException) {
+                        cancelCurrentProcess()
+                        it.onComplete()
+                    }
                 }
-
-                // Сгенерировать дополнительный пустой фрейм, означающий конец передачи.
-                // Нужен для того, чтобы дождаться декодирования последнего фрейма для отображения
-                // индикации прогресса передачи.
-                val chls = channels.map { c ->
-                    c.copy().apply { frameData = booleanArrayOf() }
-                }
-                it.onNext(chls)
                 it.onComplete()
             }
-            .zipWith(storage.observeDecoderChannels(false)) { next, prev ->
-                storage.resetTransmittingSubProcesses()
-                framesTransmitted++
-                next
-            } // дожидаться декодирования
-            // Первый фрейм запускает цикл передачи (нужно для срабатывания zipWith)
-            .startWith(channels.map { c -> setupWithData(c, coder) })
             .subscribeOn(Schedulers.io())
             .doOnSubscribe {
                 storage.startCountingStatistics()
                 storage.setExpectedFrameCount(frameCount)
             }
-            .doFinally { storage.endCountingStatistics() }
-            .subscribe {
-                if (framesTransmitted >= frameCount) {
-                    transmitSubscription?.dispose()
-                    return@subscribe
-                }
-
-                storage.setChannels(it) // передача очередного фрейма всеми каналами
-            }
+            .subscribe({
+                storage.setSimulatedChannels(it) // передача очередного фрейма всеми каналами
+            }, {
+                it.printStackTrace()
+            })
     }
 
     private fun setupWithData(channel: Channel, coder: DataCoder): Channel {
         val dataLength = if (coder is HammingCoder) coder.dataBitsInWord else channel.frameLength
         val data = UserDataProvider.generateData(dataLength)
         val codedData = coder.encode(data)
-        return channel.copy().apply { frameData = codedData }
+        return channel.copy().apply {
+            frameData = codedData
+            sourceData = data
+        }
     }
 
     @SuppressLint("CheckResult")
@@ -477,7 +481,7 @@ class SystemProcessor {
     }
 
     fun removeChannel(channel: Channel) {
-        storage.removeChannel(channel)
+        storage.removeSimulatedChannel(channel)
     }
 
     @SuppressLint("CheckResult")
@@ -656,7 +660,9 @@ class SystemProcessor {
     private fun decodeChannels(
         channels: List<Channel>,
         data: DoubleArray,
-        threshold: Float
+        threshold: Float,
+        isDataDecoding: Boolean,
+        dataCodesType: Int
     ) {
         decodeSubscription = Single.create<List<Channel>> { emitter ->
             val decodedChannels = channels.map {
@@ -666,6 +672,7 @@ class SystemProcessor {
                     frame.forEachIndexed { i, d -> if (d == 0.0) errors.add(i) }
                     this.errors = errors
                     this.frameData = frame.toUnipolar()
+                    this.sourceData = extractData(frameData, isDataDecoding, dataCodesType)
                 }
             }
             emitter.onSuccess(decodedChannels)
@@ -703,7 +710,9 @@ class SystemProcessor {
         data: DoubleArray,
         codeLength: Int,
         channelsCodeType: Int,
-        threshold: Float
+        threshold: Float,
+        isDataDecoding: Boolean,
+        dataCodesType: Int
     ) {
         decodeSubscription = Single.create<List<Channel>> { emitter ->
             val channels = mutableListOf<Channel>()
@@ -720,10 +729,11 @@ class SystemProcessor {
                     val errors = mutableListOf<Int>()
                     val frame = decoder.decode(code, data).apply {
                         forEachIndexed { index, d -> if (d == 0.0) errors.add(index) }
-                    }
+                    }.toUnipolar()
                     val channel = Channel(
                         name = "${i + 1}",
-                        frameData = frame.toUnipolar(),
+                        frameData = frame,
+                        sourceData = extractData(frame, isDataDecoding, dataCodesType),
                         code = codes[i]
                     ).apply {
                         this.errors = errors
@@ -758,6 +768,22 @@ class SystemProcessor {
                 L.d(this, "Decoding: auto decode")
                 storage.setDecoderChannels(channels)
             }
+    }
+
+    private fun extractData(
+        frame: BooleanArray,
+        isDataDecoding: Boolean,
+        dataCodesType: Int
+    ): BooleanArray {
+        var frameData = frame
+        if (isDataDecoding) {
+            val coder = when (dataCodesType) {
+                DataCodesContract.HAMMING -> HammingCoder(frame.size)
+                else -> Repeater()
+            }
+            frameData = coder.decode(frameData)
+        }
+        return frameData
     }
 
     /**
@@ -801,6 +827,15 @@ class SystemProcessor {
         return fromSnr to toSnr
     }
 
+    fun cancelCurrentProcess() {
+        errorsCountingSubscription?.dispose()
+        transmitSubscription?.let {
+            it.dispose()
+            storage.endCountingStatistics()
+        }
+        characteristicsProcess?.cancel()
+    }
+
     /**
      * Определение ошибочно принятых битов каналов.
      * Декодированные каналы, которые не передавались источником, не учитываются.
@@ -810,7 +845,7 @@ class SystemProcessor {
      * @return словарь, где ключ - код канала, значение - список индексов несовпадающих битов канала
      */
     @SuppressLint("CheckResult")
-    fun diffChannels(
+    fun diffChannelsFrames(
         transmitted: List<Channel>,
         received: List<Channel>
     ): Map<BooleanArray, List<Int>> {
@@ -830,6 +865,34 @@ class SystemProcessor {
                 channelsErrorBits[transCh.code] = transCh.frameData.indices.toList()
             } else {
                 diff(transCh.frameData, recCh.frameData).let {
+                    if (it.isNotEmpty()) channelsErrorBits[transCh.code] = it
+                }
+            }
+        }
+
+        return channelsErrorBits
+    }
+
+    private fun diffChannelsData(
+        transmitted: List<Channel>,
+        received: List<Channel>
+    ): Map<BooleanArray, List<Int>> {
+        val channelsErrorBits = mutableMapOf<BooleanArray, List<Int>>()
+
+        if (transmitted.isEmpty()) {
+            return channelsErrorBits
+        }
+        if (received.isEmpty()) {
+            transmitted.forEach { channelsErrorBits[it.code] = it.sourceData.indices.toList() }
+            return channelsErrorBits
+        }
+
+        for (transCh in transmitted) {
+            val recCh = received.find { it.code.contentEquals(transCh.code) }
+            if (recCh == null) {
+                channelsErrorBits[transCh.code] = transCh.sourceData.indices.toList()
+            } else {
+                diff(transCh.sourceData, recCh.sourceData).let {
                     if (it.isNotEmpty()) channelsErrorBits[transCh.code] = it
                 }
             }
@@ -860,14 +923,6 @@ class SystemProcessor {
         }
 
         return indices
-    }
-
-    fun cancelCurrentProcess() {
-        transmitSubscription?.let {
-            it.dispose()
-            storage.endCountingStatistics()
-        }
-        characteristicsProcess?.cancel()
     }
 
 }

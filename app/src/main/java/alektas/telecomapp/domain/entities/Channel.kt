@@ -9,6 +9,7 @@ data class Channel(
     val carrierFrequency: Double = QpskContract.DEFAULT_CARRIER_FREQUENCY,
     val frameLength: Int = CdmaContract.DEFAULT_FRAME_SIZE,
     var frameData: BooleanArray = booleanArrayOf(),
+    var sourceData: BooleanArray = booleanArrayOf(),
     val bitTime: Double = QpskContract.DEFAULT_DATA_BIT_TIME,
     val code: BooleanArray = booleanArrayOf(),
     val channelCodeType: Int = ChannelCodesGenerator.WALSH
