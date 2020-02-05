@@ -62,16 +62,8 @@ class SystemProcessor {
         App.component.channelsConfig().let { applyConfig(it) }
         App.component.decoderConfig().let { applyConfig(it) }
 
-        if (noiseSnr != null) {
-            setNoise(noiseSnr ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE)
-        }
-
-        if (interferenceRate != null && interferenceSparseness != null) {
-            setInterference(
-                interferenceSparseness ?: QpskContract.DEFAULT_INTERFERENCE_SPARSENESS,
-                interferenceRate ?: QpskContract.DEFAULT_SIGNAL_NOISE_RATE
-            )
-        }
+        noiseSnr?.let { setNoise(it) }
+        interferenceRate?.let { r -> interferenceSparseness?.let { setInterference(it, r) } }
 
         disposable.addAll(
             storage.observeSimulationChannelsConfig()
@@ -114,22 +106,27 @@ class SystemProcessor {
                     decodeSubscription?.dispose()
                     val isAuto =
                         config.isAutoDetection ?: CdmaContract.DEFAULT_IS_AUTO_DETECTION_ENABLED
+                    val threshold = config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD
+                    val isDataDecoding = config.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED
+                    val dataCodesType = config.dataCodesType ?: DataCodesContract.HAMMING
+                    val codeLength = config.channelsCodeLength ?: CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
+                    val channelsCodesType = config.channelsCodeType ?: CdmaContract.DEFAULT_CHANNEL_CODE_TYPE
                     if (isAuto) {
                         autoDecode(
                             data,
-                            config.channelsCodeLength ?: 0,
-                            config.channelsCodeType ?: 0,
-                            config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD,
-                            config.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED,
-                            config.dataCodesType ?: DataCodesContract.HAMMING
+                            codeLength,
+                            channelsCodesType,
+                            threshold,
+                            isDataDecoding,
+                            dataCodesType
                         )
                     } else {
                         decodeChannels(
                             storage.getDecoderChannels(),
                             data,
-                            config.threshold ?: QpskContract.DEFAULT_SIGNAL_THRESHOLD,
-                            config.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED,
-                            config.dataCodesType ?: DataCodesContract.HAMMING
+                            threshold,
+                            isDataDecoding,
+                            dataCodesType
                         )
                     }
                 },
