@@ -3,6 +3,7 @@ package alektas.telecomapp.ui.demodulator.input
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.utils.L
 import alektas.telecomapp.utils.getNormalizedSpectrum
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
@@ -20,16 +21,18 @@ class DemodulatorInputViewModel : ViewModel() {
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
-    val specturmData = MutableLiveData<Array<DataPoint>>()
+    val spectrumData = MutableLiveData<Array<DataPoint>>()
 
     init {
         App.component.inject(this)
 
-        disposable.add(storage.observeEther()
+        disposable.add(
+            storage.observeEther()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object : DisposableObserver<Signal>() {
                 override fun onNext(t: Signal) {
+                    L.d(this, "Demodulation: draw input signal graphs")
                     extractData(t)
                 }
 
@@ -57,7 +60,7 @@ class DemodulatorInputViewModel : ViewModel() {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { s: Array<DataPoint> -> specturmData.value = s })
+            .subscribe { s: Array<DataPoint> -> spectrumData.value = s })
     }
 
     override fun onCleared() {
