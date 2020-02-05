@@ -394,10 +394,11 @@ class SystemProcessor {
                     val chls = channels.map { c -> setupWithData(c, coder) }
                     it.onNext(chls)
                     try {
-                        Thread.sleep(1000)
+                        Thread.sleep(1000) // Равномерная нагрузка (успеваем увидеть изменения на графиках)
                     } catch (e: InterruptedException) {
                         cancelCurrentProcess()
                         it.onComplete()
+                        break
                     }
                 }
                 it.onComplete()
