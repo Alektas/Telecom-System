@@ -20,7 +20,7 @@ class DemodulatorInputViewModel : ViewModel() {
     lateinit var storage: Repository
     private val disposable = CompositeDisposable()
     val inputSignalData = MutableLiveData<Array<DataPoint>>()
-    val specturmData = MutableLiveData<Array<DataPoint>>()
+    val spectrumData = MutableLiveData<Array<DataPoint>>()
 
     init {
         App.component.inject(this)
@@ -57,7 +57,7 @@ class DemodulatorInputViewModel : ViewModel() {
         }
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { s: Array<DataPoint> -> specturmData.value = s })
+            .subscribe { s: Array<DataPoint> -> spectrumData.value = s })
     }
 
     override fun onCleared() {
