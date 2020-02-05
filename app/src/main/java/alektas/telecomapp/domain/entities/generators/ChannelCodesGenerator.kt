@@ -1,8 +1,8 @@
-package alektas.telecomapp.data
+package alektas.telecomapp.domain.entities.generators
 
 import kotlin.random.Random
 
-class CodeGenerator {
+class ChannelCodesGenerator {
 
     companion object {
         const val RANDOM = 0

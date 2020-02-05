@@ -102,7 +102,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="@string/code_types"
+            android:hint="@string/channel_code_types"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
             app:layout_constraintTop_toBottomOf="@id/decoder_channel_code_layout">
@@ -122,7 +122,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top_text"
-            android:hint="@string/code_length"
+            android:hint="@string/channel_code_length"
             app:errorEnabled="true"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
@@ -175,6 +175,35 @@
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/decoder_data_coding_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/source_decoding"
+            android:textColorHint="@android:color/black"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/decoder_threshold_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/decoder_data_code_type_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/data_code_types"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
+            app:layout_constraintStart_toStartOf="@id/guideline_left_border"
+            app:layout_constraintTop_toBottomOf="@id/decoder_data_coding_checkbox">
+
+            <AutoCompleteTextView
+                android:id="@+id/decoder_data_code_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:editable="false"
+                android:inputType="none"
+                android:lines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/generate_channels_btn"
             android:layout_width="0dp"
@@ -182,7 +211,7 @@
             android:text="@string/decode_channels"
             app:layout_constraintEnd_toStartOf="@id/guideline_right_border"
             app:layout_constraintStart_toStartOf="@id/guideline_left_border"
-            app:layout_constraintTop_toBottomOf="@id/decoder_threshold_layout" />
+            app:layout_constraintTop_toBottomOf="@id/decoder_data_code_type_layout" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/channel_list"

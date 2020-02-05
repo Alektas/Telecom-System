@@ -9,8 +9,9 @@ import android.view.ViewGroup
 
 import alektas.telecomapp.R
 import androidx.lifecycle.Observer
+import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.demodulator_input_fragment.*
 
 class DemodulatorInputFragment : Fragment() {
 
@@ -19,6 +20,8 @@ class DemodulatorInputFragment : Fragment() {
     }
 
     private lateinit var viewModel: DemodulatorInputViewModel
+    private val signalGraph = LineGraphSeries<DataPoint>()
+    private val spectrumGraph = LineGraphSeries<DataPoint>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,16 +30,22 @@ class DemodulatorInputFragment : Fragment() {
         return inflater.inflate(R.layout.demodulator_input_fragment, container, false)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        view.findViewById<GraphView>(R.id.input_signal_chart).apply { addSeries(signalGraph) }
+        view.findViewById<GraphView>(R.id.spectrum_chart).apply { addSeries(spectrumGraph) }
+        super.onViewCreated(view, savedInstanceState)
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(DemodulatorInputViewModel::class.java)
 
         viewModel.inputSignalData.observe(viewLifecycleOwner, Observer {
-            input_signal_chart.addSeries(LineGraphSeries(it))
+            signalGraph.resetData(it)
         })
 
-        viewModel.specturmData.observe(viewLifecycleOwner, Observer {
-            spectrum_chart.addSeries(LineGraphSeries(it))
+        viewModel.spectrumData.observe(viewLifecycleOwner, Observer {
+            spectrumGraph.resetData(it)
         })
     }
 

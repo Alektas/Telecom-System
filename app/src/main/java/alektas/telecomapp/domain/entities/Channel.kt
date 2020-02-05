@@ -1,6 +1,6 @@
 package alektas.telecomapp.domain.entities
 
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 
@@ -9,9 +9,10 @@ data class Channel(
     val carrierFrequency: Double = QpskContract.DEFAULT_CARRIER_FREQUENCY,
     val frameLength: Int = CdmaContract.DEFAULT_FRAME_SIZE,
     var frameData: BooleanArray = booleanArrayOf(),
+    var sourceData: BooleanArray = booleanArrayOf(),
     val bitTime: Double = QpskContract.DEFAULT_DATA_BIT_TIME,
     val code: BooleanArray = booleanArrayOf(),
-    val codeType: Int = CodeGenerator.WALSH
+    val channelCodeType: Int = ChannelCodesGenerator.WALSH
 ) {
     val id: Int
     var errors: List<Int>? = null

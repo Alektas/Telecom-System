@@ -8,12 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 
 import alektas.telecomapp.R
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.Channel
+import alektas.telecomapp.domain.entities.coders.DataCodesContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.ui.datasource.ChannelAdapter
 import alektas.telecomapp.ui.datasource.ChannelController
+import alektas.telecomapp.ui.utils.ChannelsAutoDetection
+import alektas.telecomapp.ui.utils.DataCoding
+import alektas.telecomapp.ui.utils.Mode
 import alektas.telecomapp.ui.utils.SimpleArrayAdapter
 import alektas.telecomapp.utils.SystemUtils
 import android.content.Context
@@ -30,12 +34,12 @@ import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.android.synthetic.main.decoder_fragment.*
 import kotlinx.android.synthetic.main.decoder_fragment.channel_list
 import kotlinx.android.synthetic.main.decoder_fragment.generate_channels_btn
+import java.lang.NumberFormatException
 
 class DecoderFragment : Fragment(), ChannelController {
     private lateinit var viewModel: DecoderViewModel
     private lateinit var prefs: SharedPreferences
     private val graphPoints = LineGraphSeries<DataPoint>()
-    private var isAutoDetection = true
 
     companion object {
         fun newInstance() = DecoderFragment()
@@ -67,7 +71,12 @@ class DecoderFragment : Fragment(), ChannelController {
             getString(R.string.settings_decoder_key),
             Context.MODE_PRIVATE
         )
-        setupCodeTypesDropdown()
+
+        val channelCodes = listOf(ChannelCodesGenerator.codeNames[ChannelCodesGenerator.WALSH] ?: "")
+        setupDropdown(decoder_channel_code_type, channelCodes)
+        val dataCodes = DataCodesContract.codeNames.values.toList()
+        setupDropdown(decoder_data_code_type, dataCodes)
+
         setFieldsValidation()
         setInitValues(prefs)
         setupControls()
@@ -97,32 +106,24 @@ class DecoderFragment : Fragment(), ChannelController {
 
     override fun showChannelDetails(channel: Channel) {}
 
-    private fun setupCodeTypesDropdown() {
+    private fun setupDropdown(dropdown: AutoCompleteTextView, items: List<String>) {
         val adapter = SimpleArrayAdapter(
             requireContext(),
             R.layout.support_simple_spinner_dropdown_item,
-            listOf(CodeGenerator.codeNames[CodeGenerator.WALSH] ?: "")
+            items
         )
-        decoder_channel_code_type.setAdapter<ArrayAdapter<String>>(adapter)
 
-        val defaultType = CodeGenerator.getCodeName(CodeGenerator.WALSH)
-        decoder_channel_code_type.setText(defaultType)
-
-        decoder_channel_code_type_layout.setOnTouchListener { v, _ ->
-            SystemUtils.hideKeyboard(this)
-            v.findViewById<AutoCompleteTextView>(R.id.decoder_channel_code_type).showDropDown()
-            false
+        dropdown.apply {
+            setAdapter<ArrayAdapter<String>>(adapter)
+            setOnItemClickListener { _, _, _, _ ->
+                SystemUtils.hideKeyboard(this)
+            }
         }
     }
 
     private fun setupControls() {
         decoder_channel_code.setOnEditorActionListener { _, _, _ ->
             add_channel_btn.performClick()
-            false
-        }
-
-        decoder_threshold.setOnEditorActionListener { _, _, _ ->
-            generate_channels_btn.performClick()
             false
         }
 
@@ -133,31 +134,40 @@ class DecoderFragment : Fragment(), ChannelController {
 
         generate_channels_btn.setOnClickListener {
             SystemUtils.hideKeyboard(this)
-            decodeChannels(isAutoDetection)
+            setupDecoding()
         }
 
         channels_autodetection_checkbox.setOnCheckedChangeListener { _, isAuto ->
-            setupViewByMode(isAuto)
-            decodeChannels(isAuto)
+            setupViewByMode(ChannelsAutoDetection(isAuto))
+            setupDecoding()
             prefs.edit().putBoolean(getString(R.string.decoder_channels_autodetection_key), isAuto).apply()
+        }
+
+        decoder_data_coding_checkbox.setOnCheckedChangeListener { _, isEnabled ->
+            setupViewByMode(DataCoding(isEnabled))
+            setupDecoding()
+            prefs.edit().putBoolean(getString(R.string.decoder_data_decoding_enable_key), isEnabled).apply()
         }
     }
 
     private fun setInitValues(prefs: SharedPreferences) {
-        val isAutoDetection = prefs.getBoolean(getString(R.string.decoder_channels_autodetection_key), false)
+        val isAutoDetection = prefs.getBoolean(
+            getString(R.string.decoder_channels_autodetection_key),
+            CdmaContract.DEFAULT_IS_AUTO_DETECTION_ENABLED
+        )
         channels_autodetection_checkbox.isChecked = isAutoDetection
-        setupViewByMode(isAutoDetection)
+        setupViewByMode(ChannelsAutoDetection(isAutoDetection))
 
         prefs.getInt(
             getString(R.string.decoder_channels_codetype_key),
-            CdmaContract.DEFAULT_CODE_TYPE
+            CdmaContract.DEFAULT_CHANNEL_CODE_TYPE
         ).let {
-            decoder_channel_code_type.setText(CodeGenerator.getCodeName(it))
+            decoder_channel_code_type.setText(ChannelCodesGenerator.getCodeName(it))
         }
 
         prefs.getInt(
             getString(R.string.decoder_code_length_key),
-            CdmaContract.DEFAULT_CODE_SIZE
+            CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         ).let {
             decoder_code_length.setText(it.toString())
         }
@@ -175,14 +185,28 @@ class DecoderFragment : Fragment(), ChannelController {
         ).let {
             decoder_channel_count.setText(it.toString())
         }
+
+        val isDataCodingEnabled = prefs.getBoolean(
+            getString(R.string.decoder_data_decoding_enable_key),
+            DataCodesContract.DEFAULT_IS_CODING_ENABLED
+        )
+        decoder_data_coding_checkbox.isChecked = isDataCodingEnabled
+        setupViewByMode(DataCoding(isDataCodingEnabled))
+
+        prefs.getInt(
+            getString(R.string.decoder_data_coding_type_key),
+            DataCodesContract.HAMMING
+        ).let {
+            decoder_data_code_type.setText(DataCodesContract.getCodeName(it))
+        }
     }
 
     private fun observeSettings(viewModel: DecoderViewModel, prefs: SharedPreferences) {
-        viewModel.codeType.observe(viewLifecycleOwner, Observer {
+        viewModel.channelsCodesType.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.decoder_channels_codetype_key), it).apply()
         })
 
-        viewModel.codeLength.observe(viewLifecycleOwner, Observer {
+        viewModel.channelsCodesLength.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.decoder_code_length_key), it).apply()
         })
 
@@ -193,47 +217,65 @@ class DecoderFragment : Fragment(), ChannelController {
         viewModel.channelCount.observe(viewLifecycleOwner, Observer {
             prefs.edit().putInt(getString(R.string.decoder_channels_count_key), it).apply()
         })
+
+        viewModel.dataCodesType.observe(viewLifecycleOwner, Observer {
+            prefs.edit().putInt(getString(R.string.decoder_data_coding_type_key), it).apply()
+        })
     }
 
     private fun setFieldsValidation() {
         decoder_code_length.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseChannelCount(text.toString()) > 0) {
-                decoder_code_length_layout.error = null
-            } else {
-                decoder_code_length_layout.error = getString(R.string.error_positive_num)
+            decoder_code_length_layout.error = try {
+                viewModel.parseChannelCount(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_positive_num)
             }
         }
 
         decoder_threshold.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseThreshold(text.toString()) >= 0) {
-                decoder_threshold_layout.error = null
-            } else {
-                decoder_threshold_layout.error = getString(R.string.error_num)
+            decoder_threshold_layout.error = try {
+                viewModel.parseThreshold(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_num)
             }
         }
 
         decoder_channel_count.doOnTextChanged { text, _, _, _ ->
-            if (viewModel.parseChannelCount(text.toString()) > 0) {
-                decoder_channel_count_layout.error = null
-            } else {
-                decoder_channel_count_layout.error = getString(R.string.error_positive_num)
+            decoder_channel_count_layout.error = try {
+                viewModel.parseChannelCount(text.toString())
+                null
+            } catch (e: NumberFormatException) {
+                getString(R.string.error_positive_num)
             }
         }
     }
 
-    private fun decodeChannels(isAuto: Boolean = false) {
+    private fun setupDecoding() {
+        val isAutoDetection = channels_autodetection_checkbox.isChecked
         val channelCount = decoder_channel_count.text.toString()
-        val codeLength = decoder_code_length.text.toString()
-        val codeType = decoder_channel_code_type.text.toString()
+        val channelsCodeLength = decoder_code_length.text.toString()
+        val channelsCodeType = decoder_channel_code_type.text.toString()
         val threshold = decoder_threshold.text.toString()
+        val isDataDecoding = decoder_data_coding_checkbox.isChecked
+        val dataCodesType = decoder_data_code_type.text.toString()
 
-        val isSuccess = if (isAuto) {
-            viewModel.setupAutoDecoding(codeLength, codeType, threshold)
-        } else {
-            viewModel.setupDecoding(channelCount, codeLength, codeType, threshold)
-        }
+        val isSuccess = viewModel.setupDecoding(
+            isAutoDetection,
+            channelCount,
+            channelsCodeType,
+            channelsCodeLength,
+            threshold,
+            isDataDecoding,
+            dataCodesType
+        )
         if (!isSuccess) {
-            Toast.makeText(requireContext(), getString(R.string.enter_valid_data), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.enter_valid_data),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -249,20 +291,30 @@ class DecoderFragment : Fragment(), ChannelController {
         }
     }
 
-    private fun setupViewByMode(auto: Boolean) {
-        isAutoDetection = auto
-        if (auto) {
-            View.GONE.let {
-                decoder_channel_code_layout.visibility = it
-                add_channel_btn.visibility = it
-                decoder_channel_count_layout.visibility = it
+    private fun setupViewByMode(mode: Mode) {
+        when (mode) {
+            is DataCoding -> {
+                decoder_data_code_type_layout.isEnabled = mode.isEnabled
             }
-        } else {
-            View.VISIBLE.let {
-                decoder_channel_code_layout.visibility = it
-                add_channel_btn.visibility = it
-                decoder_channel_count_layout.visibility = it
+            is ChannelsAutoDetection -> {
+                if (mode.isEnabled) hideManualDetectionFields() else showManualDetectionFields()
             }
+        }
+    }
+
+    private fun showManualDetectionFields() {
+        View.VISIBLE.let {
+            decoder_channel_code_layout.visibility = it
+            add_channel_btn.visibility = it
+            decoder_channel_count_layout.visibility = it
+        }
+    }
+
+    private fun hideManualDetectionFields() {
+        View.GONE.let {
+            decoder_channel_code_layout.visibility = it
+            add_channel_btn.visibility = it
+            decoder_channel_count_layout.visibility = it
         }
     }
 

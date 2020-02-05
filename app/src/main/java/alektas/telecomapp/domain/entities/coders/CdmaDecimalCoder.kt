@@ -55,7 +55,6 @@ class CdmaDecimalCoder(private val threshold: Float = QpskContract.DEFAULT_SIGNA
      */
     fun detectChannel(code: DoubleArray, codedData: DoubleArray): Boolean {
         if (code.isEmpty() || codedData.isEmpty()) return false
-
         val slice = codedData.sliceArray(0 until code.size * CHANNEL_DETECTION_BITS_COUNT)
         val decodedBits = decode(code, slice)
         return decodedBits.all { it != 0.0 }
