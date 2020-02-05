@@ -3,6 +3,7 @@ package alektas.telecomapp.ui.demodulator.input
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.signals.Signal
+import alektas.telecomapp.utils.L
 import alektas.telecomapp.utils.getNormalizedSpectrum
 import alektas.telecomapp.utils.toDataPoints
 import androidx.lifecycle.MutableLiveData
@@ -25,11 +26,13 @@ class DemodulatorInputViewModel : ViewModel() {
     init {
         App.component.inject(this)
 
-        disposable.add(storage.observeEther()
+        disposable.add(
+            storage.observeEther()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object : DisposableObserver<Signal>() {
                 override fun onNext(t: Signal) {
+                    L.d(this, "Demodulation: draw input signal graphs")
                     extractData(t)
                 }
 
