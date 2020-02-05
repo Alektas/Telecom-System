@@ -47,7 +47,23 @@ class StatisticFragment : Fragment() {
         })
 
         viewModel.berData.observe(viewLifecycleOwner, Observer {
-            statistic_ber.text = String.format("%.2f", it)
+            statistic_ber.text = String.format("%.3f", it)
+        })
+
+        viewModel.dataBitTransmittedData.observe(viewLifecycleOwner, Observer {
+            statistic_data_bits_transmitted.text = it.toString()
+        })
+
+        viewModel.dataBitReceivedData.observe(viewLifecycleOwner, Observer {
+            statistic_data_bits_received.text = it.toString()
+        })
+
+        viewModel.dataErrorBitCountData.observe(viewLifecycleOwner, Observer {
+            statistic_data_error_bits_count.text = it.toString()
+        })
+
+        viewModel.dataBerData.observe(viewLifecycleOwner, Observer {
+            statistic_data_ber.text = String.format("%.3f", it)
         })
     }
 

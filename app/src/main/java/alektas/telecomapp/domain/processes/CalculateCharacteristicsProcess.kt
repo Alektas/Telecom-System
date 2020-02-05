@@ -1,16 +1,16 @@
 package alektas.telecomapp.domain.processes
 
 import alektas.telecomapp.App
-import alektas.telecomapp.data.CodeGenerator
+import alektas.telecomapp.domain.entities.generators.ChannelCodesGenerator
 import alektas.telecomapp.data.UserDataProvider
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
-import alektas.telecomapp.domain.entities.coders.CdmaDecimalCoder
-import alektas.telecomapp.domain.entities.coders.toBipolar
-import alektas.telecomapp.domain.entities.coders.toUnipolar
+import alektas.telecomapp.domain.entities.coders.*
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
+import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.domain.entities.contracts.QpskContract
 import alektas.telecomapp.domain.entities.demodulators.QpskDemodulator
 import alektas.telecomapp.domain.entities.generators.SignalGenerator
@@ -29,6 +29,7 @@ import kotlin.math.*
 
 class CalculateCharacteristicsProcess(
     private val transmittingChannels: List<Channel>,
+    private val sourceConfig: ChannelsConfig,
     private val decodingChannels: List<Channel>,
     private val demodulatorConfig: DemodulatorConfig,
     private val decoderConfig: DecoderConfig
@@ -73,22 +74,36 @@ class CalculateCharacteristicsProcess(
             snrs.toFlowable()
                 .map { snr ->
                     progress(state.withResetedSubStates())
+
+                    val frameLength = transmittingChannels.firstOrNull()?.frameLength ?: CdmaContract.DEFAULT_FRAME_SIZE
+                    val isDataCoding = sourceConfig.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED
+                    val coderType = sourceConfig.dataCodesType ?: DataCodesContract.HAMMING
+                    val coder = buildCoder(frameLength, isDataCoding, coderType)
+
                     val ber = calculateBer(
                         transmittingChannels,
+                        coder,
                         snr,
                         demodulatorConfig,
                         decodingChannels,
                         decoderConfig
                     ) { progress(state.withSubState(it)) }
+
+
+                    val codeRate = if (coder is HammingCoder) coder.rate else 1.0f
+                    val dataSpeed =
+                        calculateDataSpeed(transmittingChannels.first().bitTime, ber, codeRate) {
+                            progress(state.withSubState(it))
+                        }
+
                     val theoreticBer =
                         calculateTheoreticBer(snr) { progress(state.withSubState(it)) }
+
                     val capacity = calculateCapacity(
                         snr,
                         transmittingChannels.first().bitTime
                     ) { progress(state.withSubState(it)) }
-                    val dataSpeed = calculateDataSpeed(transmittingChannels.first().bitTime, ber) {
-                        progress(state.withSubState(it))
-                    }
+
                     SystemCharacteristics(snr, ber, theoreticBer, capacity, dataSpeed)
                 }
                 .subscribeOn(Schedulers.computation())
@@ -125,6 +140,7 @@ class CalculateCharacteristicsProcess(
      */
     private fun calculateBer(
         transmittingChannels: List<Channel>,
+        coder: DataCoder,
         snr: Double,
         demodulatorConfig: DemodulatorConfig,
         decoderChannels: List<Channel>,
@@ -133,11 +149,21 @@ class CalculateCharacteristicsProcess(
     ): Double {
         progress(berState.withState(ProcessState.STARTED))
 
-        val dataChannels = generateData(transmittingChannels) {
+        val dataLength =
+            if (coder is HammingCoder) {
+                coder.dataBitsInWord
+            } else {
+                transmittingChannels.first().frameLength
+            }
+        val dataChannels = generateData(transmittingChannels, dataLength) {
             progress(berState.withSubState(it))
         }
 
-        val signal = createSignal(dataChannels) {
+        val codedDataChannels = encodeData(dataChannels, coder) {
+            progress(berState.withSubState(it))
+        }
+
+        val signal = createSignal(codedDataChannels) {
             progress(berState.withSubState(it))
         }
 
@@ -153,7 +179,8 @@ class CalculateCharacteristicsProcess(
             progress(berState.withSubState(it))
         }
 
-        val channels = if (decoderConfig.isAutoDetection) {
+        val isAuto = decoderConfig.isAutoDetection ?: CdmaContract.DEFAULT_IS_AUTO_DETECTION_ENABLED
+        val channels = if (isAuto) {
             detectChannels(
                 decoderConfig,
                 groupData,
@@ -165,7 +192,16 @@ class CalculateCharacteristicsProcess(
 
         val decodeState = ProcessState(DECODE_KEY, DECODE_NAME, ProcessState.STARTED)
         progress(berState.withSubState(decodeState))
-        val decodedChannels = decodeChannels(channels, groupData, threshold)
+        val isDataDecoding = decoderConfig.isDataCoding ?: DataCodesContract.DEFAULT_IS_CODING_ENABLED
+        val decoderType = decoderConfig.dataCodesType ?: DataCodesContract.HAMMING
+        val frameLength = channels.firstOrNull()?.frameLength ?: CdmaContract.DEFAULT_FRAME_SIZE
+        val decoder = buildCoder(frameLength, isDataDecoding, decoderType)
+        val decodedChannels = decodeChannels(
+            channels,
+            groupData,
+            threshold,
+            decoder
+        )
         progress(berState.withSubState(decodeState.withState(ProcessState.FINISHED)))
 
         val errorsState = ProcessState(FIND_ERRORS_KEY, FIND_ERRORS_NAME, ProcessState.STARTED)
@@ -173,7 +209,7 @@ class CalculateCharacteristicsProcess(
         val bitCount = decodedChannels.fold(0) { acc, c ->
             acc + c.frameData.size
         }
-        val errorMap = processor.diffChannels(dataChannels, decodedChannels)
+        val errorMap = processor.diffChannelsFrames(dataChannels, decodedChannels)
         val errorCount = errorMap.values.flatten().size
         progress(berState.withSubState(errorsState.withState(ProcessState.FINISHED)))
 
@@ -186,6 +222,14 @@ class CalculateCharacteristicsProcess(
 
         progress(berState.withState(ProcessState.FINISHED))
         return ber
+    }
+
+    private fun buildCoder(frameLength: Int, isDataCoding: Boolean, coderType: Int): DataCoder {
+        return if (isDataCoding && coderType == DataCodesContract.HAMMING) {
+            HammingCoder(frameLength)
+        } else {
+            Repeater()
+        }
     }
 
     private fun calculateTheoreticBer(
@@ -235,11 +279,12 @@ class CalculateCharacteristicsProcess(
     private fun calculateDataSpeed(
         bitTime: Double,
         ber: Double,
+        codeRate: Float,
         progress: (ProcessState) -> Unit
     ): Double {
         progress(dataSpeedState.withState(ProcessState.STARTED))
 
-        val dataSpeed = 1.0e-3 / bitTime * (100 - ber) / 100
+        val dataSpeed = codeRate * 1.0e-3 / bitTime * (100 - ber) / 100
         L.d(
             "Data speed calculation",
             "BER=${ber.format(3)}%, Data speed=${dataSpeed.format(3)}кБит/с"
@@ -251,17 +296,29 @@ class CalculateCharacteristicsProcess(
 
     private fun generateData(
         channels: List<Channel>,
+        dataLength: Int,
         progress: (ProcessState) -> Unit
     ): List<Channel> {
         val state = ProcessState(GENERATE_DATA_KEY, GENERATE_DATA_NAME, ProcessState.STARTED)
         progress(state)
         val dataChannels = channels.map { c ->
-            val channel = c.copy()
-            if (channel.frameData.isEmpty()) {
-                channel.apply { frameData = UserDataProvider.generateData(frameLength) }
-            } else {
-                channel
+            c.copy().apply {
+                frameData = UserDataProvider.generateData(dataLength)
             }
+        }
+        progress(state.withState(ProcessState.FINISHED))
+        return dataChannels
+    }
+
+    private fun encodeData(
+        channels: List<Channel>,
+        coder: DataCoder,
+        progress: (ProcessState) -> Unit
+    ): List<Channel> {
+        val state = ProcessState(ENCODE_DATA_KEY, ENCODE_DATA_NAME, ProcessState.STARTED)
+        progress(state)
+        val dataChannels = channels.map { c ->
+            c.copy().apply { frameData = coder.encode(frameData) }
         }
         progress(state.withState(ProcessState.FINISHED))
         return dataChannels
@@ -338,12 +395,12 @@ class CalculateCharacteristicsProcess(
         val state = ProcessState(DETECT_CHANNELS_KEY, DETECT_CHANNELS_NAME, ProcessState.STARTED)
         progress(state)
 
-        val codeGen = CodeGenerator()
-        val codes = when (decoderConfig.codeType) {
-            CodeGenerator.WALSH -> codeGen.generateWalshMatrix(
-                decoderConfig.codeLength ?: 0
+        val codeGen = ChannelCodesGenerator()
+        val codes = when (decoderConfig.channelsCodeType) {
+            ChannelCodesGenerator.WALSH -> codeGen.generateWalshMatrix(
+                decoderConfig.channelsCodeLength ?: 0
             )
-            else -> codeGen.generateWalshMatrix(decoderConfig.codeLength ?: 0)
+            else -> codeGen.generateWalshMatrix(decoderConfig.channelsCodeLength ?: 0)
         }
         val channels = mutableListOf<Channel>()
         for (i in codes.indices) {
@@ -361,19 +418,31 @@ class CalculateCharacteristicsProcess(
     private fun decodeChannels(
         channels: List<Channel>,
         groupData: DoubleArray,
-        threshold: Float
+        threshold: Float,
+        coder: DataCoder
     ): List<Channel> {
         return channels.map {
-            it.apply { frameData = decode(groupData, it.code, threshold) }
+            it.apply {
+                val frame = decodeChannel(groupData, it.code, threshold)
+                val frameData = decodeFrame(frame, coder)
+                this.frameData = frameData
+            }
         }
     }
 
-    private fun decode(
+    private fun decodeChannel(
         groupData: DoubleArray,
         code: BooleanArray,
         threshold: Float
+    ): DoubleArray {
+        return CdmaDecimalCoder(threshold).decode(code.toBipolar(), groupData)
+    }
+
+    private fun decodeFrame(
+        frame: DoubleArray,
+        coder: DataCoder
     ): BooleanArray {
-        return CdmaDecimalCoder(threshold).decode(code.toBipolar(), groupData).toUnipolar()
+        return coder.decode(frame.toUnipolar())
     }
 
     data class SystemCharacteristics(

@@ -137,7 +137,7 @@ class DemodulatorProcessFragment : Fragment() {
 
         prefs.getInt(
             getString(R.string.demodulator_process_code_length_key),
-            CdmaContract.DEFAULT_CODE_SIZE
+            CdmaContract.DEFAULT_CHANNEL_CODE_SIZE
         ).let {
             process_code_length.setText(it.toString())
         }

@@ -140,4 +140,26 @@
     <string name="characteristics_finish_snr_key">characteristics_finish_snr_key</string>
     <string name="characteristics_points_count_key">characteristics_points_count_key</string>
     <string name="process_name_placeholder">Название процесса</string>
+    <string name="data_label">Данные</string>
+    <string name="source_coding">Кодирование источника</string>
+    <string name="source_data_coding_enable_key">source_data_coding_enable_key</string>
+    <string name="source_data_coding_type_key">source_data_coding_type_key</string>
+    <string name="source_data_coding_word_length_key">source_data_coding_word_length_key</string>
+    <string name="code_word_length">Длина слова</string>
+    <string name="error_code_word_length">Длина слова не может быть меньше 3</string>
+    <string name="source_decoding">Декодирование источника</string>
+    <string name="channel_code_types">Тип канальных кодов</string>
+    <string name="channel_code_length">Длина канальных кодов</string>
+    <string name="data_code_types">Тип кодов источника</string>
+    <string name="decoder_data_decoding_enable_key">decoder_data_coding_enable_key</string>
+    <string name="decoder_data_coding_type_key">decoder_data_coding_type_key</string>
+    <string name="decoder_data_coding_word_length_key">decoder_data_coding_word_length_key</string>
+    <string name="channels_label">Каналы</string>
+    <string name="data_bits_transmitted">Передано</string>
+    <string name="data_bits_received">Принято</string>
+    <string name="data_error_bits">Ошибок</string>
+    <string name="transmitted">Передано</string>
+    <string name="received">Принято</string>
+    <string name="errors">Ошибок</string>
+    <string name="bit">бит</string>
 </resources>

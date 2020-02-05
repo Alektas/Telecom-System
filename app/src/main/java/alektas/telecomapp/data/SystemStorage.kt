@@ -3,6 +3,7 @@ package alektas.telecomapp.data
 import alektas.telecomapp.App
 import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
+import alektas.telecomapp.domain.entities.configs.ChannelsConfig
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
 import alektas.telecomapp.domain.entities.configs.DemodulatorConfig
 import alektas.telecomapp.domain.entities.converters.ValueConverter
@@ -36,6 +37,8 @@ class SystemStorage : Repository {
     lateinit var filterConfig: FilterConfig
     @Inject
     lateinit var decoderConfig: DecoderConfig
+    @Inject
+    lateinit var simulatedChannelsConfig: ChannelsConfig
     /**
      * Шум источника.
      * Если шум отключен с помощью метода {@see #disableNoise}, то этот объект сохраняется,
@@ -62,6 +65,7 @@ class SystemStorage : Repository {
      */
     private var isSavedToFile = false
     private var adcBitDepth = 8
+    private var isFileProcessMode = false
     private var simulatedChannelList = mutableListOf<Channel>()
     private var decoderChannelList = mutableListOf<Channel>()
     private val disposable = CompositeDisposable()
@@ -78,8 +82,6 @@ class SystemStorage : Repository {
         BehaviorSubject.create<DigitalSignal>()
     private val decoderChannelsSource =
         BehaviorSubject.create<List<Channel>>()
-    private val decoderChannelsLiveSource =
-        PublishSubject.create<List<Channel>>()
     private val channelsErrorsSource =
         BehaviorSubject.create<Map<BooleanArray, List<Int>>>()
     private val etherSource: Observable<Signal>
@@ -88,6 +90,7 @@ class SystemStorage : Repository {
         BehaviorSubject.create<DemodulatorConfig>()
     private val decoderConfigSource =
         BehaviorSubject.create<DecoderConfig>()
+    private val simulatedChannelsConfigSource = BehaviorSubject.create<ChannelsConfig>()
     private val simulatedChannelsCountSource = BehaviorSubject.create<Int>()
     private var transmittedBitsCount = 0
         set(value) {
@@ -95,6 +98,12 @@ class SystemStorage : Repository {
             transmittedBitsCountSource.onNext(value)
         }
     private val transmittedBitsCountSource = BehaviorSubject.create<Int>()
+    private var transmittedDataBitsCount = 0
+        set(value) {
+            field = value
+            transmittedDataBitsCountSource.onNext(value)
+        }
+    private val transmittedDataBitsCountSource = BehaviorSubject.create<Int>()
     private var expectedFramesCount = 0
         set(value) {
             field = value
@@ -113,18 +122,36 @@ class SystemStorage : Repository {
             receivedBitsCountSource.onNext(value)
         }
     private val receivedBitsCountSource = BehaviorSubject.create<Int>()
+    private var receivedDataBitsCount = 0
+        set(value) {
+            field = value
+            receivedDataBitsCountSource.onNext(value)
+        }
+    private val receivedDataBitsCountSource = BehaviorSubject.create<Int>()
     private var receivedErrorsCount = 0
         set(value) {
             field = value
             receivedErrorsCountSource.onNext(value)
         }
     private val receivedErrorsCountSource = BehaviorSubject.create<Int>()
+    private var receivedDataErrorsCount = 0
+        set(value) {
+            field = value
+            receivedDataErrorsCountSource.onNext(value)
+        }
+    private val receivedDataErrorsCountSource = BehaviorSubject.create<Int>()
     private var ber = 0.0
         set(value) {
             field = value
             berSource.onNext(value)
         }
     private val berSource = BehaviorSubject.create<Double>()
+    private var dataBer = 0.0
+        set(value) {
+            field = value
+            dataBerSource.onNext(value)
+        }
+    private val dataBerSource = BehaviorSubject.create<Double>()
     private val berByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val berByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val theoreticBerByNoiseList = mutableListOf<Pair<Double, Double>>()
@@ -134,42 +161,37 @@ class SystemStorage : Repository {
     private val dataSpeedByNoiseList = mutableListOf<Pair<Double, Double>>()
     private val dataSpeedByNoiseSource = PublishSubject.create<Pair<Double, Double>>()
     private val transmittingStateSource = BehaviorSubject.create<ProcessState>()
-    private val transmittingState = ProcessState(TRANSMITTING_PROCESS_KEY, TRANSMITTING_PROCESS_NAME)
+    private val transmittingState =
+        ProcessState(TRANSMITTING_PROCESS_KEY, TRANSMITTING_PROCESS_NAME)
 
     init {
         App.component.inject(this)
         demodulatorConfigSource.onNext(demodulatorConfig)
-        decoderConfigSource.onNext(decoderConfig)
 
         disposable.addAll(
             simulatedChannelsSource
                 .subscribe {
-                    if (isStatisticsCounting) {
-                        transmittedBitsCount += it.sumBy { c -> c.frameData.size }
-                        simulatedChannelsCountSource.onNext(it.size)
-                    }
+                    transmittedBitsCount += it.sumBy { c -> c.frameData.size }
+                    transmittedDataBitsCount += it.sumBy { c -> c.sourceData.size }
+                    simulatedChannelsCountSource.onNext(it.size)
                 },
 
             decoderChannelsSource
                 .subscribe {
-                    if (isStatisticsCounting) {
-                        if (receivedFramesCount >= expectedFramesCount) {
-                            endCountingStatistics()
-                            return@subscribe
-                        }
+                    receivedBitsCount += it.sumBy { c -> c.frameData.size }
+                    receivedErrorsCount += it.sumBy { c -> c.errors?.size ?: 0 }
+                    receivedDataBitsCount += it.sumBy { c -> c.sourceData.size }
+                    ber = receivedErrorsCount / receivedBitsCount.toDouble() * 100
 
-                        receivedBitsCount += it.sumBy { c -> c.frameData.size }
-                        receivedErrorsCount += it.sumBy { c -> c.errors?.size ?: 0 }
-                        ber = receivedErrorsCount / receivedBitsCount.toDouble() * 100
+                    if (isFileProcessMode) finishFrameProcessing()
+                },
 
-                        receivedFramesCount++
-                        val progress =
-                            (receivedFramesCount / expectedFramesCount.toDouble() * 100).toInt()
-                        transmittingStateSource.onNext(transmittingState.apply {
-                            if (receivedFramesCount == expectedFramesCount) endCountingStatistics()
-                            this.progress = progress
-                        })
-                    }
+            channelsErrorsSource
+                .subscribe {
+                    receivedDataErrorsCount += it.values.sumBy { c -> c.size }
+                    dataBer = receivedDataErrorsCount / receivedDataBitsCount.toDouble() * 100
+
+                    finishFrameProcessing()
                 },
 
             channelsFrameSignalSource
@@ -202,6 +224,19 @@ class SystemStorage : Repository {
                 signal + noise + interf
             })
             .mergeWith(fileSignalSource)
+    }
+
+    override fun getSimulatedChannelsConfiguration(): ChannelsConfig {
+        return simulatedChannelsConfig
+    }
+
+    override fun observeSimulationChannelsConfig(): Observable<ChannelsConfig> {
+        return simulatedChannelsConfigSource
+    }
+
+    override fun updateSimulationChannelsConfig(config: ChannelsConfig) {
+        simulatedChannelsConfig.update(config)
+        simulatedChannelsConfigSource.onNext(simulatedChannelsConfig)
     }
 
     override fun getCurrentDemodulatorConfig(): DemodulatorConfig {
@@ -269,10 +304,15 @@ class SystemStorage : Repository {
         receivedBitsCount = 0
         receivedErrorsCount = 0
         ber = 0.0
+        transmittedDataBitsCount = 0
+        receivedDataBitsCount = 0
+        receivedDataErrorsCount = 0
+        dataBer = 0.0
     }
 
     override fun endCountingStatistics() {
         isStatisticsCounting = false
+        isFileProcessMode = false
         removeTransmittingSubProcesses()
         setTransmittingState(ProcessState.FINISHED, 100)
     }
@@ -281,21 +321,33 @@ class SystemStorage : Repository {
         expectedFramesCount = count
     }
 
-    override fun setChannels(channels: List<Channel>) {
+    override fun startFileProcessingMode() {
+        isFileProcessMode = true
+    }
+
+    override fun setSimulatedChannels(channels: List<Channel>) {
         simulatedChannelList = channels.toMutableList()
         simulatedChannelsSource.onNext(simulatedChannelList)
     }
 
-    override fun removeChannel(channel: Channel) {
-        if (simulatedChannelList.remove(channel)) simulatedChannelsSource.onNext(simulatedChannelList)
+    override fun removeSimulatedChannel(channel: Channel) {
+        if (simulatedChannelList.remove(channel)) simulatedChannelsSource.onNext(
+            simulatedChannelList
+        )
     }
 
     override fun getSimulatedChannels(): List<Channel> {
         return simulatedChannelList
     }
 
-    override fun observeSimulatedChannels(): Observable<List<Channel>> {
-        return simulatedChannelsSource
+    override fun observeSimulatedChannels(withLast: Boolean): Observable<List<Channel>> {
+        return if (withLast) {
+            simulatedChannelsSource
+        } else {
+            PublishSubject.create<List<Channel>>().apply {
+                simulatedChannelsSource.subscribe(this)
+            }
+        }
     }
 
     override fun setFileSignal(signal: Signal) {
@@ -419,39 +471,35 @@ class SystemStorage : Repository {
     override fun addDecoderChannel(channel: Channel) {
         decoderChannelList.add(channel)
         decoderChannelsSource.onNext(decoderChannelList)
-        decoderChannelsLiveSource.onNext(decoderChannelList)
     }
 
     override fun removeDecoderChannel(channel: Channel) {
         if (decoderChannelList.remove(channel)) {
             decoderChannelsSource.onNext(decoderChannelList)
-            decoderChannelsLiveSource.onNext(decoderChannelList)
         }
     }
 
     override fun setDecoderChannels(channels: List<Channel>) {
         decoderChannelList = channels.toMutableList()
         decoderChannelsSource.onNext(decoderChannelList)
-        decoderChannelsLiveSource.onNext(decoderChannelList)
     }
 
     override fun getDecoderChannels(): List<Channel> {
         return decoderChannelList
     }
 
-    /**
-     * @param withLast true - источник при подписке выдает последний список декодированных каналов
-     */
     override fun observeDecoderChannels(withLast: Boolean): Observable<List<Channel>> {
-        return if (withLast) decoderChannelsSource else decoderChannelsLiveSource
+        return if (withLast) {
+            decoderChannelsSource
+        } else {
+            PublishSubject.create<List<Channel>>().apply {
+                decoderChannelsSource.subscribe(this)
+            }
+        }
     }
 
-    override fun setSimulatedChannelsErrors(errors: Map<BooleanArray, List<Int>>) {
+    override fun setChannelsDataErrors(errors: Map<BooleanArray, List<Int>>) {
         channelsErrorsSource.onNext(errors)
-    }
-
-    override fun observeSimulatedChannelsErrors(): Observable<Map<BooleanArray, List<Int>>> {
-        return channelsErrorsSource
     }
 
     override fun setTransmittingState(state: Int, progress: Int) {
@@ -489,16 +537,32 @@ class SystemStorage : Repository {
         return transmittedBitsCountSource
     }
 
+    override fun observeTransmittedDataBitsCount(): Observable<Int> {
+        return transmittedDataBitsCountSource
+    }
+
     override fun observeReceivedBitsCount(): Observable<Int> {
         return receivedBitsCountSource
+    }
+
+    override fun observeReceivedDataBitsCount(): Observable<Int> {
+        return receivedDataBitsCountSource
     }
 
     override fun observeReceivedErrorsCount(): Observable<Int> {
         return receivedErrorsCountSource
     }
 
+    override fun observeReceivedDataErrorsCount(): Observable<Int> {
+        return receivedDataErrorsCountSource
+    }
+
     override fun observeBer(): Observable<Double> {
         return berSource
+    }
+
+    override fun observeDataBer(): Observable<Double> {
+        return dataBerSource
     }
 
     override fun setBerByNoise(berByNoise: Pair<Double, Double>) {
@@ -567,5 +631,19 @@ class SystemStorage : Repository {
 
     override fun observeDataSpeedByNoise(): Observable<Pair<Double, Double>> {
         return dataSpeedByNoiseSource
+    }
+
+    private fun finishFrameProcessing() {
+        receivedFramesCount++
+        val progress =
+            (receivedFramesCount / expectedFramesCount.toDouble() * 100).toInt()
+
+        if (receivedFramesCount >= expectedFramesCount) {
+            endCountingStatistics()
+        } else {
+            transmittingStateSource.onNext(transmittingState.apply {
+                this.progress = progress
+            })
+        }
     }
 }

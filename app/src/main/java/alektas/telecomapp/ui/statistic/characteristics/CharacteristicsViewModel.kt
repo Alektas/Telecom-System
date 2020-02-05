@@ -5,6 +5,7 @@ import alektas.telecomapp.domain.Repository
 import alektas.telecomapp.domain.entities.Channel
 import alektas.telecomapp.domain.entities.SystemProcessor
 import alektas.telecomapp.domain.entities.configs.DecoderConfig
+import alektas.telecomapp.domain.entities.contracts.CdmaContract
 import alektas.telecomapp.utils.toSortedPoints
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -129,7 +130,8 @@ class CharacteristicsViewModel : ViewModel() {
                 storage.observeDecoderChannels().startWith(listOf<Channel>()),
                 storage.observeDecoderConfig(),
                 Function3 { sim: List<Channel>, dec: List<Channel>, dc: DecoderConfig ->
-                    sim.isEmpty() || (!dc.isAutoDetection && dec.isEmpty())
+                    val isAuto = dc.isAutoDetection ?: CdmaContract.DEFAULT_IS_AUTO_DETECTION_ENABLED
+                    sim.isEmpty() || (!isAuto && dec.isEmpty())
                 }
             )
                 .subscribeOn(Schedulers.io())
